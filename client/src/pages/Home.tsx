@@ -1,10 +1,8 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, Package, DollarSign, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
+import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap, Banknote } from "lucide-react";
 
 function formatCurrency(val: number) {
-  // Formato en pesos colombianos
   if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
   if (val >= 1e6) return `${(val / 1e6).toFixed(1)}M COP`;
   if (val >= 1e3) return `${(val / 1e3).toFixed(0)}K COP`;
@@ -13,6 +11,10 @@ function formatCurrency(val: number) {
 
 function formatNumber(val: number) {
   return new Intl.NumberFormat("es-CO").format(val);
+}
+
+function formatCurrencyFull(val: number) {
+  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -50,11 +52,14 @@ export default function Home() {
     zero: Number(c.zeroStock) || 0,
   }));
 
+  const maxCatValue = Math.max(...categoryData.map((c) => c.value), 1);
+
   const abcData = [
-    { name: "Clase A", value: Number(kpis?.classA) || 0, color: "#e879f9" },
-    { name: "Clase B", value: Number(kpis?.classB) || 0, color: "#22d3ee" },
-    { name: "Clase C", value: Number(kpis?.classC) || 0, color: "#a78bfa" },
+    { name: "Clase A", value: Number(kpis?.classA) || 0, color: "#e879f9", label: "Alto Valor" },
+    { name: "Clase B", value: Number(kpis?.classB) || 0, color: "#22d3ee", label: "Medio" },
+    { name: "Clase C", value: Number(kpis?.classC) || 0, color: "#a78bfa", label: "Normal" },
   ];
+  const abcTotal = abcData.reduce((s, d) => s + d.value, 0) || 1;
 
   return (
     <div className="space-y-6">
@@ -93,8 +98,8 @@ export default function Home() {
         <KPICard
           title="Valor Inventario"
           value={formatCurrency(Number(kpis?.totalValue) || 0)}
-          subtitle={`$${formatNumber(Number(kpis?.totalValue) || 0)} COP`}
-          icon={DollarSign}
+          subtitle={`${formatCurrencyFull(Number(kpis?.totalValue) || 0)}`}
+          icon={Banknote}
           glowClass="cyber-glow-pink"
           color="text-neon-pink"
         />
@@ -174,7 +179,7 @@ export default function Home() {
           />
           <SemaphoreCard
             count={Number(jit?.reorden) || 0}
-            label="REORDEN INMEDIATO"
+            label="REORDEN"
             sublabel="Stock ≤ Punto Reorden"
             bgColor="bg-orange-500/10"
             borderColor="border-orange-500/40"
@@ -183,7 +188,7 @@ export default function Home() {
           />
           <SemaphoreCard
             count={Number(jit?.precaucion) || 0}
-            label="PRÓXIMO A MÍNIMO"
+            label="PRECAUCIÓN"
             sublabel="Revisar en 48 horas"
             bgColor="bg-yellow-500/10"
             borderColor="border-yellow-500/40"
@@ -192,7 +197,7 @@ export default function Home() {
           />
           <SemaphoreCard
             count={Number(jit?.optimo) || 0}
-            label="STOCK SEGURO"
+            label="SEGURO"
             sublabel="Nivel Óptimo JIT"
             bgColor="bg-green-500/10"
             borderColor="border-green-500/40"
@@ -202,82 +207,85 @@ export default function Home() {
         </div>
       </Card>
 
-      {/* Charts Row */}
+      {/* Charts Row — Pure CSS, NO Recharts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Value by Category */}
+        {/* Value by Category — Horizontal CSS Bars */}
         <Card className="cyber-card p-6 rounded-xl">
           <h2 className="text-sm font-bold text-neon-cyan mb-4 tracking-wider" style={{ fontFamily: "Orbitron" }}>
             VALOR POR CATEGORÍA
           </h2>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData} layout="vertical" margin={{ left: 10, right: 10 }}>
-                <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} stroke="#666" fontSize={10} />
-                <YAxis type="category" dataKey="name" width={100} stroke="#888" fontSize={10} tick={{ fontFamily: "Rajdhani" }} />
-                <Tooltip
-                  contentStyle={{
-                    background: "oklch(0.14 0.025 280)",
-                    border: "1px solid oklch(0.7 0.25 350 / 0.3)",
-                    borderRadius: "8px",
-                    color: "#e0e0e0",
-                    fontFamily: "Rajdhani",
-                  }}
-                  formatter={(value: number) => [`$${formatNumber(value)} COP`, "Valor"]}
-                />
-                <Bar dataKey="value" radius={[0, 4, 4, 0]}>
-                  {categoryData.map((entry, i) => (
-                    <Cell key={i} fill={CATEGORY_COLORS[entry.name] || "#a78bfa"} fillOpacity={0.8} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="space-y-3">
+            {categoryData.map((cat) => {
+              const pct = maxCatValue > 0 ? (cat.value / maxCatValue) * 100 : 0;
+              const barColor = CATEGORY_COLORS[cat.name] || "#a78bfa";
+              return (
+                <div key={cat.name} className="space-y-1">
+                  <div className="flex items-center justify-between text-xs" style={{ fontFamily: "Rajdhani" }}>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: barColor }} />
+                      <span className="text-foreground font-medium">{cat.name}</span>
+                    </div>
+                    <span className="text-muted-foreground font-mono">{formatCurrency(cat.value)}</span>
+                  </div>
+                  <div className="w-full h-3 bg-muted/30 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{ width: `${pct}%`, backgroundColor: barColor, boxShadow: `0 0 8px ${barColor}40` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
 
-        {/* ABC Classification */}
+        {/* ABC Classification — CSS Donut */}
         <Card className="cyber-card p-6 rounded-xl">
           <h2 className="text-sm font-bold text-neon-cyan mb-4 tracking-wider" style={{ fontFamily: "Orbitron" }}>
             CLASIFICACIÓN ABC — PARETO 80/20
           </h2>
-          <div className="h-[300px] flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={abcData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={4}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                  labelLine={{ stroke: "#666" }}
-                  fontSize={12}
-                  fontFamily="Rajdhani"
-                >
-                  {abcData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} fillOpacity={0.85} stroke={entry.color} strokeWidth={1} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    background: "oklch(0.14 0.025 280)",
-                    border: "1px solid oklch(0.7 0.25 350 / 0.3)",
-                    borderRadius: "8px",
-                    color: "#e0e0e0",
-                    fontFamily: "Rajdhani",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="flex justify-center gap-6 mt-2">
-            {abcData.map((d) => (
-              <div key={d.name} className="flex items-center gap-2 text-xs">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
-                <span className="text-muted-foreground">{d.name}: <span className="text-foreground font-semibold">{d.value}</span></span>
-              </div>
-            ))}
+          <div className="flex flex-col items-center gap-4">
+            {/* SVG Donut */}
+            <svg viewBox="0 0 200 200" className="w-48 h-48">
+              {(() => {
+                let cumAngle = -90;
+                return abcData.map((d) => {
+                  const angle = (d.value / abcTotal) * 360;
+                  const startAngle = cumAngle;
+                  cumAngle += angle;
+                  const endAngle = cumAngle;
+                  const startRad = (startAngle * Math.PI) / 180;
+                  const endRad = (endAngle * Math.PI) / 180;
+                  const x1 = 100 + 70 * Math.cos(startRad);
+                  const y1 = 100 + 70 * Math.sin(startRad);
+                  const x2 = 100 + 70 * Math.cos(endRad);
+                  const y2 = 100 + 70 * Math.sin(endRad);
+                  const largeArc = angle > 180 ? 1 : 0;
+                  const pathD = `M 100 100 L ${x1} ${y1} A 70 70 0 ${largeArc} 1 ${x2} ${y2} Z`;
+                  return <path key={d.name} d={pathD} fill={d.color} fillOpacity={0.85} stroke="oklch(0.12 0.025 280)" strokeWidth="2" />;
+                });
+              })()}
+              <circle cx="100" cy="100" r="40" fill="oklch(0.12 0.025 280)" />
+              <text x="100" y="95" textAnchor="middle" fill="#22d3ee" fontSize="14" fontFamily="Orbitron" fontWeight="bold">
+                {formatNumber(abcTotal)}
+              </text>
+              <text x="100" y="115" textAnchor="middle" fill="#999" fontSize="10" fontFamily="Rajdhani">
+                Total Refs
+              </text>
+            </svg>
+
+            {/* Legend */}
+            <div className="flex flex-wrap justify-center gap-4">
+              {abcData.map((d) => (
+                <div key={d.name} className="flex items-center gap-2 text-xs">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: d.color }} />
+                  <span className="text-muted-foreground">
+                    {d.name} ({d.label}): <span className="text-foreground font-semibold">{formatNumber(d.value)}</span>
+                    <span className="text-muted-foreground ml-1">({((d.value / abcTotal) * 100).toFixed(0)}%)</span>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         </Card>
       </div>

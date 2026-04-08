@@ -15,12 +15,9 @@ import {
   getLastSync,
   getDelayedOrders,
   getCriticalStockItems,
-  bulkUpsertInventory,
-  bulkUpsertOrders,
-  bulkUpsertSuppliers,
-  logSync,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
+import { syncFromGoogleDrive } from "./gdrive-sync";
 
 export const appRouter = router({
   system: systemRouter,
@@ -102,18 +99,9 @@ export const appRouter = router({
 
   sync: router({
     trigger: protectedProcedure.mutation(async () => {
-      try {
-        // This will be called from the frontend to trigger a Drive sync
-        // The actual sync logic runs server-side via the sync endpoint
-        const response = await fetch(`http://localhost:${process.env.PORT || 3000}/api/sync-drive`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        const result = await response.json();
-        return result;
-      } catch (error: any) {
-        return { success: false, error: error.message };
-      }
+      // Call syncFromGoogleDrive directly — no internal fetch
+      const result = await syncFromGoogleDrive();
+      return result;
     }),
 
     lastSync: publicProcedure.query(async () => {

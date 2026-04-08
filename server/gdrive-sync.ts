@@ -1,180 +1,261 @@
-import { exec } from "child_process";
-import { promisify } from "util";
-import { readFileSync, existsSync, mkdirSync } from "fs";
+import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } from "./db";
 
-const execAsync = promisify(exec);
-
-const RCLONE_CONFIG = "/home/ubuntu/.gdrive-rclone.ini";
-const DRIVE_FILE = "DASBOARD SOMOS U - GESTOR 1.xlsx";
-const LOCAL_DIR = "/home/ubuntu/gdrive-sync-temp";
+const LOCAL_DIR = "/tmp/gdrive-sync-temp";
 const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
+
+// Google Drive file ID — we find it dynamically via search
+const DRIVE_FILE_NAME = "DASBOARD SOMOS U - GESTOR 1.xlsx";
+
+/**
+ * Get rclone token from config file (available in sandbox and production)
+ */
+function getRcloneToken(): { access_token: string; token_type: string } | null {
+  const configPath = "/home/ubuntu/.gdrive-rclone.ini";
+  try {
+    if (!existsSync(configPath)) return null;
+    const config = readFileSync(configPath, "utf-8");
+    const tokenMatch = config.match(/token\s*=\s*(.+)/);
+    if (!tokenMatch) return null;
+    return JSON.parse(tokenMatch[1]);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Search for the file in Google Drive by name
+ */
+async function findFileInDrive(accessToken: string): Promise<string | null> {
+  const query = encodeURIComponent(`name = '${DRIVE_FILE_NAME}' and trashed = false`);
+  const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Drive search failed: ${res.status} ${await res.text()}`);
+  }
+  const data = await res.json();
+  if (data.files && data.files.length > 0) {
+    return data.files[0].id;
+  }
+  return null;
+}
+
+/**
+ * Download file from Google Drive by file ID
+ */
+async function downloadFileFromDrive(accessToken: string, fileId: string): Promise<Buffer> {
+  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!res.ok) {
+    throw new Error(`Drive download failed: ${res.status} ${await res.text()}`);
+  }
+  const arrayBuffer = await res.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+/**
+ * Parse Excel using xlsx (pure Node.js, no Python dependency)
+ */
+async function parseExcelData(filePath: string) {
+  // Dynamic import for ESM compatibility
+  const XLSX = await import("xlsx");
+  const fileData = readFileSync(filePath);
+  const workbook = XLSX.read(fileData, { type: "buffer" });
+
+  // Helper functions
+  function safeFloat(val: any, def = 0): number {
+    if (val === null || val === undefined || val === "") return def;
+    const n = Number(val);
+    return isNaN(n) ? def : n;
+  }
+
+  function safeStr(val: any, def: string | null = null): string | null {
+    if (val === null || val === undefined || val === "") return def;
+    const s = String(val).trim();
+    return s || def;
+  }
+
+  function safeDate(val: any): string | null {
+    if (!val) return null;
+    try {
+      if (typeof val === "number") {
+        // Excel serial date to JS Date
+        const epoch = new Date(1899, 11, 30);
+        const d = new Date(epoch.getTime() + val * 86400000);
+        if (isNaN(d.getTime())) return null;
+        return d.toISOString().replace("T", " ").substring(0, 19);
+      }
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return null;
+      return d.toISOString().replace("T", " ").substring(0, 19);
+    } catch {
+      return null;
+    }
+  }
+
+  function sheetToRows(sheetName: string, headerRow = 2): Record<string, any>[] {
+    const sheet = workbook.Sheets[sheetName];
+    if (!sheet) return [];
+    const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+    if (!raw || raw.length <= headerRow) return [];
+    const headers = (raw[headerRow] as any[]) || [];
+    const rows: Record<string, any>[] = [];
+    for (let i = headerRow + 1; i < raw.length; i++) {
+      const rowData = raw[i] as any[];
+      if (!rowData) continue;
+      const obj: Record<string, any> = {};
+      let hasData = false;
+      headers.forEach((h: any, idx: number) => {
+        if (h !== null && h !== undefined) {
+          const key = String(h).trim();
+          const val = rowData[idx] !== undefined ? rowData[idx] : null;
+          obj[key] = val;
+          if (val !== null && val !== undefined && val !== "") hasData = true;
+        }
+      });
+      if (hasData) rows.push(obj);
+    }
+    return rows;
+  }
+
+  // Parse CONTROL INVENTARIO
+  const ctrlRows = sheetToRows("CONTROL INVENTARIO", 2);
+
+  // Parse DATA for lookup
+  const dataRows = sheetToRows("DATA", 2);
+  const dataLookup: Record<string, Record<string, any>> = {};
+  for (const row of dataRows) {
+    const ref = safeStr(row["REFERENCIA"]);
+    if (ref) dataLookup[ref] = row;
+  }
+
+  // Build inventory
+  const inventory = [];
+  for (const row of ctrlRows) {
+    const ref = safeStr(row["REFERENCIA"]);
+    if (!ref) continue;
+    const dataRow = dataLookup[ref] || {};
+    inventory.push({
+      referencia: ref,
+      descripcion: safeStr(row["DESCRIPCION"]),
+      parteFabricante: safeStr(row["FABRICANTES"]),
+      stockActual: safeFloat(row["STOCK ACTUAL"]),
+      costoUnitario: safeFloat(row["COSTO UNIT."]),
+      totalStock: safeFloat(row["VALOR INVENTARIO"]),
+      cuenta: safeStr(row["CUENTA"]),
+      puntoPedido: safeFloat(dataRow["PUNTO PEDIDO"]),
+      minimo: safeFloat(dataRow["MINIMO"]),
+      maximo: safeFloat(dataRow["MAXIMO"]),
+      umEmision: safeStr(row["UM"]),
+      claseAbc: safeStr(row["CLASE ABC"]),
+      usoAnno: safeFloat(dataRow["USO ANNO"]),
+      usoAnnoAnt: safeFloat(dataRow["USO ANNO ANT."]),
+      leadTimeProm: safeFloat(dataRow["LEAD TIME PROM."]),
+      rotacionAnno: safeFloat(dataRow["ROTACION ANNO"]),
+      rotacionAnt: safeFloat(dataRow["ROTACION ANT."]),
+      quiebresAnno: safeFloat(dataRow["QUIEBRES ANNO"]),
+      quiebresAnt: safeFloat(dataRow["QUIEBRES ANT."]),
+      costoPromedio: safeFloat(dataRow["COSTO PROM."]),
+      ultimoCosto: safeFloat(dataRow["ULTIMO COSTO"]),
+      nitProveedor: safeStr(row["NIT PROVEEDOR"]),
+      bodega: safeStr(row["BODEGA"]),
+      proveedor: safeStr(row["PROVEEDOR"]),
+      consumoAnual: safeFloat(row["CONSUMO ANUAL"]),
+      consumoDiario: safeFloat(row["CONSUMO DIARIO"]),
+      leadTimeDias: safeFloat(row["LEAD TIME (dias)"]),
+      stockSeguridad: safeFloat(row["STOCK SEGURIDAD"]),
+      puntoReorden: safeFloat(row["PUNTO REORDEN"]),
+      inventarioDias: safeFloat(row["INVENTARIO (dias)"]),
+      estado: safeStr(row["ESTADO"]),
+      accionRequerida: safeStr(row["ACCION REQUERIDA"]),
+      cantidadAPedir: safeFloat(row["CANTIDAD A PEDIR"]),
+      valorAPedir: safeFloat(row["VALOR A PEDIR"]),
+      prioridad: safeStr(row["PRIORIDAD"]),
+    });
+  }
+
+  // Parse DATA PENDIENTES
+  const pendRows = sheetToRows("DATA PENDIENTES", 2);
+  const orders = [];
+  for (const row of pendRows) {
+    const oc = safeStr(row["ORDEN COMPRA"]);
+    if (!oc) continue;
+    orders.push({
+      ordenCompra: oc,
+      descripcion: safeStr(row["DESCRIPCION"]),
+      qtyOrdenada: safeFloat(row["QTY ORDENADA"]),
+      um: safeStr(row["UM"]),
+      qtyRecibida: safeFloat(row["QTY RECIBIDA"]),
+      qtyPendiente: safeFloat(row["QTY PENDIENTE"]),
+      costoUnitario: safeFloat(row["COSTO UNIT."]),
+      proveedor: safeStr(row["PROVEEDOR"]),
+      parteFabricante: safeStr(row["PARTE FABRICANTE"]),
+      comprador: safeStr(row["COMPRADOR"]),
+      mainsaver: safeStr(row["MAINSAVER"]),
+      fechaPromesa: safeDate(row["FECHA PROMESA"]),
+      fechaRequerida: safeDate(row["FECHA REQUERIDA"]),
+      valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
+      valorPendiente: safeFloat(row["VALOR PENDIENTE"]),
+      diasRetraso: Math.round(safeFloat(row["DIAS RETRASO"])),
+      estado: safeStr(row["ESTADO"]),
+      cumplimiento: safeFloat(row["CUMPLIMIENTO"]),
+      prioridad: safeStr(row["PRIORIDAD"]),
+    });
+  }
+
+  // Parse PROVEEDORES (no header row)
+  const provSheet = workbook.Sheets["PROVEEDORES"];
+  const suppliers: { nit: string; nombre: string | null; tipoImpuesto: string | null }[] = [];
+  if (provSheet) {
+    const provRaw = XLSX.utils.sheet_to_json(provSheet, { header: 1, defval: null });
+    const seenNits = new Set<string>();
+    for (const row of provRaw as any[][]) {
+      if (!row) continue;
+      const nit = safeStr(row[0]);
+      if (!nit || seenNits.has(nit)) continue;
+      // Check if it looks like a NIT (numeric)
+      if (!/^\d+/.test(nit)) continue;
+      seenNits.add(nit);
+      suppliers.push({
+        nit,
+        nombre: safeStr(row[1]),
+        tipoImpuesto: safeStr(row[2]),
+      });
+    }
+  }
+
+  return { inventory, orders, suppliers };
+}
 
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   try {
     // Ensure temp dir exists
     if (!existsSync(LOCAL_DIR)) mkdirSync(LOCAL_DIR, { recursive: true });
 
-    // Download file from Google Drive using rclone
-    console.log("[Sync] Downloading from Google Drive...");
-    const { stdout, stderr } = await execAsync(
-      `rclone copy "manus_google_drive:${DRIVE_FILE}" "${LOCAL_DIR}/" --config "${RCLONE_CONFIG}" -v 2>&1`
-    );
-
-    // Rename to consistent name
-    const { stdout: lsOut } = await execAsync(`ls "${LOCAL_DIR}/"`)
-    const files = lsOut.trim().split('\n').filter(f => f.endsWith('.xlsx'));
-    if (files.length === 0) {
-      throw new Error("No xlsx file found after download");
+    // Get access token from rclone config
+    const token = getRcloneToken();
+    if (!token) {
+      throw new Error("No se encontró token de Google Drive. Verifica la configuración.");
     }
 
-    const downloadedFile = `${LOCAL_DIR}/${files[0]}`;
-
-    // Parse Excel using Python (most reliable for complex xlsx)
-    console.log("[Sync] Parsing Excel data...");
-    const parseScript = `
-import pandas as pd
-import json
-import math
-import sys
-
-def safe_float(val, default=0):
-    if val is None or (isinstance(val, float) and math.isnan(val)):
-        return default
-    try:
-        return float(val)
-    except:
-        return default
-
-def safe_str(val, default=None):
-    if val is None or (isinstance(val, float) and math.isnan(val)):
-        return default
-    return str(val).strip() if str(val).strip() else default
-
-def safe_date(val):
-    if val is None or (isinstance(val, float) and math.isnan(val)):
-        return None
-    try:
-        ts = pd.Timestamp(val)
-        if pd.isna(ts):
-            return None
-        return ts.strftime('%Y-%m-%d %H:%M:%S')
-    except:
-        return None
-
-xlsx = pd.ExcelFile('${downloadedFile.replace(/'/g, "\\'")}')
-
-df_ctrl = pd.read_excel(xlsx, 'CONTROL INVENTARIO', header=2)
-df_data = pd.read_excel(xlsx, 'DATA', header=2)
-
-data_lookup = {}
-for _, row in df_data.iterrows():
-    ref = safe_str(row.get('REFERENCIA'))
-    if ref:
-        data_lookup[ref] = row
-
-inventory = []
-for _, row in df_ctrl.iterrows():
-    ref = safe_str(row.get('REFERENCIA'))
-    if not ref:
-        continue
-    data_row = data_lookup.get(ref, {})
-    item = {
-        "referencia": ref,
-        "descripcion": safe_str(row.get('DESCRIPCION')),
-        "parteFabricante": safe_str(row.get('FABRICANTES')),
-        "stockActual": safe_float(row.get('STOCK ACTUAL')),
-        "costoUnitario": safe_float(row.get('COSTO UNIT.')),
-        "totalStock": safe_float(row.get('VALOR INVENTARIO')),
-        "cuenta": safe_str(row.get('CUENTA')),
-        "puntoPedido": safe_float(data_row.get('PUNTO PEDIDO') if isinstance(data_row, pd.Series) else 0),
-        "minimo": safe_float(data_row.get('MINIMO') if isinstance(data_row, pd.Series) else 0),
-        "maximo": safe_float(data_row.get('MAXIMO') if isinstance(data_row, pd.Series) else 0),
-        "umEmision": safe_str(row.get('UM')),
-        "claseAbc": safe_str(row.get('CLASE ABC')),
-        "usoAnno": safe_float(data_row.get('USO ANNO') if isinstance(data_row, pd.Series) else 0),
-        "usoAnnoAnt": safe_float(data_row.get('USO ANNO ANT.') if isinstance(data_row, pd.Series) else 0),
-        "leadTimeProm": safe_float(data_row.get('LEAD TIME PROM.') if isinstance(data_row, pd.Series) else 0),
-        "rotacionAnno": safe_float(data_row.get('ROTACION ANNO') if isinstance(data_row, pd.Series) else 0),
-        "rotacionAnt": safe_float(data_row.get('ROTACION ANT.') if isinstance(data_row, pd.Series) else 0),
-        "quiebresAnno": safe_float(data_row.get('QUIEBRES ANNO') if isinstance(data_row, pd.Series) else 0),
-        "quiebresAnt": safe_float(data_row.get('QUIEBRES ANT.') if isinstance(data_row, pd.Series) else 0),
-        "costoPromedio": safe_float(data_row.get('COSTO PROM.') if isinstance(data_row, pd.Series) else 0),
-        "ultimoCosto": safe_float(data_row.get('ULTIMO COSTO') if isinstance(data_row, pd.Series) else 0),
-        "nitProveedor": safe_str(row.get('NIT PROVEEDOR')),
-        "bodega": safe_str(row.get('BODEGA')),
-        "proveedor": safe_str(row.get('PROVEEDOR')),
-        "consumoAnual": safe_float(row.get('CONSUMO ANUAL')),
-        "consumoDiario": safe_float(row.get('CONSUMO DIARIO')),
-        "leadTimeDias": safe_float(row.get('LEAD TIME (dias)')),
-        "stockSeguridad": safe_float(row.get('STOCK SEGURIDAD')),
-        "puntoReorden": safe_float(row.get('PUNTO REORDEN')),
-        "inventarioDias": safe_float(row.get('INVENTARIO (dias)')),
-        "estado": safe_str(row.get('ESTADO')),
-        "accionRequerida": safe_str(row.get('ACCION REQUERIDA')),
-        "cantidadAPedir": safe_float(row.get('CANTIDAD A PEDIR')),
-        "valorAPedir": safe_float(row.get('VALOR A PEDIR')),
-        "prioridad": safe_str(row.get('PRIORIDAD')),
+    console.log("[Sync] Searching for file in Google Drive...");
+    const fileId = await findFileInDrive(token.access_token);
+    if (!fileId) {
+      throw new Error(`No se encontró el archivo '${DRIVE_FILE_NAME}' en Google Drive`);
     }
-    inventory.append(item)
 
-df_pend = pd.read_excel(xlsx, 'DATA PENDIENTES', header=2)
-orders = []
-for _, row in df_pend.iterrows():
-    oc = safe_str(row.get('ORDEN COMPRA'))
-    if not oc:
-        continue
-    orders.append({
-        "ordenCompra": oc,
-        "descripcion": safe_str(row.get('DESCRIPCION')),
-        "qtyOrdenada": safe_float(row.get('QTY ORDENADA')),
-        "um": safe_str(row.get('UM')),
-        "qtyRecibida": safe_float(row.get('QTY RECIBIDA')),
-        "qtyPendiente": safe_float(row.get('QTY PENDIENTE')),
-        "costoUnitario": safe_float(row.get('COSTO UNIT.')),
-        "proveedor": safe_str(row.get('PROVEEDOR')),
-        "parteFabricante": safe_str(row.get('PARTE FABRICANTE')),
-        "comprador": safe_str(row.get('COMPRADOR')),
-        "mainsaver": safe_str(row.get('MAINSAVER')),
-        "fechaPromesa": safe_date(row.get('FECHA PROMESA')),
-        "fechaRequerida": safe_date(row.get('FECHA REQUERIDA')),
-        "valorImpuesto": safe_float(row.get('VALOR IMPUESTO')),
-        "valorPendiente": safe_float(row.get('VALOR PENDIENTE')),
-        "diasRetraso": int(safe_float(row.get('DIAS RETRASO'))),
-        "estado": safe_str(row.get('ESTADO')),
-        "cumplimiento": safe_float(row.get('CUMPLIMIENTO')),
-        "prioridad": safe_str(row.get('PRIORIDAD')),
-    })
+    console.log(`[Sync] Found file ID: ${fileId}. Downloading...`);
+    const fileBuffer = await downloadFileFromDrive(token.access_token, fileId);
+    writeFileSync(LOCAL_FILE, fileBuffer);
+    console.log(`[Sync] Downloaded ${(fileBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
-df_prov = pd.read_excel(xlsx, 'PROVEEDORES', header=None)
-suppliers_list = []
-seen_nits = set()
-for _, row in df_prov.iterrows():
-    nit = safe_str(row.iloc[0])
-    if not nit or nit in seen_nits:
-        continue
-    try:
-        int(nit)
-    except:
-        continue
-    seen_nits.add(nit)
-    suppliers_list.append({
-        "nit": nit,
-        "nombre": safe_str(row.iloc[1]),
-        "tipoImpuesto": safe_str(row.iloc[2]),
-    })
-
-result = {"inventory": inventory, "orders": orders, "suppliers": suppliers_list}
-print(json.dumps(result, ensure_ascii=False, default=str))
-`;
-
-    // Write parse script to temp
-    const scriptPath = `${LOCAL_DIR}/parse_excel.py`;
-    const { writeFileSync } = await import("fs");
-    writeFileSync(scriptPath, parseScript);
-
-    const { stdout: jsonOut } = await execAsync(`python3 "${scriptPath}"`, { maxBuffer: 50 * 1024 * 1024 });
-    const parsed = JSON.parse(jsonOut);
+    // Parse Excel using xlsx (pure Node.js)
+    console.log("[Sync] Parsing Excel data with xlsx...");
+    const parsed = await parseExcelData(LOCAL_FILE);
 
     console.log(`[Sync] Parsed: ${parsed.inventory.length} inventory, ${parsed.orders.length} orders, ${parsed.suppliers.length} suppliers`);
 

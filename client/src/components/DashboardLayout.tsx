@@ -6,23 +6,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarInset,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
-  useSidebar,
-} from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
-import { useIsMobile } from "@/hooks/useMobile";
-import { LogOut, PanelLeft, Bus, Zap, type LucideIcon } from "lucide-react";
-import { CSSProperties, useEffect, useRef, useState } from "react";
+import { LogOut, Bus, Zap, Menu, X, type LucideIcon } from "lucide-react";
+import { useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
@@ -33,29 +19,18 @@ type NavItem = {
   icon: LucideIcon;
 };
 
-const SIDEBAR_WIDTH_KEY = "sidebar-width";
-const DEFAULT_WIDTH = 260;
-const MIN_WIDTH = 200;
-const MAX_WIDTH = 400;
-
 export default function DashboardLayout({
   children,
-  navItems,
-  title,
+  navItems = [],
+  title = "SOMOS USME // JIT SYSTEM",
 }: {
   children: React.ReactNode;
   navItems?: NavItem[];
   title?: string;
 }) {
-  const [sidebarWidth, setSidebarWidth] = useState(() => {
-    const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
-    return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
-  });
-  const { loading, user } = useAuth();
-
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
-  }, [sidebarWidth]);
+  const { loading, user, logout } = useAuth();
+  const [location, setLocation] = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   if (loading) {
     return <DashboardLayoutSkeleton />;
@@ -93,167 +68,110 @@ export default function DashboardLayout({
     );
   }
 
-  return (
-    <SidebarProvider style={{ "--sidebar-width": `${sidebarWidth}px` } as CSSProperties}>
-      <DashboardLayoutContent
-        setSidebarWidth={setSidebarWidth}
-        navItems={navItems}
-        title={title}
-      >
-        {children}
-      </DashboardLayoutContent>
-    </SidebarProvider>
-  );
-}
-
-type DashboardLayoutContentProps = {
-  children: React.ReactNode;
-  setSidebarWidth: (width: number) => void;
-  navItems?: NavItem[];
-  title?: string;
-};
-
-function DashboardLayoutContent({
-  children,
-  setSidebarWidth,
-  navItems = [],
-  title = "SOMOS USME",
-}: DashboardLayoutContentProps) {
-  const { user, logout } = useAuth();
-  const [location, setLocation] = useLocation();
-  const { state, toggleSidebar } = useSidebar();
-  const isCollapsed = state === "collapsed";
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
   const activeMenuItem = navItems.find((item) => item.href === location);
-  const isMobile = useIsMobile();
-
-  useEffect(() => {
-    if (isCollapsed) setIsResizing(false);
-  }, [isCollapsed]);
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      const sidebarLeft = sidebarRef.current?.getBoundingClientRect().left ?? 0;
-      const newWidth = e.clientX - sidebarLeft;
-      if (newWidth >= MIN_WIDTH && newWidth <= MAX_WIDTH) setSidebarWidth(newWidth);
-    };
-    const handleMouseUp = () => setIsResizing(false);
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "col-resize";
-      document.body.style.userSelect = "none";
-    }
-    return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
-      document.body.style.cursor = "";
-      document.body.style.userSelect = "";
-    };
-  }, [isResizing, setSidebarWidth]);
 
   return (
-    <>
-      <div className="relative" ref={sidebarRef}>
-        <Sidebar collapsible="icon" className="border-r border-neon-pink/10" disableTransition={isResizing}>
-          <SidebarHeader className="h-16 justify-center border-b border-neon-pink/10">
-            <div className="flex items-center gap-3 px-2 transition-all w-full">
+    <div className="flex min-h-screen bg-background">
+      {/* Overlay for mobile menu */}
+      <div
+        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        onClick={() => setMobileOpen(false)}
+      />
+
+      {/* Sidebar — always rendered, visibility via CSS */}
+      <aside
+        className={`fixed top-0 left-0 h-full w-[260px] bg-background border-r border-neon-pink/10 z-50 flex flex-col transition-transform duration-300 md:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:sticky md:top-0 md:h-screen`}
+      >
+        {/* Sidebar Header */}
+        <div className="h-16 flex items-center gap-3 px-4 border-b border-neon-pink/10 shrink-0">
+          <Bus className="h-5 w-5 text-neon-cyan shrink-0" />
+          <span
+            className="font-bold tracking-wider text-neon-cyan truncate text-xs"
+            style={{ fontFamily: "Orbitron" }}
+          >
+            {title}
+          </span>
+          {/* Close button on mobile */}
+          <button
+            className="ml-auto md:hidden h-8 w-8 flex items-center justify-center hover:bg-neon-pink/10 rounded-lg"
+            onClick={() => setMobileOpen(false)}
+          >
+            <X className="h-4 w-4 text-neon-pink" />
+          </button>
+        </div>
+
+        {/* Nav Items */}
+        <nav className="flex-1 overflow-y-auto py-2 px-2">
+          {navItems.map((item) => {
+            const isActive = location === item.href;
+            return (
               <button
-                onClick={toggleSidebar}
-                className="h-8 w-8 flex items-center justify-center hover:bg-neon-pink/10 rounded-lg transition-colors focus:outline-none shrink-0"
-                aria-label="Toggle navigation"
+                key={item.href}
+                onClick={() => {
+                  setLocation(item.href);
+                  setMobileOpen(false);
+                }}
+                className={`w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left ${
+                  isActive
+                    ? "bg-neon-pink/10 text-neon-pink border-l-2 border-neon-pink"
+                    : "hover:bg-neon-cyan/5 hover:text-neon-cyan text-muted-foreground"
+                }`}
               >
-                <PanelLeft className="h-4 w-4 text-neon-pink" />
+                <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-neon-pink" : "text-muted-foreground"}`} />
+                <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 500 }}>{item.label}</span>
               </button>
-              {!isCollapsed && (
-                <div className="flex items-center gap-2 min-w-0">
-                  <Bus className="h-5 w-5 text-neon-cyan shrink-0" />
-                  <span
-                    className="font-bold tracking-wider text-neon-cyan truncate text-xs"
-                    style={{ fontFamily: "Orbitron" }}
-                  >
-                    {title}
-                  </span>
+            );
+          })}
+        </nav>
+
+        {/* User Footer */}
+        <div className="p-3 border-t border-neon-pink/10 shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-neon-pink/10 transition-colors w-full text-left focus:outline-none">
+                <Avatar className="h-9 w-9 border border-neon-cyan/30 shrink-0">
+                  <AvatarFallback className="text-xs font-medium bg-neon-cyan/10 text-neon-cyan">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate leading-none text-foreground">
+                    {user?.name || "-"}
+                  </p>
+                  <p className="text-xs text-neon-pink/60 truncate mt-1">
+                    {user?.email || "Gestor"}
+                  </p>
                 </div>
-              )}
-            </div>
-          </SidebarHeader>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 cyber-card">
+              <DropdownMenuItem onClick={logout} className="cursor-pointer text-neon-red focus:text-neon-red">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar Sesión</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </aside>
 
-          <SidebarContent className="gap-0 py-2">
-            <SidebarMenu className="px-2 py-1 gap-1">
-              {navItems.map((item) => {
-                const isActive = location === item.href;
-                return (
-                  <SidebarMenuItem key={item.href}>
-                    <SidebarMenuButton
-                      isActive={isActive}
-                      onClick={() => setLocation(item.href)}
-                      tooltip={item.label}
-                      className={`h-10 transition-all font-normal ${
-                        isActive
-                          ? "bg-neon-pink/10 text-neon-pink border-l-2 border-neon-pink"
-                          : "hover:bg-neon-cyan/5 hover:text-neon-cyan"
-                      }`}
-                    >
-                      <item.icon className={`h-4 w-4 ${isActive ? "text-neon-pink" : "text-muted-foreground"}`} />
-                      <span style={{ fontFamily: "Rajdhani", fontWeight: 500 }}>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarContent>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Mobile Header */}
+        <header className="md:hidden flex items-center justify-between h-14 px-4 border-b border-neon-pink/10 bg-background/95 backdrop-blur sticky top-0 z-30">
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="h-9 w-9 flex items-center justify-center hover:bg-neon-pink/10 rounded-lg"
+          >
+            <Menu className="h-5 w-5 text-neon-pink" />
+          </button>
+          <span className="text-neon-cyan text-sm font-bold" style={{ fontFamily: "Orbitron" }}>
+            {activeMenuItem?.label ?? "SOMOS USME"}
+          </span>
+          <div className="w-9" />
+        </header>
 
-          <SidebarFooter className="p-3 border-t border-neon-pink/10">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-neon-pink/10 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none">
-                  <Avatar className="h-9 w-9 border border-neon-cyan/30 shrink-0">
-                    <AvatarFallback className="text-xs font-medium bg-neon-cyan/10 text-neon-cyan">
-                      {user?.name?.charAt(0).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
-                    <p className="text-sm font-medium truncate leading-none text-foreground">
-                      {user?.name || "-"}
-                    </p>
-                    <p className="text-xs text-neon-pink/60 truncate mt-1">
-                      {user?.email || "Gestor"}
-                    </p>
-                  </div>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 cyber-card">
-                <DropdownMenuItem onClick={logout} className="cursor-pointer text-neon-red focus:text-neon-red">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarFooter>
-        </Sidebar>
-        <div
-          className={`absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-neon-pink/20 transition-colors ${isCollapsed ? "hidden" : ""}`}
-          onMouseDown={() => { if (!isCollapsed) setIsResizing(true); }}
-          style={{ zIndex: 50 }}
-        />
-      </div>
-
-      <SidebarInset>
-        {isMobile && (
-          <div className="flex border-b border-neon-pink/10 h-14 items-center justify-between bg-background/95 px-2 backdrop-blur sticky top-0 z-40">
-            <div className="flex items-center gap-2">
-              <SidebarTrigger className="h-9 w-9 rounded-lg" />
-              <span className="text-neon-cyan text-sm font-bold" style={{ fontFamily: "Orbitron" }}>
-                {activeMenuItem?.label ?? "SOMOS USME"}
-              </span>
-            </div>
-          </div>
-        )}
         <main className="flex-1 p-4 md:p-6 cyber-grid-bg min-h-screen">{children}</main>
-      </SidebarInset>
-    </>
+      </div>
+    </div>
   );
 }
