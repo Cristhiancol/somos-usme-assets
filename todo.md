@@ -48,3 +48,5 @@
 - [x] Cambiar formato de moneda de USD ($) a COP (pesos colombianos) en todo el dashboard
 - [x] BUG: Error "insertBefore" en dashboard móvil (gráficos Recharts crash en mobile) — SafeChart wrapper + responsive
 - [x] BUG: Sincronización Google Drive falla — migrado de Python a xlsx nativo Node.js, corregido parsing
+- [x] BUG PERSISTENTE: Error insertBefore en producción móvil — eliminado Recharts completamente, gráficos CSS/SVG puros
+- [x] BUG PERSISTENTE: Sincronización falla en producción — sync.trigger llama directamente syncFromGoogleDrive()
