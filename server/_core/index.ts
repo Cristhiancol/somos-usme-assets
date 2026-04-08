@@ -7,6 +7,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { syncFromGoogleDrive } from "../gdrive-sync";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -35,6 +36,26 @@ async function startServer() {
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
+
+  // Google Drive sync endpoint
+  app.post('/api/sync-drive', async (_req, res) => {
+    try {
+      const result = await syncFromGoogleDrive();
+      res.json(result);
+    } catch (error: any) {
+      res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Auto-sync every 15 minutes
+  setInterval(async () => {
+    console.log('[AutoSync] Running scheduled Google Drive sync...');
+    try {
+      await syncFromGoogleDrive();
+    } catch (e) {
+      console.error('[AutoSync] Failed:', e);
+    }
+  }, 15 * 60 * 1000);
   // tRPC API
   app.use(
     "/api/trpc",

@@ -1,17 +1,8 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, double, bigint } from "drizzle-orm/mysql-core";
 
-/**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
- */
+// ── Users (Auth) ──
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +16,109 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// ── Inventory Items (DATA + CONTROL INVENTARIO) ──
+export const inventoryItems = mysqlTable("inventory_items", {
+  id: int("id").autoincrement().primaryKey(),
+  referencia: varchar("referencia", { length: 64 }).notNull(),
+  descripcion: text("descripcion"),
+  parteFabricante: varchar("parteFabricante", { length: 128 }),
+  stockActual: double("stockActual").default(0),
+  costoUnitario: double("costoUnitario").default(0),
+  totalStock: double("totalStock").default(0),
+  cuenta: varchar("cuenta", { length: 64 }), // CAJA, CARROCERIA, COMBUSTIBLE, etc.
+  puntoPedido: double("puntoPedido").default(0),
+  minimo: double("minimo").default(0),
+  maximo: double("maximo").default(0),
+  umEmision: varchar("umEmision", { length: 16 }),
+  claseAbc: varchar("claseAbc", { length: 4 }), // A, B, C
+  usoAnno: double("usoAnno").default(0),
+  usoAnnoAnt: double("usoAnnoAnt").default(0),
+  leadTimeProm: double("leadTimeProm").default(0),
+  rotacionAnno: double("rotacionAnno").default(0),
+  rotacionAnt: double("rotacionAnt").default(0),
+  quiebresAnno: double("quiebresAnno").default(0),
+  quiebresAnt: double("quiebresAnt").default(0),
+  costoPromedio: double("costoPromedio").default(0),
+  ultimoCosto: double("ultimoCosto").default(0),
+  nitProveedor: varchar("nitProveedor", { length: 32 }),
+  bodega: varchar("bodega", { length: 32 }),
+  // CONTROL INVENTARIO enriched fields
+  proveedor: text("proveedor"),
+  consumoAnual: double("consumoAnual").default(0),
+  consumoDiario: double("consumoDiario").default(0),
+  leadTimeDias: double("leadTimeDias").default(0),
+  stockSeguridad: double("stockSeguridad").default(0),
+  puntoReorden: double("puntoReorden").default(0),
+  inventarioDias: double("inventarioDias").default(0),
+  estado: varchar("estado", { length: 32 }), // CRITICO, REORDEN, PRECAUCION, OPTIMO, EXCESO
+  accionRequerida: varchar("accionRequerida", { length: 64 }),
+  cantidadAPedir: double("cantidadAPedir").default(0),
+  valorAPedir: double("valorAPedir").default(0),
+  prioridad: varchar("prioridad", { length: 16 }), // 1-CRITICA, 2-ALTA, 3-MEDIA, 4-BAJA
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InventoryItem = typeof inventoryItems.$inferSelect;
+export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
+
+// ── Purchase Orders (DATA PENDIENTES) ──
+export const purchaseOrders = mysqlTable("purchase_orders", {
+  id: int("id").autoincrement().primaryKey(),
+  ordenCompra: varchar("ordenCompra", { length: 32 }),
+  descripcion: text("descripcion"),
+  qtyOrdenada: double("qtyOrdenada").default(0),
+  um: varchar("um", { length: 16 }),
+  qtyRecibida: double("qtyRecibida").default(0),
+  qtyPendiente: double("qtyPendiente").default(0),
+  costoUnitario: double("costoUnitario").default(0),
+  proveedor: text("proveedor"),
+  parteFabricante: varchar("parteFabricante", { length: 128 }),
+  comprador: varchar("comprador", { length: 128 }),
+  mainsaver: varchar("mainsaver", { length: 64 }),
+  fechaPromesa: timestamp("fechaPromesa"),
+  fechaRequerida: timestamp("fechaRequerida"),
+  valorImpuesto: double("valorImpuesto").default(0),
+  valorPendiente: double("valorPendiente").default(0),
+  diasRetraso: int("diasRetraso").default(0),
+  estado: varchar("estado", { length: 32 }), // PENDIENTE, RECIBIDO PARCIAL, VENCIDO
+  cumplimiento: double("cumplimiento").default(0),
+  prioridad: varchar("prioridad", { length: 16 }), // NORMAL, URGENTE, CRITICO
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
+export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
+
+// ── Suppliers (PROVEEDORES) ──
+export const suppliers = mysqlTable("suppliers", {
+  id: int("id").autoincrement().primaryKey(),
+  nit: varchar("nit", { length: 32 }).notNull(),
+  nombre: text("nombre"),
+  tipoImpuesto: varchar("tipoImpuesto", { length: 16 }),
+  email: varchar("email", { length: 320 }),
+  telefono: varchar("telefono", { length: 32 }),
+  contacto: varchar("contacto", { length: 128 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type InsertSupplier = typeof suppliers.$inferInsert;
+
+// ── Sync Log ──
+export const syncLogs = mysqlTable("sync_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  syncType: varchar("syncType", { length: 32 }).notNull(), // 'gdrive_import', 'manual_import'
+  status: varchar("status", { length: 16 }).notNull(), // 'success', 'error', 'running'
+  itemsProcessed: int("itemsProcessed").default(0),
+  ordersProcessed: int("ordersProcessed").default(0),
+  suppliersProcessed: int("suppliersProcessed").default(0),
+  errorMessage: text("errorMessage"),
+  startedAt: timestamp("startedAt").defaultNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export type SyncLog = typeof syncLogs.$inferSelect;
+export type InsertSyncLog = typeof syncLogs.$inferInsert;
