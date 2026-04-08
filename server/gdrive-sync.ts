@@ -1,7 +1,6 @@
 import { exec } from "child_process";
 import { promisify } from "util";
-import { existsSync, mkdirSync, readFileSync, readdirSync } from "fs";
-import * as XLSX from "xlsx";
+import { readFileSync, existsSync, mkdirSync } from "fs";
 import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } from "./db";
 
 const execAsync = promisify(exec);
@@ -9,189 +8,180 @@ const execAsync = promisify(exec);
 const RCLONE_CONFIG = "/home/ubuntu/.gdrive-rclone.ini";
 const DRIVE_FILE = "DASBOARD SOMOS U - GESTOR 1.xlsx";
 const LOCAL_DIR = "/home/ubuntu/gdrive-sync-temp";
-
-function safeFloat(val: any, def = 0): number {
-  if (val == null || val === "" || val === undefined) return def;
-  const n = Number(val);
-  return isNaN(n) ? def : n;
-}
-
-function safeStr(val: any, def: string | null = null): string | null {
-  if (val == null || val === "" || val === undefined) return def;
-  const s = String(val).trim();
-  return s || def;
-}
-
-function safeDate(val: any): string | null {
-  if (val == null || val === "" || val === undefined) return null;
-  try {
-    if (typeof val === "number") {
-      // Excel serial date
-      const d = XLSX.SSF.parse_date_code(val);
-      if (d) {
-        const dt = new Date(d.y, d.m - 1, d.d, d.H || 0, d.M || 0, d.S || 0);
-        return dt.toISOString().slice(0, 19).replace("T", " ");
-      }
-    }
-    const d = new Date(val);
-    if (isNaN(d.getTime())) return null;
-    return d.toISOString().slice(0, 19).replace("T", " ");
-  } catch {
-    return null;
-  }
-}
-
-function sheetToRows(wb: XLSX.WorkBook, sheetName: string, headerRow = 2): Record<string, any>[] {
-  const ws = wb.Sheets[sheetName];
-  if (!ws) return [];
-  const raw: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1, defval: null });
-  if (raw.length <= headerRow || headerRow < 0) return [];
-  const headerArr = raw[headerRow];
-  if (!headerArr || !Array.isArray(headerArr)) return [];
-  const headers = headerArr.map((h: any) => (h ? String(h).trim() : ""));
-  const rows: Record<string, any>[] = [];
-  for (let i = headerRow + 1; i < raw.length; i++) {
-    const rawRow = raw[i];
-    if (!rawRow || !Array.isArray(rawRow)) continue;
-    const row: Record<string, any> = {};
-    for (let j = 0; j < headers.length; j++) {
-      if (headers[j]) row[headers[j]] = rawRow[j] ?? null;
-    }
-    rows.push(row);
-  }
-  return rows;
-}
+const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
 
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   try {
+    // Ensure temp dir exists
     if (!existsSync(LOCAL_DIR)) mkdirSync(LOCAL_DIR, { recursive: true });
 
     // Download file from Google Drive using rclone
     console.log("[Sync] Downloading from Google Drive...");
-    await execAsync(
+    const { stdout, stderr } = await execAsync(
       `rclone copy "manus_google_drive:${DRIVE_FILE}" "${LOCAL_DIR}/" --config "${RCLONE_CONFIG}" -v 2>&1`
     );
 
-    // Find downloaded xlsx
-    const files = readdirSync(LOCAL_DIR).filter(f => f.endsWith(".xlsx"));
-    if (files.length === 0) throw new Error("No xlsx file found after download");
+    // Rename to consistent name
+    const { stdout: lsOut } = await execAsync(`ls "${LOCAL_DIR}/"`)
+    const files = lsOut.trim().split('\n').filter(f => f.endsWith('.xlsx'));
+    if (files.length === 0) {
+      throw new Error("No xlsx file found after download");
+    }
+
     const downloadedFile = `${LOCAL_DIR}/${files[0]}`;
 
-    // Parse Excel using xlsx (pure JS, no Python dependency)
-    console.log("[Sync] Parsing Excel data with xlsx...");
-    const buf = readFileSync(downloadedFile);
-    const wb = XLSX.read(buf, { type: "buffer", cellDates: true });
+    // Parse Excel using Python (most reliable for complex xlsx)
+    console.log("[Sync] Parsing Excel data...");
+    const parseScript = `
+import pandas as pd
+import json
+import math
+import sys
 
-    // Parse CONTROL INVENTARIO
-    const ctrlRows = sheetToRows(wb, "CONTROL INVENTARIO", 2);
-    // Parse DATA for lookup
-    const dataRows = sheetToRows(wb, "DATA", 2);
-    const dataLookup: Record<string, Record<string, any>> = {};
-    for (const row of dataRows) {
-      const ref = safeStr(row["REFERENCIA"]);
-      if (ref) dataLookup[ref] = row;
+def safe_float(val, default=0):
+    if val is None or (isinstance(val, float) and math.isnan(val)):
+        return default
+    try:
+        return float(val)
+    except:
+        return default
+
+def safe_str(val, default=None):
+    if val is None or (isinstance(val, float) and math.isnan(val)):
+        return default
+    return str(val).strip() if str(val).strip() else default
+
+def safe_date(val):
+    if val is None or (isinstance(val, float) and math.isnan(val)):
+        return None
+    try:
+        ts = pd.Timestamp(val)
+        if pd.isna(ts):
+            return None
+        return ts.strftime('%Y-%m-%d %H:%M:%S')
+    except:
+        return None
+
+xlsx = pd.ExcelFile('${downloadedFile.replace(/'/g, "\\'")}')
+
+df_ctrl = pd.read_excel(xlsx, 'CONTROL INVENTARIO', header=2)
+df_data = pd.read_excel(xlsx, 'DATA', header=2)
+
+data_lookup = {}
+for _, row in df_data.iterrows():
+    ref = safe_str(row.get('REFERENCIA'))
+    if ref:
+        data_lookup[ref] = row
+
+inventory = []
+for _, row in df_ctrl.iterrows():
+    ref = safe_str(row.get('REFERENCIA'))
+    if not ref:
+        continue
+    data_row = data_lookup.get(ref, {})
+    item = {
+        "referencia": ref,
+        "descripcion": safe_str(row.get('DESCRIPCION')),
+        "parteFabricante": safe_str(row.get('FABRICANTES')),
+        "stockActual": safe_float(row.get('STOCK ACTUAL')),
+        "costoUnitario": safe_float(row.get('COSTO UNIT.')),
+        "totalStock": safe_float(row.get('VALOR INVENTARIO')),
+        "cuenta": safe_str(row.get('CUENTA')),
+        "puntoPedido": safe_float(data_row.get('PUNTO PEDIDO') if isinstance(data_row, pd.Series) else 0),
+        "minimo": safe_float(data_row.get('MINIMO') if isinstance(data_row, pd.Series) else 0),
+        "maximo": safe_float(data_row.get('MAXIMO') if isinstance(data_row, pd.Series) else 0),
+        "umEmision": safe_str(row.get('UM')),
+        "claseAbc": safe_str(row.get('CLASE ABC')),
+        "usoAnno": safe_float(data_row.get('USO ANNO') if isinstance(data_row, pd.Series) else 0),
+        "usoAnnoAnt": safe_float(data_row.get('USO ANNO ANT.') if isinstance(data_row, pd.Series) else 0),
+        "leadTimeProm": safe_float(data_row.get('LEAD TIME PROM.') if isinstance(data_row, pd.Series) else 0),
+        "rotacionAnno": safe_float(data_row.get('ROTACION ANNO') if isinstance(data_row, pd.Series) else 0),
+        "rotacionAnt": safe_float(data_row.get('ROTACION ANT.') if isinstance(data_row, pd.Series) else 0),
+        "quiebresAnno": safe_float(data_row.get('QUIEBRES ANNO') if isinstance(data_row, pd.Series) else 0),
+        "quiebresAnt": safe_float(data_row.get('QUIEBRES ANT.') if isinstance(data_row, pd.Series) else 0),
+        "costoPromedio": safe_float(data_row.get('COSTO PROM.') if isinstance(data_row, pd.Series) else 0),
+        "ultimoCosto": safe_float(data_row.get('ULTIMO COSTO') if isinstance(data_row, pd.Series) else 0),
+        "nitProveedor": safe_str(row.get('NIT PROVEEDOR')),
+        "bodega": safe_str(row.get('BODEGA')),
+        "proveedor": safe_str(row.get('PROVEEDOR')),
+        "consumoAnual": safe_float(row.get('CONSUMO ANUAL')),
+        "consumoDiario": safe_float(row.get('CONSUMO DIARIO')),
+        "leadTimeDias": safe_float(row.get('LEAD TIME (dias)')),
+        "stockSeguridad": safe_float(row.get('STOCK SEGURIDAD')),
+        "puntoReorden": safe_float(row.get('PUNTO REORDEN')),
+        "inventarioDias": safe_float(row.get('INVENTARIO (dias)')),
+        "estado": safe_str(row.get('ESTADO')),
+        "accionRequerida": safe_str(row.get('ACCION REQUERIDA')),
+        "cantidadAPedir": safe_float(row.get('CANTIDAD A PEDIR')),
+        "valorAPedir": safe_float(row.get('VALOR A PEDIR')),
+        "prioridad": safe_str(row.get('PRIORIDAD')),
     }
+    inventory.append(item)
 
-    const inventory = [];
-    for (const row of ctrlRows) {
-      const ref = safeStr(row["REFERENCIA"]);
-      if (!ref) continue;
-      const dr = dataLookup[ref] || {};
-      inventory.push({
-        referencia: ref,
-        descripcion: safeStr(row["DESCRIPCION"]),
-        parteFabricante: safeStr(row["FABRICANTES"]),
-        stockActual: safeFloat(row["STOCK ACTUAL"]),
-        costoUnitario: safeFloat(row["COSTO UNIT."]),
-        totalStock: safeFloat(row["VALOR INVENTARIO"]),
-        cuenta: safeStr(row["CUENTA"]),
-        puntoPedido: safeFloat(dr["PUNTO PEDIDO"]),
-        minimo: safeFloat(dr["MINIMO"]),
-        maximo: safeFloat(dr["MAXIMO"]),
-        umEmision: safeStr(row["UM"]),
-        claseAbc: safeStr(row["CLASE ABC"]),
-        usoAnno: safeFloat(dr["USO ANNO"]),
-        usoAnnoAnt: safeFloat(dr["USO ANNO ANT."]),
-        leadTimeProm: safeFloat(dr["LEAD TIME PROM."]),
-        rotacionAnno: safeFloat(dr["ROTACION ANNO"]),
-        rotacionAnt: safeFloat(dr["ROTACION ANT."]),
-        quiebresAnno: safeFloat(dr["QUIEBRES ANNO"]),
-        quiebresAnt: safeFloat(dr["QUIEBRES ANT."]),
-        costoPromedio: safeFloat(dr["COSTO PROM."]),
-        ultimoCosto: safeFloat(dr["ULTIMO COSTO"]),
-        nitProveedor: safeStr(row["NIT PROVEEDOR"]),
-        bodega: safeStr(row["BODEGA"]),
-        proveedor: safeStr(row["PROVEEDOR"]),
-        consumoAnual: safeFloat(row["CONSUMO ANUAL"]),
-        consumoDiario: safeFloat(row["CONSUMO DIARIO"]),
-        leadTimeDias: safeFloat(row["LEAD TIME (dias)"]),
-        stockSeguridad: safeFloat(row["STOCK SEGURIDAD"]),
-        puntoReorden: safeFloat(row["PUNTO REORDEN"]),
-        inventarioDias: safeFloat(row["INVENTARIO (dias)"]),
-        estado: safeStr(row["ESTADO"]),
-        accionRequerida: safeStr(row["ACCION REQUERIDA"]),
-        cantidadAPedir: safeFloat(row["CANTIDAD A PEDIR"]),
-        valorAPedir: safeFloat(row["VALOR A PEDIR"]),
-        prioridad: safeStr(row["PRIORIDAD"]),
-      });
-    }
+df_pend = pd.read_excel(xlsx, 'DATA PENDIENTES', header=2)
+orders = []
+for _, row in df_pend.iterrows():
+    oc = safe_str(row.get('ORDEN COMPRA'))
+    if not oc:
+        continue
+    orders.append({
+        "ordenCompra": oc,
+        "descripcion": safe_str(row.get('DESCRIPCION')),
+        "qtyOrdenada": safe_float(row.get('QTY ORDENADA')),
+        "um": safe_str(row.get('UM')),
+        "qtyRecibida": safe_float(row.get('QTY RECIBIDA')),
+        "qtyPendiente": safe_float(row.get('QTY PENDIENTE')),
+        "costoUnitario": safe_float(row.get('COSTO UNIT.')),
+        "proveedor": safe_str(row.get('PROVEEDOR')),
+        "parteFabricante": safe_str(row.get('PARTE FABRICANTE')),
+        "comprador": safe_str(row.get('COMPRADOR')),
+        "mainsaver": safe_str(row.get('MAINSAVER')),
+        "fechaPromesa": safe_date(row.get('FECHA PROMESA')),
+        "fechaRequerida": safe_date(row.get('FECHA REQUERIDA')),
+        "valorImpuesto": safe_float(row.get('VALOR IMPUESTO')),
+        "valorPendiente": safe_float(row.get('VALOR PENDIENTE')),
+        "diasRetraso": int(safe_float(row.get('DIAS RETRASO'))),
+        "estado": safe_str(row.get('ESTADO')),
+        "cumplimiento": safe_float(row.get('CUMPLIMIENTO')),
+        "prioridad": safe_str(row.get('PRIORIDAD')),
+    })
 
-    // Parse DATA PENDIENTES
-    const pendRows = sheetToRows(wb, "DATA PENDIENTES", 2);
-    const orders = [];
-    for (const row of pendRows) {
-      const oc = safeStr(row["ORDEN COMPRA"]);
-      if (!oc) continue;
-      orders.push({
-        ordenCompra: oc,
-        descripcion: safeStr(row["DESCRIPCION"]),
-        qtyOrdenada: safeFloat(row["QTY ORDENADA"]),
-        um: safeStr(row["UM"]),
-        qtyRecibida: safeFloat(row["QTY RECIBIDA"]),
-        qtyPendiente: safeFloat(row["QTY PENDIENTE"]),
-        costoUnitario: safeFloat(row["COSTO UNIT."]),
-        proveedor: safeStr(row["PROVEEDOR"]),
-        parteFabricante: safeStr(row["PARTE FABRICANTE"]),
-        comprador: safeStr(row["COMPRADOR"]),
-        mainsaver: safeStr(row["MAINSAVER"]),
-        fechaPromesa: safeDate(row["FECHA PROMESA"]),
-        fechaRequerida: safeDate(row["FECHA REQUERIDA"]),
-        valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
-        valorPendiente: safeFloat(row["VALOR PENDIENTE"]),
-        diasRetraso: Math.round(safeFloat(row["DIAS RETRASO"])),
-        estado: safeStr(row["ESTADO"]),
-        cumplimiento: safeFloat(row["CUMPLIMIENTO"]),
-        prioridad: safeStr(row["PRIORIDAD"]),
-      });
-    }
+df_prov = pd.read_excel(xlsx, 'PROVEEDORES', header=None)
+suppliers_list = []
+seen_nits = set()
+for _, row in df_prov.iterrows():
+    nit = safe_str(row.iloc[0])
+    if not nit or nit in seen_nits:
+        continue
+    try:
+        int(nit)
+    except:
+        continue
+    seen_nits.add(nit)
+    suppliers_list.append({
+        "nit": nit,
+        "nombre": safe_str(row.iloc[1]),
+        "tipoImpuesto": safe_str(row.iloc[2]),
+    })
 
-    // Parse PROVEEDORES - has header row at index 0
-    const provWs = wb.Sheets["PROVEEDORES"];
-    const provRaw: any[][] = provWs ? XLSX.utils.sheet_to_json(provWs, { header: 1, defval: null }) : [];
-    const suppliers_list: { nit: string; nombre: string | null; tipoImpuesto: string | null }[] = [];
-    const seenNits = new Set<string>();
-    // Skip header row (index 0), start from index 1
-    for (let i = 1; i < provRaw.length; i++) {
-      const row = provRaw[i];
-      if (!row || !Array.isArray(row)) continue;
-      const nit = safeStr(row[0]);
-      if (!nit || seenNits.has(nit)) continue;
-      // Only include numeric NITs
-      if (!/^\d+/.test(nit)) continue;
-      seenNits.add(nit);
-      suppliers_list.push({
-        nit,
-        nombre: safeStr(row[1]),
-        tipoImpuesto: safeStr(row[2]),
-      });
-    }
+result = {"inventory": inventory, "orders": orders, "suppliers": suppliers_list}
+print(json.dumps(result, ensure_ascii=False, default=str))
+`;
 
-    console.log(`[Sync] Parsed: ${inventory.length} inventory, ${orders.length} orders, ${suppliers_list.length} suppliers`);
+    // Write parse script to temp
+    const scriptPath = `${LOCAL_DIR}/parse_excel.py`;
+    const { writeFileSync } = await import("fs");
+    writeFileSync(scriptPath, parseScript);
+
+    const { stdout: jsonOut } = await execAsync(`python3 "${scriptPath}"`, { maxBuffer: 50 * 1024 * 1024 });
+    const parsed = JSON.parse(jsonOut);
+
+    console.log(`[Sync] Parsed: ${parsed.inventory.length} inventory, ${parsed.orders.length} orders, ${parsed.suppliers.length} suppliers`);
 
     // Upsert to database
-    const itemsCount = await bulkUpsertInventory(inventory);
-    const ordersCount = await bulkUpsertOrders(orders);
-    const suppliersCount = await bulkUpsertSuppliers(suppliers_list);
+    const itemsCount = await bulkUpsertInventory(parsed.inventory);
+    const ordersCount = await bulkUpsertOrders(parsed.orders);
+    const suppliersCount = await bulkUpsertSuppliers(parsed.suppliers);
 
     await logSync({
       syncType: "gdrive_import",
