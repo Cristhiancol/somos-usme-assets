@@ -4,10 +4,11 @@ import { Loader2, Package, DollarSign, AlertTriangle, ShoppingCart, TrendingUp, 
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 
 function formatCurrency(val: number) {
-  if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
-  if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
-  if (val >= 1e3) return `$${(val / 1e3).toFixed(0)}K`;
-  return `$${val.toFixed(0)}`;
+  // Formato en pesos colombianos
+  if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
+  if (val >= 1e6) return `${(val / 1e6).toFixed(1)}M COP`;
+  if (val >= 1e3) return `${(val / 1e3).toFixed(0)}K COP`;
+  return `${val.toFixed(0)} COP`;
 }
 
 function formatNumber(val: number) {
