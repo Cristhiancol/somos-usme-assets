@@ -3,14 +3,78 @@ import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } f
 
 const LOCAL_DIR = "/tmp/gdrive-sync-temp";
 const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
+const DATA_FILE = "/home/ubuntu/somos-usme-assets/data/DASBOARD_SOMOS_U_GESTOR_1.xlsx";
 
 // Google Drive file ID — we find it dynamically via search
 const DRIVE_FILE_NAME = "DASBOARD SOMOS U - GESTOR 1.xlsx";
 
 /**
- * Get rclone token from config file (available in sandbox and production)
+ * Check if local data file exists (use it as primary source)
+ */
+function useLocalFile(): boolean {
+  return existsSync(DATA_FILE);
+}
+
+/**
+ * Get file data (local file or Google Drive)
+ */
+async function getFileData(): Promise<Buffer> {
+  // Use local file if it exists (primary source)
+  if (useLocalFile()) {
+    console.log("[Sync] Using local data file...");
+    return readFileSync(DATA_FILE);
+  }
+
+  // Fallback to Google Drive (if configured)
+  console.log("[Sync] Local file not found, attempting Google Drive...");
+  const token = getRcloneToken();
+  if (!token) {
+    throw new Error("No local file and no Google Drive token available");
+  }
+
+  const query = encodeURIComponent(`name = '${DRIVE_FILE_NAME}' and trashed = false`);
+  const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`;
+  const searchRes = await fetch(searchUrl, {
+    headers: { Authorization: `Bearer ${token.access_token}` },
+  });
+  if (!searchRes.ok) {
+    throw new Error(`Drive search failed: ${searchRes.status} ${await searchRes.text()}`);
+  }
+  const searchData = await searchRes.json();
+  if (!searchData.files || searchData.files.length === 0) {
+    throw new Error("File not found in Google Drive");
+  }
+
+  const fileId = searchData.files[0].id;
+  console.log(`[Sync] Found file ID: ${fileId}. Downloading...`);
+  const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+  const downloadRes = await fetch(downloadUrl, {
+    headers: { Authorization: `Bearer ${token.access_token}` },
+  });
+  if (!downloadRes.ok) {
+    throw new Error(`Drive download failed: ${downloadRes.status} ${await downloadRes.text()}`);
+  }
+  const arrayBuffer = await downloadRes.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+}
+
+/**
+ * Get Google Drive token from environment variable or config file
+ * Priority: env var > config file
  */
 function getRcloneToken(): { access_token: string; token_type: string } | null {
+  // Try environment variable first (for production)
+  const envToken = process.env.GDRIVE_TOKEN;
+  if (envToken) {
+    try {
+      return JSON.parse(envToken);
+    } catch {
+      console.error("[Sync] Invalid GDRIVE_TOKEN in environment");
+      return null;
+    }
+  }
+
+  // Fallback to config file (for development)
   const configPath = "/home/ubuntu/.gdrive-rclone.ini";
   try {
     if (!existsSync(configPath)) return null;
@@ -21,40 +85,6 @@ function getRcloneToken(): { access_token: string; token_type: string } | null {
   } catch {
     return null;
   }
-}
-
-/**
- * Search for the file in Google Drive by name
- */
-async function findFileInDrive(accessToken: string): Promise<string | null> {
-  const query = encodeURIComponent(`name = '${DRIVE_FILE_NAME}' and trashed = false`);
-  const url = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) {
-    throw new Error(`Drive search failed: ${res.status} ${await res.text()}`);
-  }
-  const data = await res.json();
-  if (data.files && data.files.length > 0) {
-    return data.files[0].id;
-  }
-  return null;
-}
-
-/**
- * Download file from Google Drive by file ID
- */
-async function downloadFileFromDrive(accessToken: string, fileId: string): Promise<Buffer> {
-  const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  });
-  if (!res.ok) {
-    throw new Error(`Drive download failed: ${res.status} ${await res.text()}`);
-  }
-  const arrayBuffer = await res.arrayBuffer();
-  return Buffer.from(arrayBuffer);
 }
 
 /**
@@ -236,20 +266,8 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     // Ensure temp dir exists
     if (!existsSync(LOCAL_DIR)) mkdirSync(LOCAL_DIR, { recursive: true });
 
-    // Get access token from rclone config
-    const token = getRcloneToken();
-    if (!token) {
-      throw new Error("No se encontró token de Google Drive. Verifica la configuración.");
-    }
-
-    console.log("[Sync] Searching for file in Google Drive...");
-    const fileId = await findFileInDrive(token.access_token);
-    if (!fileId) {
-      throw new Error(`No se encontró el archivo '${DRIVE_FILE_NAME}' en Google Drive`);
-    }
-
-    console.log(`[Sync] Found file ID: ${fileId}. Downloading...`);
-    const fileBuffer = await downloadFileFromDrive(token.access_token, fileId);
+    // Get file data (local or Google Drive)
+    const fileBuffer = await getFileData();
     writeFileSync(LOCAL_FILE, fileBuffer);
     console.log(`[Sync] Downloaded ${(fileBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
