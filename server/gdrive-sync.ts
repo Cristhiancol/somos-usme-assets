@@ -62,9 +62,9 @@ async function downloadFileFromDrive(accessToken: string, fileId: string): Promi
  */
 async function parseExcelData(filePath: string) {
   // Dynamic import for ESM compatibility
-  const XLSX = await import("xlsx");
+  const { read, utils } = await import("xlsx");
   const fileData = readFileSync(filePath);
-  const workbook = XLSX.read(fileData, { type: "buffer" });
+  const workbook = read(fileData, { type: "buffer" });
 
   // Helper functions
   function safeFloat(val: any, def = 0): number {
@@ -100,7 +100,7 @@ async function parseExcelData(filePath: string) {
   function sheetToRows(sheetName: string, headerRow = 2): Record<string, any>[] {
     const sheet = workbook.Sheets[sheetName];
     if (!sheet) return [];
-    const raw = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: null });
+    const raw = utils.sheet_to_json(sheet, { header: 1, defval: null });
     if (!raw || raw.length <= headerRow) return [];
     const headers = (raw[headerRow] as any[]) || [];
     const rows: Record<string, any>[] = [];
@@ -211,7 +211,7 @@ async function parseExcelData(filePath: string) {
   const provSheet = workbook.Sheets["PROVEEDORES"];
   const suppliers: { nit: string; nombre: string | null; tipoImpuesto: string | null }[] = [];
   if (provSheet) {
-    const provRaw = XLSX.utils.sheet_to_json(provSheet, { header: 1, defval: null });
+    const provRaw = utils.sheet_to_json(provSheet, { header: 1, defval: null });
     const seenNits = new Set<string>();
     for (const row of provRaw as any[][]) {
       if (!row) continue;

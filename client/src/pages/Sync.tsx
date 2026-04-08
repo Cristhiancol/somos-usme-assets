@@ -3,38 +3,49 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, CheckCircle, XCircle, Clock, Cloud, Bell } from "lucide-react";
 import { useState } from "react";
-import { toast } from "sonner";
 
 export default function SyncPage() {
   const { data: lastSync, isLoading, refetch } = trpc.sync.lastSync.useQuery();
   const syncMutation = trpc.sync.trigger.useMutation({
     onSuccess: (res: any) => {
       if (res.success) {
-        toast.success(res.message || "Sincronización exitosa");
+        setStatusMsg({ type: "success", text: res.message || "Sincronización exitosa" });
         refetch();
       } else {
-        toast.error(res.message || "Error en sincronización");
+        setStatusMsg({ type: "error", text: res.message || "Error en sincronización" });
       }
     },
-    onError: (err) => toast.error(err.message),
+    onError: (err) => setStatusMsg({ type: "error", text: err.message }),
   });
 
   const notifyDelayed = trpc.notifications.sendDelayedOrdersAlert.useMutation({
     onSuccess: (res) => {
-      if (res.sent) toast.success(`Alerta enviada: ${res.count} órdenes con retraso`);
-      else toast.info(res.message);
+      if (res.sent) setStatusMsg({ type: "success", text: `Alerta enviada: ${res.count} órdenes con retraso` });
+      else setStatusMsg({ type: "info", text: res.message || "Sin órdenes con retraso" });
     },
   });
 
+  const [statusMsg, setStatusMsg] = useState<{ type: string; text: string } | null>(null);
+
   const notifyCritical = trpc.notifications.sendCriticalStockAlert.useMutation({
     onSuccess: (res) => {
-      if (res.sent) toast.success(`Alerta enviada: ${res.count} productos en stock cero`);
-      else toast.info(res.message);
+      if (res.sent) setStatusMsg({ type: "success", text: `Alerta enviada: ${res.count} productos en stock cero` });
+      else setStatusMsg({ type: "info", text: res.message || "Sin productos en stock cero" });
     },
   });
 
   return (
     <div className="space-y-6">
+      {statusMsg && (
+        <div className={`p-3 rounded-lg border text-sm mb-4 ${
+          statusMsg.type === "success" ? "bg-green-500/10 border-green-500/30 text-green-400" :
+          statusMsg.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-400" :
+          "bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
+        }`} style={{ fontFamily: "Rajdhani" }}>
+          {statusMsg.text}
+          <button onClick={() => setStatusMsg(null)} className="ml-2 opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
       <div className="flex items-center gap-3">
         <RefreshCw className="h-6 w-6 text-neon-green" />
         <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>

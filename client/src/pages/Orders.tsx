@@ -1,12 +1,10 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, ShoppingCart, Bell } from "lucide-react";
 import { useState, useMemo } from "react";
-import { toast } from "sonner";
 
 function formatCurrency(val: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
@@ -32,6 +30,25 @@ function getEstadoBadge(e: string | null) {
   return <Badge variant="outline" className={`text-[10px] ${map[e] || ""}`}>{e}</Badge>;
 }
 
+function CyberSelect({ value, onChange, placeholder, options }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-9 w-full rounded-md border border-neon-pink/20 bg-cyber-dark px-3 py-1 text-sm text-foreground shadow-xs outline-none focus:border-neon-pink/50 focus:ring-1 focus:ring-neon-pink/30 appearance-none cursor-pointer"
+      style={{ fontFamily: "Rajdhani", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff2d95' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+    >
+      <option value="">{placeholder}</option>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  );
+}
+
 export default function OrdersPage() {
   const [search, setSearch] = useState("");
   const [estado, setEstado] = useState("");
@@ -44,12 +61,13 @@ export default function OrdersPage() {
   }), [search, estado, prioridad]);
 
   const { data, isLoading } = trpc.orders.list.useQuery(input);
+  const [alertMsg, setAlertMsg] = useState<string | null>(null);
   const notifyDelayed = trpc.notifications.sendDelayedOrdersAlert.useMutation({
     onSuccess: (res) => {
-      if (res.sent) toast.success(`Alerta enviada: ${res.count} órdenes con retraso`);
-      else toast.info(res.message);
+      if (res.sent) setAlertMsg(`Alerta enviada: ${res.count} órdenes con retraso`);
+      else setAlertMsg(res.message || "Sin órdenes con retraso");
     },
-    onError: () => toast.error("Error al enviar notificación"),
+    onError: () => setAlertMsg("Error al enviar notificación"),
   });
 
   const totalPendingValue = (data || []).reduce((s, o) => s + (o.valorPendiente || 0), 0);
@@ -78,6 +96,13 @@ export default function OrdersPage() {
         </Button>
       </div>
 
+      {alertMsg && (
+        <div className="p-3 rounded-lg border border-neon-cyan/30 bg-neon-cyan/10 text-neon-cyan text-sm" style={{ fontFamily: "Rajdhani" }}>
+          {alertMsg}
+          <button onClick={() => setAlertMsg(null)} className="ml-3 text-xs opacity-60 hover:opacity-100">✕</button>
+        </div>
+      )}
+
       {/* Filters */}
       <Card className="cyber-card p-4 rounded-xl">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -91,24 +116,26 @@ export default function OrdersPage() {
               style={{ fontFamily: "Rajdhani" }}
             />
           </div>
-          <Select value={estado} onValueChange={(v) => setEstado(v === "ALL" ? "" : v)}>
-            <SelectTrigger className="bg-cyber-dark border-neon-pink/20"><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent className="cyber-card">
-              <SelectItem value="ALL">Todos</SelectItem>
-              <SelectItem value="PENDIENTE">Pendiente</SelectItem>
-              <SelectItem value="RECIBIDO PARCIAL">Recibido Parcial</SelectItem>
-              <SelectItem value="VENCIDO">Vencido</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={prioridad} onValueChange={(v) => setPrioridad(v === "ALL" ? "" : v)}>
-            <SelectTrigger className="bg-cyber-dark border-neon-pink/20"><SelectValue placeholder="Prioridad" /></SelectTrigger>
-            <SelectContent className="cyber-card">
-              <SelectItem value="ALL">Todas</SelectItem>
-              <SelectItem value="CRITICO">Crítico</SelectItem>
-              <SelectItem value="URGENTE">Urgente</SelectItem>
-              <SelectItem value="NORMAL">Normal</SelectItem>
-            </SelectContent>
-          </Select>
+          <CyberSelect
+            value={estado}
+            onChange={(v) => setEstado(v)}
+            placeholder="Todos los estados"
+            options={[
+              { value: "PENDIENTE", label: "Pendiente" },
+              { value: "RECIBIDO PARCIAL", label: "Recibido Parcial" },
+              { value: "VENCIDO", label: "Vencido" },
+            ]}
+          />
+          <CyberSelect
+            value={prioridad}
+            onChange={(v) => setPrioridad(v)}
+            placeholder="Todas las prioridades"
+            options={[
+              { value: "CRITICO", label: "Crítico" },
+              { value: "URGENTE", label: "Urgente" },
+              { value: "NORMAL", label: "Normal" },
+            ]}
+          />
         </div>
       </Card>
 

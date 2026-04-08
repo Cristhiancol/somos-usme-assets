@@ -1,17 +1,9 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { getLoginUrl } from "@/const";
 import { LogOut, Bus, Zap, Menu, X, type LucideIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
-import { Button } from "./ui/button";
 
 type NavItem = {
   label: string;
@@ -31,6 +23,21 @@ export default function DashboardLayout({
   const { loading, user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close user menu on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    if (userMenuOpen) {
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }
+  }, [userMenuOpen]);
 
   if (loading) {
     return <DashboardLayoutSkeleton />;
@@ -55,14 +62,13 @@ export default function DashboardLayout({
               Gestión de Flota 260 Buses
             </p>
           </div>
-          <Button
+          <button
             onClick={() => { window.location.href = getLoginUrl(); }}
-            size="lg"
-            className="w-full bg-neon-pink/20 border border-neon-pink/50 text-neon-pink hover:bg-neon-pink/30 hover:shadow-[0_0_20px_oklch(0.7_0.25_350/0.3)] transition-all"
+            className="w-full h-11 rounded-lg bg-neon-pink/20 border border-neon-pink/50 text-neon-pink hover:bg-neon-pink/30 hover:shadow-[0_0_20px_oklch(0.7_0.25_350/0.3)] transition-all font-bold tracking-wider"
             style={{ fontFamily: 'Orbitron' }}
           >
             INICIAR SESIÓN
-          </Button>
+          </button>
         </div>
       </div>
     );
@@ -78,7 +84,7 @@ export default function DashboardLayout({
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* Sidebar — always rendered, visibility via CSS */}
+      {/* Sidebar — always rendered, visibility via CSS transform */}
       <aside
         className={`fixed top-0 left-0 h-full w-[260px] bg-background border-r border-neon-pink/10 z-50 flex flex-col transition-transform duration-300 md:translate-x-0 ${mobileOpen ? "translate-x-0" : "-translate-x-full"} md:sticky md:top-0 md:h-screen`}
       >
@@ -91,7 +97,6 @@ export default function DashboardLayout({
           >
             {title}
           </span>
-          {/* Close button on mobile */}
           <button
             className="ml-auto md:hidden h-8 w-8 flex items-center justify-center hover:bg-neon-pink/10 rounded-lg"
             onClick={() => setMobileOpen(false)}
@@ -124,33 +129,41 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        {/* User Footer */}
-        <div className="p-3 border-t border-neon-pink/10 shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-neon-pink/10 transition-colors w-full text-left focus:outline-none">
-                <Avatar className="h-9 w-9 border border-neon-cyan/30 shrink-0">
-                  <AvatarFallback className="text-xs font-medium bg-neon-cyan/10 text-neon-cyan">
-                    {user?.name?.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate leading-none text-foreground">
-                    {user?.name || "-"}
-                  </p>
-                  <p className="text-xs text-neon-pink/60 truncate mt-1">
-                    {user?.email || "Gestor"}
-                  </p>
-                </div>
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 cyber-card">
-              <DropdownMenuItem onClick={logout} className="cursor-pointer text-neon-red focus:text-neon-red">
-                <LogOut className="mr-2 h-4 w-4" />
+        {/* User Footer — CSS-only dropdown, NO Radix Portal */}
+        <div className="p-3 border-t border-neon-pink/10 shrink-0 relative" ref={userMenuRef}>
+          {/* User menu popup */}
+          {userMenuOpen && (
+            <div className="absolute bottom-full left-3 right-3 mb-2 rounded-lg border border-neon-pink/20 bg-background shadow-lg shadow-neon-pink/10 overflow-hidden">
+              <button
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
                 <span>Cerrar Sesión</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              </button>
+            </div>
+          )}
+          <button
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-neon-pink/10 transition-colors w-full text-left focus:outline-none"
+          >
+            <div className="h-9 w-9 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 flex items-center justify-center shrink-0">
+              <span className="text-xs font-medium text-neon-cyan">
+                {user?.name?.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate leading-none text-foreground">
+                {user?.name || "-"}
+              </p>
+              <p className="text-xs text-neon-pink/60 truncate mt-1">
+                {user?.email || "Gestor"}
+              </p>
+            </div>
+          </button>
         </div>
       </aside>
 

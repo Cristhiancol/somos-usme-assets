@@ -53,3 +53,8 @@
 - [x] FIX DEFINITIVO: Eliminar Sidebar Radix UI que causa insertBefore en móvil — DashboardLayout reescrito CSS puro
 - [x] FIX DEFINITIVO: Reemplazar rclone por Google Drive API HTTP nativa para producción — usa googleapis.com directamente
 - [x] AUDITORÍA: Todas las páginas verificadas — 0 Recharts, 0 Sidebar Radix, 0 useIsMobile, 0 rclone
+- [x] AUDITORÍA FINAL: Select de Radix reemplazado por CyberSelect (HTML nativo <select>) en Inventory.tsx y Orders.tsx
+- [x] AUDITORÍA FINAL: App.tsx limpio — sin TooltipProvider, Toaster, Sonner, ni componentes Radix con Portal
+- [x] AUDITORÍA FINAL: DashboardLayout usa CSS puro — sin imports de @radix-ui
+- [x] AUDITORÍA FINAL: Bundle de producción verificado — solo Radix Slot (sin Portal), insertBefore solo de React DOM interno
+- [x] AUDITORÍA FINAL: 0 errores en consola del navegador, 0 errores de red, 11 tests pasando

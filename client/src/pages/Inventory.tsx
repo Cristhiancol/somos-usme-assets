@@ -1,7 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, Package, ChevronLeft, ChevronRight } from "lucide-react";
@@ -27,6 +26,25 @@ function getEstadoBadge(estado: string | null) {
   return <Badge variant="outline" className={`text-[10px] ${map[estado] || ""}`}>{estado}</Badge>;
 }
 
+function CyberSelect({ value, onChange, placeholder, options }: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-9 w-full rounded-md border border-neon-pink/20 bg-cyber-dark px-3 py-1 text-sm text-foreground shadow-xs outline-none focus:border-neon-pink/50 focus:ring-1 focus:ring-neon-pink/30 appearance-none cursor-pointer"
+      style={{ fontFamily: "Rajdhani", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff2d95' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+    >
+      <option value="">{placeholder}</option>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  );
+}
+
 export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const [cuenta, setCuenta] = useState<string>("");
@@ -45,7 +63,6 @@ export default function InventoryPage() {
   }), [search, cuenta, claseAbc, estado, page]);
 
   const { data, isLoading } = trpc.inventory.list.useQuery(input);
-
   const totalPages = Math.ceil((data?.total || 0) / limit);
 
   return (
@@ -73,27 +90,24 @@ export default function InventoryPage() {
               style={{ fontFamily: "Rajdhani" }}
             />
           </div>
-          <Select value={cuenta} onValueChange={(v) => { setCuenta(v === "ALL" ? "" : v); setPage(1); }}>
-            <SelectTrigger className="bg-cyber-dark border-neon-pink/20"><SelectValue placeholder="Categoría" /></SelectTrigger>
-            <SelectContent className="cyber-card">
-              <SelectItem value="ALL">Todas</SelectItem>
-              {CUENTAS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={claseAbc} onValueChange={(v) => { setClaseAbc(v === "ALL" ? "" : v); setPage(1); }}>
-            <SelectTrigger className="bg-cyber-dark border-neon-pink/20"><SelectValue placeholder="Clase ABC" /></SelectTrigger>
-            <SelectContent className="cyber-card">
-              <SelectItem value="ALL">Todas</SelectItem>
-              {CLASES.map(c => <SelectItem key={c} value={c}>Clase {c}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <Select value={estado} onValueChange={(v) => { setEstado(v === "ALL" ? "" : v); setPage(1); }}>
-            <SelectTrigger className="bg-cyber-dark border-neon-pink/20"><SelectValue placeholder="Estado" /></SelectTrigger>
-            <SelectContent className="cyber-card">
-              <SelectItem value="ALL">Todos</SelectItem>
-              {ESTADOS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <CyberSelect
+            value={cuenta}
+            onChange={(v) => { setCuenta(v); setPage(1); }}
+            placeholder="Todas las categorías"
+            options={CUENTAS.map(c => ({ value: c, label: c }))}
+          />
+          <CyberSelect
+            value={claseAbc}
+            onChange={(v) => { setClaseAbc(v); setPage(1); }}
+            placeholder="Todas las clases"
+            options={CLASES.map(c => ({ value: c, label: `Clase ${c}` }))}
+          />
+          <CyberSelect
+            value={estado}
+            onChange={(v) => { setEstado(v); setPage(1); }}
+            placeholder="Todos los estados"
+            options={ESTADOS.map(e => ({ value: e, label: e }))}
+          />
         </div>
       </Card>
 
@@ -120,7 +134,7 @@ export default function InventoryPage() {
                 </tr>
               </thead>
               <tbody>
-                {(data?.items || []).map((item, i) => (
+                {(data?.items || []).map((item) => (
                   <tr key={item.id} className={`border-b border-border/20 hover:bg-neon-cyan/5 transition-colors ${item.stockActual === 0 ? "bg-red-500/5" : ""}`}>
                     <td className="py-2 px-3 font-mono text-neon-cyan text-xs">{item.referencia}</td>
                     <td className="py-2 px-3 text-xs max-w-[200px] truncate">{item.descripcion}</td>
@@ -150,22 +164,10 @@ export default function InventoryPage() {
             Página {page} de {totalPages} — {data?.total || 0} referencias
           </span>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="border-neon-pink/20 hover:bg-neon-pink/10"
-            >
+            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="border-neon-pink/20 hover:bg-neon-pink/10">
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="border-neon-pink/20 hover:bg-neon-pink/10"
-            >
+            <Button variant="outline" size="sm" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="border-neon-pink/20 hover:bg-neon-pink/10">
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
