@@ -1,13 +1,17 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, Package, DollarSign, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap } from "lucide-react";
+import { Loader2, Package, Banknote, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 
 function formatCurrency(val: number) {
-  if (val >= 1e9) return `$${(val / 1e9).toFixed(1)}B`;
-  if (val >= 1e6) return `$${(val / 1e6).toFixed(1)}M`;
-  if (val >= 1e3) return `$${(val / 1e3).toFixed(0)}K`;
-  return `$${val.toFixed(0)}`;
+  return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
+}
+
+function formatCurrencyShort(val: number) {
+  if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
+  if (val >= 1e6) return `${(val / 1e6).toFixed(1)}M COP`;
+  if (val >= 1e3) return `${(val / 1e3).toFixed(0)}K COP`;
+  return `${val.toFixed(0)} COP`;
 }
 
 function formatNumber(val: number) {
@@ -91,9 +95,9 @@ export default function Home() {
         />
         <KPICard
           title="Valor Inventario"
-          value={formatCurrency(Number(kpis?.totalValue) || 0)}
-          subtitle={`$${formatNumber(Number(kpis?.totalValue) || 0)} COP`}
-          icon={DollarSign}
+          value={formatCurrencyShort(Number(kpis?.totalValue) || 0)}
+          subtitle={formatCurrency(Number(kpis?.totalValue) || 0)}
+          icon={Banknote}
           glowClass="cyber-glow-pink"
           color="text-neon-pink"
         />
@@ -211,7 +215,7 @@ export default function Home() {
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData} layout="vertical" margin={{ left: 10, right: 10 }}>
-                <XAxis type="number" tickFormatter={(v) => formatCurrency(v)} stroke="#666" fontSize={10} />
+                <XAxis type="number" tickFormatter={(v) => formatCurrencyShort(v)} stroke="#666" fontSize={10} />
                 <YAxis type="category" dataKey="name" width={100} stroke="#888" fontSize={10} tick={{ fontFamily: "Rajdhani" }} />
                 <Tooltip
                   contentStyle={{
@@ -221,7 +225,7 @@ export default function Home() {
                     color: "#e0e0e0",
                     fontFamily: "Rajdhani",
                   }}
-                  formatter={(value: number) => [`$${formatNumber(value)} COP`, "Valor"]}
+                  formatter={(value: number) => [formatCurrency(value), "Valor"]}
                 />
                 <Bar dataKey="value" radius={[0, 4, 4, 0]}>
                   {categoryData.map((entry, i) => (

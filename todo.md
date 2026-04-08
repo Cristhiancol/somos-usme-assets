@@ -41,5 +41,8 @@
 
 ## Fase 5: Entrega
 - [x] Tests unitarios (11 tests pasando)
-- [ ] Checkpoint final
-- [ ] Entrega al usuario
+- [x] Checkpoint final
+- [x] Entrega al usuario
+
+## Correcciones
+- [x] Cambiar formato de moneda de USD ($) a COP (pesos colombianos) en todo el dashboard
