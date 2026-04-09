@@ -9,12 +9,19 @@ describe("Google Drive OAuth configuration", () => {
 
   it("should build a valid Google OAuth URL", async () => {
     // Import after env is set
-    const { getGDriveAuthUrl } = await import("./gdrive-oauth");
-    const url = getGDriveAuthUrl("https://example.com/callback");
+    const { getGDriveAuthUrl, parseGDriveState } = await import("./gdrive-oauth");
+    const redirectUri = "https://example.com/callback";
+    const url = getGDriveAuthUrl(redirectUri);
     expect(url).toContain("accounts.google.com/o/oauth2/v2/auth");
     expect(url).toContain("client_id=220183698829");
     expect(url).toContain("drive.readonly");
     expect(url).toContain("offline");
-    expect(url).toContain("gdrive_auth");
+    // state is now a base64url-encoded JSON containing gdrive_auth and redirectUri
+    const stateMatch = url.match(/state=([^&]+)/);
+    expect(stateMatch).toBeTruthy();
+    const parsed = parseGDriveState(decodeURIComponent(stateMatch![1]));
+    expect(parsed).toBeTruthy();
+    expect(parsed!.type).toBe("gdrive_auth");
+    expect(parsed!.redirectUri).toBe(redirectUri);
   });
 });

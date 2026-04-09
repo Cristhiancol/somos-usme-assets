@@ -16,6 +16,8 @@ const PROVIDER = "google_drive";
  * The user visits this URL once to grant access.
  */
 export function getGDriveAuthUrl(redirectUri: string): string {
+  // Encode the redirectUri in the state so the callback can recover it exactly
+  const statePayload = Buffer.from(JSON.stringify({ type: 'gdrive_auth', redirectUri })).toString('base64url');
   const params = new URLSearchParams({
     client_id: CLIENT_ID,
     redirect_uri: redirectUri,
@@ -23,9 +25,25 @@ export function getGDriveAuthUrl(redirectUri: string): string {
     scope: "https://www.googleapis.com/auth/drive.readonly",
     access_type: "offline",
     prompt: "consent",
-    state: "gdrive_auth",
+    state: statePayload,
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+/**
+ * Parse the state param from the OAuth callback.
+ * Returns { type, redirectUri } or null if invalid.
+ */
+export function parseGDriveState(state: string): { type: string; redirectUri: string } | null {
+  try {
+    const decoded = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+    if (decoded.type && decoded.redirectUri) return decoded;
+    return null;
+  } catch {
+    // Legacy plain-text state fallback
+    if (state === 'gdrive_auth') return null;
+    return null;
+  }
 }
 
 /**

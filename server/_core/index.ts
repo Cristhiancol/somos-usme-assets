@@ -8,7 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { syncFromGoogleDrive } from "../gdrive-sync";
-import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized } from "../gdrive-oauth";
+import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState } from "../gdrive-oauth";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -43,13 +43,25 @@ async function startServer() {
     const { code, state, error } = req.query as Record<string, string>;
     if (error) {
       console.error('[GDriveOAuth] Callback error:', error);
-      return res.redirect('/?gdrive_error=' + encodeURIComponent(error));
+      return res.redirect('/sync?gdrive_error=' + encodeURIComponent(error));
     }
-    if (!code || state !== 'gdrive_auth') {
-      return res.redirect('/?gdrive_error=invalid_callback');
+    if (!code || !state) {
+      return res.redirect('/sync?gdrive_error=invalid_callback');
     }
-    const origin = req.headers.origin || `${req.protocol}://${req.headers.host}`;
-    const redirectUri = `${origin}/api/gdrive/callback`;
+    // Recover the exact redirectUri from the state payload (base64url-encoded JSON)
+    // This avoids relying on req.headers.origin which is absent in Google redirects
+    const parsed = parseGDriveState(state);
+    let redirectUri: string;
+    if (parsed && parsed.redirectUri) {
+      redirectUri = parsed.redirectUri;
+      console.log('[GDriveOAuth] Recovered redirectUri from state:', redirectUri);
+    } else {
+      // Fallback: construct from host header
+      const host = req.headers.host || 'usme.blog';
+      const proto = host.includes('localhost') ? 'http' : 'https';
+      redirectUri = `${proto}://${host}/api/gdrive/callback`;
+      console.warn('[GDriveOAuth] Could not parse state, using fallback redirectUri:', redirectUri);
+    }
     const success = await exchangeCodeForTokens(code, redirectUri);
     if (success) {
       console.log('[GDriveOAuth] Authorization successful!');
