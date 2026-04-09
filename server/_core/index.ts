@@ -60,11 +60,14 @@ async function startServer() {
   });
 
   // Get Google Drive auth URL
+  // The frontend passes its own origin so the redirect_uri matches exactly what's registered in Google Cloud
   app.get('/api/gdrive/auth-url', (req, res) => {
-    const origin = req.headers.origin || `${req.protocol}://${req.headers.host}`;
-    const redirectUri = `${origin}/api/gdrive/callback`;
+    // Accept origin from query param (passed by frontend) or fallback to request headers
+    const frontendOrigin = (req.query.origin as string) || req.headers.origin || `${req.protocol}://${req.headers.host}`;
+    const redirectUri = `${frontendOrigin}/api/gdrive/callback`;
+    console.log('[GDriveOAuth] Building auth URL with redirectUri:', redirectUri);
     const url = getGDriveAuthUrl(redirectUri);
-    res.json({ url });
+    res.json({ url, redirectUri });
   });
 
   // Check Google Drive authorization status

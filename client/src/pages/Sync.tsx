@@ -65,7 +65,9 @@ export default function SyncPage() {
   async function handleAuthorizeGDrive() {
     setAuthLoading(true);
     try {
-      const res = await fetch("/api/gdrive/auth-url");
+      // Pass the frontend origin so the server builds the correct redirect_uri
+      const origin = encodeURIComponent(window.location.origin);
+      const res = await fetch(`/api/gdrive/auth-url?origin=${origin}`);
       const { url } = await res.json();
       // Redirect to Google OAuth
       window.location.href = url;
