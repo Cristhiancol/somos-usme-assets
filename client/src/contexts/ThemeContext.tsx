@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useLayoutEffect, useState } from "react";
 
 type Theme = "light" | "dark";
 
@@ -29,7 +29,9 @@ export function ThemeProvider({
     return defaultTheme;
   });
 
-  useEffect(() => {
+  // useLayoutEffect ensures class is applied before browser paint,
+  // preventing DOM mutations that can cause React's insertBefore errors
+  useLayoutEffect(() => {
     const root = document.documentElement;
     if (theme === "dark") {
       root.classList.add("dark");

@@ -4,32 +4,42 @@ import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } f
 const LOCAL_DIR = "/tmp/gdrive-sync-temp";
 const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
 const DATA_FILE = "/home/ubuntu/somos-usme-assets/data/DASBOARD_SOMOS_U_GESTOR_1.xlsx";
+// CDN URL for production (file hosted on S3)
+const CDN_FILE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663355008483/Cn82Y4DQbN9nyZtZuLDx26/DASBOARD_SOMOS_U_GESTOR_1_a015c179.xlsx";
 
 // Google Drive file ID — we find it dynamically via search
 const DRIVE_FILE_NAME = "DASBOARD SOMOS U - GESTOR 1.xlsx";
 
 /**
- * Check if local data file exists (use it as primary source)
- */
-function useLocalFile(): boolean {
-  return existsSync(DATA_FILE);
-}
-
-/**
- * Get file data (local file or Google Drive)
+ * Get file data: CDN (primary) > local file (dev) > Google Drive (fallback)
  */
 async function getFileData(): Promise<Buffer> {
-  // Use local file if it exists (primary source)
-  if (useLocalFile()) {
+  // 1. Try CDN URL first (works in both dev and production)
+  try {
+    console.log("[Sync] Downloading from CDN...");
+    const res = await fetch(CDN_FILE_URL);
+    if (res.ok) {
+      const arrayBuffer = await res.arrayBuffer();
+      const buf = Buffer.from(arrayBuffer);
+      console.log(`[Sync] CDN download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+      return buf;
+    }
+    console.warn(`[Sync] CDN returned ${res.status}, trying local file...`);
+  } catch (e) {
+    console.warn("[Sync] CDN fetch failed, trying local file...", e);
+  }
+
+  // 2. Try local file (development sandbox)
+  if (existsSync(DATA_FILE)) {
     console.log("[Sync] Using local data file...");
     return readFileSync(DATA_FILE);
   }
 
-  // Fallback to Google Drive (if configured)
-  console.log("[Sync] Local file not found, attempting Google Drive...");
+  // 3. Fallback to Google Drive (if token configured)
+  console.log("[Sync] Attempting Google Drive fallback...");
   const token = getRcloneToken();
   if (!token) {
-    throw new Error("No local file and no Google Drive token available");
+    throw new Error("No CDN, no local file, and no Google Drive token available");
   }
 
   const query = encodeURIComponent(`name = '${DRIVE_FILE_NAME}' and trashed = false`);

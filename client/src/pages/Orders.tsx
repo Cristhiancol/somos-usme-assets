@@ -150,6 +150,7 @@ export default function OrdersPage() {
                 <tr className="border-b border-neon-pink/20 bg-neon-pink/5">
                   <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">OC</th>
                   <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">DESCRIPCIÓN</th>
+                  <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">MAINSAVER / PARTE FABRIC.</th>
                   <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">PROVEEDOR</th>
                   <th className="text-right py-3 px-2 text-neon-pink font-semibold text-xs">PEDIDO</th>
                   <th className="text-right py-3 px-2 text-neon-pink font-semibold text-xs">RECIBIDO</th>
@@ -166,6 +167,17 @@ export default function OrdersPage() {
                   <tr key={i} className={`border-b border-border/20 hover:bg-neon-cyan/5 transition-colors ${(o.diasRetraso || 0) > 0 ? "bg-red-500/5" : ""}`}>
                     <td className="py-2 px-2 font-mono text-neon-cyan text-xs">{o.ordenCompra}</td>
                     <td className="py-2 px-2 text-xs max-w-[150px] truncate">{o.descripcion}</td>
+                    <td className="py-2 px-2 text-xs max-w-[140px]">
+                      {o.mainsaver && (
+                        <span className="block font-mono text-neon-cyan text-xs font-bold">{o.mainsaver}</span>
+                      )}
+                      {o.parteFabricante && (
+                        <span className="block text-muted-foreground text-xs truncate max-w-[130px]" title={o.parteFabricante}>{o.parteFabricante}</span>
+                      )}
+                      {!o.mainsaver && !o.parteFabricante && (
+                        <span className="text-muted-foreground/40 text-xs">—</span>
+                      )}
+                    </td>
                     <td className="py-2 px-2 text-xs max-w-[140px] truncate text-muted-foreground">{o.proveedor}</td>
                     <td className="py-2 px-2 text-right font-mono text-xs">{o.qtyOrdenada?.toFixed(0)}</td>
                     <td className="py-2 px-2 text-right font-mono text-neon-green text-xs">{o.qtyRecibida?.toFixed(0)}</td>

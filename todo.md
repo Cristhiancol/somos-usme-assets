@@ -58,3 +58,7 @@
 - [x] AUDITORÍA FINAL: DashboardLayout usa CSS puro — sin imports de @radix-ui
 - [x] AUDITORÍA FINAL: Bundle de producción verificado — solo Radix Slot (sin Portal), insertBefore solo de React DOM interno
 - [x] AUDITORÍA FINAL: 0 errores en consola del navegador, 0 errores de red, 11 tests pasando
+- [x] BUG PRODUCCIÓN: Error insertBefore sigue en móvil — CORREGIDO: DashboardLayout separado en dos sidebars independientes (desktop sticky / móvil fixed), ThemeProvider usa useLayoutEffect
+- [x] BUG PRODUCCIÓN: Sync falla en producción — CORREGIDO: archivo Excel subido a CDN público, gdrive-sync.ts usa URL CDN como fuente primaria
+- [x] Subir archivo Excel a S3/CDN para disponibilidad permanente en producción — COMPLETADO
+- [x] Mostrar columna MAINSAVER/Parte Fabricante en tabla de Órdenes — AGREGADA al lado derecho de Descripción
