@@ -1,32 +1,52 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } from "./db";
+import { getValidAccessToken } from "./gdrive-oauth";
 
 const LOCAL_DIR = "/tmp/gdrive-sync-temp";
 const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
 const DATA_FILE = "/home/ubuntu/somos-usme-assets/data/DASBOARD_SOMOS_U_GESTOR_1.xlsx";
-// CDN URL for production (file hosted on S3)
+// CDN URL for production (fallback only — static snapshot)
 const CDN_FILE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663355008483/Cn82Y4DQbN9nyZtZuLDx26/DASBOARD_SOMOS_U_GESTOR_1_a015c179.xlsx";
-
-// Google Drive file ID — we find it dynamically via search
-const DRIVE_FILE_NAME = "DASBOARD SOMOS U - GESTOR 1.xlsx";
+// Google Drive file ID (direct — no search needed)
+const DRIVE_FILE_ID = "1sMQ-SsIfguGHGWnhm7IkHFIrBxjC3YZ8";
 
 /**
- * Get file data: CDN (primary) > local file (dev) > Google Drive (fallback)
+ * Get file data: Google Drive OAuth (primary) > local file (dev) > CDN (fallback)
  */
 async function getFileData(): Promise<Buffer> {
-  // 1. Try CDN URL first (works in both dev and production)
+  // 1. Try Google Drive with OAuth token (primary source — always up to date)
   try {
-    console.log("[Sync] Downloading from CDN...");
-    const res = await fetch(CDN_FILE_URL);
-    if (res.ok) {
-      const arrayBuffer = await res.arrayBuffer();
-      const buf = Buffer.from(arrayBuffer);
-      console.log(`[Sync] CDN download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
-      return buf;
+    const accessToken = await getValidAccessToken();
+    if (accessToken) {
+      console.log("[Sync] Downloading from Google Drive (OAuth)...");
+      // Export as xlsx from Google Sheets
+      const exportUrl = `https://www.googleapis.com/drive/v3/files/${DRIVE_FILE_ID}/export?mimeType=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet`;
+      const exportRes = await fetch(exportUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (exportRes.ok) {
+        const arrayBuffer = await exportRes.arrayBuffer();
+        const buf = Buffer.from(arrayBuffer);
+        console.log(`[Sync] Google Drive export OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+        return buf;
+      }
+      // If export fails (e.g. it's already xlsx, not a Sheet), try direct download
+      const downloadUrl = `https://www.googleapis.com/drive/v3/files/${DRIVE_FILE_ID}?alt=media`;
+      const downloadRes = await fetch(downloadUrl, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (downloadRes.ok) {
+        const arrayBuffer = await downloadRes.arrayBuffer();
+        const buf = Buffer.from(arrayBuffer);
+        console.log(`[Sync] Google Drive direct download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+        return buf;
+      }
+      console.warn(`[Sync] Google Drive returned ${exportRes.status}, trying local file...`);
+    } else {
+      console.warn("[Sync] No Google Drive OAuth token available, trying local file...");
     }
-    console.warn(`[Sync] CDN returned ${res.status}, trying local file...`);
   } catch (e) {
-    console.warn("[Sync] CDN fetch failed, trying local file...", e);
+    console.warn("[Sync] Google Drive fetch failed, trying local file...", e);
   }
 
   // 2. Try local file (development sandbox)
@@ -35,37 +55,22 @@ async function getFileData(): Promise<Buffer> {
     return readFileSync(DATA_FILE);
   }
 
-  // 3. Fallback to Google Drive (if token configured)
-  console.log("[Sync] Attempting Google Drive fallback...");
-  const token = getRcloneToken();
-  if (!token) {
-    throw new Error("No CDN, no local file, and no Google Drive token available");
+  // 3. Fallback to CDN (static snapshot — may be outdated)
+  try {
+    console.log("[Sync] Downloading from CDN (static snapshot)...");
+    const res = await fetch(CDN_FILE_URL);
+    if (res.ok) {
+      const arrayBuffer = await res.arrayBuffer();
+      const buf = Buffer.from(arrayBuffer);
+      console.log(`[Sync] CDN download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+      return buf;
+    }
+    console.warn(`[Sync] CDN returned ${res.status}`);
+  } catch (e) {
+    console.warn("[Sync] CDN fetch failed", e);
   }
 
-  const query = encodeURIComponent(`name = '${DRIVE_FILE_NAME}' and trashed = false`);
-  const searchUrl = `https://www.googleapis.com/drive/v3/files?q=${query}&fields=files(id,name)`;
-  const searchRes = await fetch(searchUrl, {
-    headers: { Authorization: `Bearer ${token.access_token}` },
-  });
-  if (!searchRes.ok) {
-    throw new Error(`Drive search failed: ${searchRes.status} ${await searchRes.text()}`);
-  }
-  const searchData = await searchRes.json();
-  if (!searchData.files || searchData.files.length === 0) {
-    throw new Error("File not found in Google Drive");
-  }
-
-  const fileId = searchData.files[0].id;
-  console.log(`[Sync] Found file ID: ${fileId}. Downloading...`);
-  const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-  const downloadRes = await fetch(downloadUrl, {
-    headers: { Authorization: `Bearer ${token.access_token}` },
-  });
-  if (!downloadRes.ok) {
-    throw new Error(`Drive download failed: ${downloadRes.status} ${await downloadRes.text()}`);
-  }
-  const arrayBuffer = await downloadRes.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  throw new Error("No se encontró token de Google Drive. Autoriza el acceso en la página de Sincronización.");
 }
 
 /**

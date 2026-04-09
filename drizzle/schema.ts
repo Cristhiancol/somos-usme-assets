@@ -122,3 +122,16 @@ export const syncLogs = mysqlTable("sync_logs", {
 
 export type SyncLog = typeof syncLogs.$inferSelect;
 export type InsertSyncLog = typeof syncLogs.$inferInsert;
+
+// ── OAuth Tokens (Google Drive) ──
+export const oauthTokens = mysqlTable("oauth_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  provider: varchar("provider", { length: 32 }).notNull(), // 'google_drive'
+  accessToken: text("accessToken"),
+  refreshToken: text("refreshToken"),
+  expiresAt: bigint("expiresAt", { mode: "number" }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type OAuthToken = typeof oauthTokens.$inferSelect;
+export type InsertOAuthToken = typeof oauthTokens.$inferInsert;

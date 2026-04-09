@@ -1,11 +1,41 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, RefreshCw, CheckCircle, XCircle, Clock, Cloud, Bell } from "lucide-react";
-import { useState } from "react";
+import { Loader2, RefreshCw, CheckCircle, XCircle, Clock, Cloud, Bell, Link, ShieldCheck, ShieldAlert } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLocation } from "wouter";
 
 export default function SyncPage() {
+  const [location] = useLocation();
   const { data: lastSync, isLoading, refetch } = trpc.sync.lastSync.useQuery();
+  const [gdriveAuthorized, setGdriveAuthorized] = useState<boolean | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ type: string; text: string } | null>(null);
+
+  // Check Google Drive authorization status on mount
+  useEffect(() => {
+    fetch("/api/gdrive/status")
+      .then(r => r.json())
+      .then(d => setGdriveAuthorized(d.authorized))
+      .catch(() => setGdriveAuthorized(false));
+  }, []);
+
+  // Handle OAuth callback result from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("gdrive_success") === "1") {
+      setGdriveAuthorized(true);
+      setStatusMsg({ type: "success", text: "✅ Google Drive autorizado correctamente. La sincronización automática está activa." });
+      // Clean up URL
+      window.history.replaceState({}, "", "/sync");
+      // Trigger a sync immediately
+      syncMutation.mutate();
+    } else if (params.get("gdrive_error")) {
+      setStatusMsg({ type: "error", text: `Error al autorizar Google Drive: ${params.get("gdrive_error")}` });
+      window.history.replaceState({}, "", "/sync");
+    }
+  }, []);
+
   const syncMutation = trpc.sync.trigger.useMutation({
     onSuccess: (res: any) => {
       if (res.success) {
@@ -25,14 +55,25 @@ export default function SyncPage() {
     },
   });
 
-  const [statusMsg, setStatusMsg] = useState<{ type: string; text: string } | null>(null);
-
   const notifyCritical = trpc.notifications.sendCriticalStockAlert.useMutation({
     onSuccess: (res) => {
       if (res.sent) setStatusMsg({ type: "success", text: `Alerta enviada: ${res.count} productos en stock cero` });
       else setStatusMsg({ type: "info", text: res.message || "Sin productos en stock cero" });
     },
   });
+
+  async function handleAuthorizeGDrive() {
+    setAuthLoading(true);
+    try {
+      const res = await fetch("/api/gdrive/auth-url");
+      const { url } = await res.json();
+      // Redirect to Google OAuth
+      window.location.href = url;
+    } catch (e) {
+      setStatusMsg({ type: "error", text: "Error al obtener URL de autorización" });
+      setAuthLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -52,6 +93,64 @@ export default function SyncPage() {
           SINCRONIZACIÓN & NOTIFICACIONES
         </h1>
       </div>
+
+      {/* Google Drive Authorization Banner */}
+      {gdriveAuthorized === false && (
+        <Card className="cyber-card p-5 rounded-xl border border-orange-500/40 bg-orange-500/5">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3 flex-1">
+              <ShieldAlert className="h-8 w-8 text-orange-400 shrink-0" />
+              <div>
+                <h3 className="text-sm font-bold text-orange-400 tracking-wider" style={{ fontFamily: "Orbitron" }}>
+                  GOOGLE DRIVE NO AUTORIZADO
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: "Rajdhani" }}>
+                  Autoriza el acceso a Google Drive una sola vez para activar la sincronización automática cada 15 minutos.
+                  El token se guarda de forma permanente y se renueva automáticamente.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={handleAuthorizeGDrive}
+              disabled={authLoading}
+              className="bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 gap-2 shrink-0"
+              style={{ fontFamily: "Orbitron", fontSize: "11px" }}
+            >
+              {authLoading ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> CONECTANDO...</>
+              ) : (
+                <><Link className="h-4 w-4" /> AUTORIZAR GOOGLE DRIVE</>
+              )}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {gdriveAuthorized === true && (
+        <Card className="cyber-card p-4 rounded-xl border border-green-500/30 bg-green-500/5">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="h-6 w-6 text-neon-green shrink-0" />
+            <div className="flex-1">
+              <span className="text-sm font-bold text-neon-green" style={{ fontFamily: "Orbitron" }}>
+                GOOGLE DRIVE CONECTADO
+              </span>
+              <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "Rajdhani" }}>
+                Sincronización automática activa cada 15 minutos. El token se renueva automáticamente.
+              </p>
+            </div>
+            <Button
+              onClick={handleAuthorizeGDrive}
+              disabled={authLoading}
+              variant="outline"
+              size="sm"
+              className="text-xs border-green-500/30 text-green-400 hover:bg-green-500/10 shrink-0"
+              style={{ fontFamily: "Rajdhani" }}
+            >
+              Re-autorizar
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Sync Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

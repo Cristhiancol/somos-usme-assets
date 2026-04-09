@@ -15,6 +15,13 @@
       "when": 1775619837178,
       "tag": "0001_mute_forgotten_one",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1775710575205,
+      "tag": "0002_heavy_darkhawk",
+      "breakpoints": true
     }
   ]
 }
