@@ -7,7 +7,7 @@ import { getDb } from "./db";
 import { oauthTokens } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 
-const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID || "327414420578-rlihtn6r7mav7d3k8one0kv53mvb44sk.apps.googleusercontent.com";
+const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID || "220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro.apps.googleusercontent.com";
 const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET || "";
 const PROVIDER = "google_drive";
 
@@ -160,17 +160,6 @@ export async function getValidAccessToken(): Promise<string | null> {
     console.error("[GDriveOAuth] Error refreshing token:", e);
     return null;
   }
-}
-
-/**
- * Revoke and delete the stored Google Drive token.
- * Forces re-authorization on next sync.
- */
-export async function revokeGDriveToken(): Promise<void> {
-  const database = await getDb();
-  if (!database) return;
-  await database.delete(oauthTokens).where(eq(oauthTokens.provider, PROVIDER));
-  console.log('[GDriveOAuth] Token revoked and deleted from database.');
 }
 
 /**

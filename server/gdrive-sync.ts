@@ -30,8 +30,6 @@ async function getFileData(): Promise<Buffer> {
         console.log(`[Sync] Google Drive export OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
         return buf;
       }
-      const exportErrBody = await exportRes.text();
-      console.warn(`[Sync] Google Drive export returned ${exportRes.status}: ${exportErrBody.substring(0, 300)}`);
       // If export fails (e.g. it's already xlsx, not a Sheet), try direct download
       const downloadUrl = `https://www.googleapis.com/drive/v3/files/${DRIVE_FILE_ID}?alt=media`;
       const downloadRes = await fetch(downloadUrl, {
@@ -43,9 +41,7 @@ async function getFileData(): Promise<Buffer> {
         console.log(`[Sync] Google Drive direct download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
         return buf;
       }
-      const downloadErrBody = await downloadRes.text();
-      console.warn(`[Sync] Google Drive direct download returned ${downloadRes.status}: ${downloadErrBody.substring(0, 300)}`);
-      console.warn(`[Sync] Both Google Drive methods failed, trying local file...`);
+      console.warn(`[Sync] Google Drive returned ${exportRes.status}, trying local file...`);
     } else {
       console.warn("[Sync] No Google Drive OAuth token available, trying local file...");
     }
@@ -219,7 +215,7 @@ async function parseExcelData(filePath: string) {
       stockSeguridad: safeFloat(row["STOCK SEGURIDAD"]),
       puntoReorden: safeFloat(row["PUNTO REORDEN"]),
       inventarioDias: safeFloat(row["INVENTARIO (dias)"]),
-      estado: (safeStr(row["ESTADO"]) || "").toUpperCase().trim() || null,
+      estado: safeStr(row["ESTADO"]),
       accionRequerida: safeStr(row["ACCION REQUERIDA"]),
       cantidadAPedir: safeFloat(row["CANTIDAD A PEDIR"]),
       valorAPedir: safeFloat(row["VALOR A PEDIR"]),
@@ -250,9 +246,9 @@ async function parseExcelData(filePath: string) {
       valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
       valorPendiente: safeFloat(row["VALOR PENDIENTE"]),
       diasRetraso: Math.round(safeFloat(row["DIAS RETRASO"])),
-      estado: (safeStr(row["ESTADO"]) || "").toUpperCase().trim() || null,
+      estado: safeStr(row["ESTADO"]),
       cumplimiento: safeFloat(row["CUMPLIMIENTO"]),
-      prioridad: (safeStr(row["PRIORIDAD"]) || "").toUpperCase().trim() || null,
+      prioridad: safeStr(row["PRIORIDAD"]),
     });
   }
 

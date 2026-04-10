@@ -63,4 +63,3 @@
 - [x] Subir archivo Excel a S3/CDN para disponibilidad permanente en producción — COMPLETADO
 - [x] Mostrar columna MAINSAVER/Parte Fabricante en tabla de Órdenes — AGREGADA al lado derecho de Descripción
 - [ ] Conectar OAuth Google Cloud (client_id: 220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro) para sincronización automática cada 15 min desde Google Drive
-- [x] BUG: Filtro REORDEN en Inventario no filtra correctamente — normalizar estado en sincronización y mejorar lógica de filtro
