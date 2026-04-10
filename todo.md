@@ -64,3 +64,4 @@
 - [x] Mostrar columna MAINSAVER/Parte Fabricante en tabla de Órdenes — AGREGADA al lado derecho de Descripción
 - [ ] Conectar OAuth Google Cloud (client_id: 220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro) para sincronización automática cada 15 min desde Google Drive
 - [x] FIX CRÍTICO: Error insertBefore en producción móvil — Causa raíz: 1) localStorage.setItem dentro de useMemo (side-effect en render) en useAuth.ts, 2) DashboardLayout retornaba árboles DOM completamente diferentes según estado (loading/login/app). Solución: mover localStorage a useEffect, wrapper raíz estable con visibility toggle en vez de return trees diferentes.
+- [x] FIX CRÍTICO: Error insertBefore al sincronizar — Causa raíz: syncMutation.mutate() llamado directamente dentro de useEffect durante el montaje del componente. Solución: useRef pendingAutoSync + setTimeout(500ms) para diferir la llamada hasta que React termine de reconciliar.

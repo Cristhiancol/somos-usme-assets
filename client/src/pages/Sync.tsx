@@ -2,15 +2,16 @@ import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw, CheckCircle, XCircle, Clock, Cloud, Bell, Link, ShieldCheck, ShieldAlert } from "lucide-react";
-import { useState, useEffect } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 export default function SyncPage() {
-  const [location] = useLocation();
   const { data: lastSync, isLoading, refetch } = trpc.sync.lastSync.useQuery();
   const [gdriveAuthorized, setGdriveAuthorized] = useState<boolean | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: string; text: string } | null>(null);
+
+  // Use a ref to track if we need to auto-sync after OAuth
+  const pendingAutoSync = useRef(false);
 
   // Check Google Drive authorization status on mount
   useEffect(() => {
@@ -20,21 +21,21 @@ export default function SyncPage() {
       .catch(() => setGdriveAuthorized(false));
   }, []);
 
-  // Handle OAuth callback result from URL params
+  // Handle OAuth callback result from URL params — only runs once on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("gdrive_success") === "1") {
       setGdriveAuthorized(true);
       setStatusMsg({ type: "success", text: "✅ Google Drive autorizado correctamente. La sincronización automática está activa." });
-      // Clean up URL
+      // Clean up URL without triggering navigation
       window.history.replaceState({}, "", "/sync");
-      // Trigger a sync immediately
-      syncMutation.mutate();
+      // Mark that we need to auto-sync — will be picked up by the mutation effect
+      pendingAutoSync.current = true;
     } else if (params.get("gdrive_error")) {
       setStatusMsg({ type: "error", text: `Error al autorizar Google Drive: ${params.get("gdrive_error")}` });
       window.history.replaceState({}, "", "/sync");
     }
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const syncMutation = trpc.sync.trigger.useMutation({
     onSuccess: (res: any) => {
@@ -47,6 +48,23 @@ export default function SyncPage() {
     },
     onError: (err) => setStatusMsg({ type: "error", text: err.message }),
   });
+
+  // Stable trigger function to avoid stale closure issues
+  const triggerSync = useCallback(() => {
+    syncMutation.mutate();
+  }, [syncMutation]);
+
+  // Auto-sync after OAuth if needed — deferred to avoid insertBefore during mount
+  useEffect(() => {
+    if (pendingAutoSync.current && !syncMutation.isPending) {
+      pendingAutoSync.current = false;
+      // Defer to next tick so React finishes reconciling first
+      const timer = setTimeout(() => {
+        triggerSync();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [triggerSync, syncMutation.isPending]);
 
   const notifyDelayed = trpc.notifications.sendDelayedOrdersAlert.useMutation({
     onSuccess: (res) => {
@@ -65,11 +83,9 @@ export default function SyncPage() {
   async function handleAuthorizeGDrive() {
     setAuthLoading(true);
     try {
-      // Pass the frontend origin so the server builds the correct redirect_uri
       const origin = encodeURIComponent(window.location.origin);
       const res = await fetch(`/api/gdrive/auth-url?origin=${origin}`);
       const { url } = await res.json();
-      // Redirect to Google OAuth
       window.location.href = url;
     } catch (e) {
       setStatusMsg({ type: "error", text: "Error al obtener URL de autorización" });
@@ -92,7 +108,7 @@ export default function SyncPage() {
       <div className="flex items-center gap-3">
         <RefreshCw className="h-6 w-6 text-neon-green" />
         <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
-          SINCRONIZACIÓN & NOTIFICACIONES
+          SINCRONIZACIÓN &amp; NOTIFICACIONES
         </h1>
       </div>
 
@@ -186,7 +202,7 @@ export default function SyncPage() {
             </div>
           </div>
           <Button
-            onClick={() => syncMutation.mutate()}
+            onClick={triggerSync}
             disabled={syncMutation.isPending}
             className="w-full bg-neon-cyan/20 border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/30 gap-2"
             style={{ fontFamily: "Orbitron" }}
