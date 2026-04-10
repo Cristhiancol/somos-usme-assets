@@ -134,11 +134,8 @@ export default function SyncPage() {
               className="bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 gap-2 shrink-0"
               style={{ fontFamily: "Orbitron", fontSize: "11px" }}
             >
-              {authLoading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> CONECTANDO...</>
-              ) : (
-                <><Link className="h-4 w-4" /> AUTORIZAR GOOGLE DRIVE</>
-              )}
+              <Link className={`h-4 w-4 ${authLoading ? 'animate-spin' : ''}`} />
+              {authLoading ? 'CONECTANDO...' : 'AUTORIZAR GOOGLE DRIVE'}
             </Button>
           </div>
         </Card>
@@ -207,11 +204,8 @@ export default function SyncPage() {
             className="w-full bg-neon-cyan/20 border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/30 gap-2"
             style={{ fontFamily: "Orbitron" }}
           >
-            {syncMutation.isPending ? (
-              <><Loader2 className="h-4 w-4 animate-spin" /> SINCRONIZANDO...</>
-            ) : (
-              <><RefreshCw className="h-4 w-4" /> SINCRONIZAR AHORA</>
-            )}
+            <RefreshCw className={`h-4 w-4 transition-transform ${syncMutation.isPending ? 'animate-spin' : ''}`} />
+            {syncMutation.isPending ? 'SINCRONIZANDO...' : 'SINCRONIZAR AHORA'}
           </Button>
         </Card>
 
