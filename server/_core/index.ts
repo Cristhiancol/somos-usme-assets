@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { syncFromGoogleDrive } from "../gdrive-sync";
 import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState, revokeGDriveToken } from "../gdrive-oauth";
+import { initializeBackgroundJobs } from "./jobs";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -113,6 +114,9 @@ async function startServer() {
       console.error('[AutoSync] Failed:', e);
     }
   }, 15 * 60 * 1000);
+
+  // Initialize background jobs (nightly analysis)
+  initializeBackgroundJobs();
   // tRPC API
   app.use(
     "/api/trpc",

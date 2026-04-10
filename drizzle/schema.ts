@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, double, bigint } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, double, bigint, tinyint } from "drizzle-orm/mysql-core";
 
 // ── Users (Auth) ──
 export const users = mysqlTable("users", {
@@ -135,3 +135,90 @@ export const oauthTokens = mysqlTable("oauth_tokens", {
 });
 export type OAuthToken = typeof oauthTokens.$inferSelect;
 export type InsertOAuthToken = typeof oauthTokens.$inferInsert;
+
+// ── Consumption History (HISTÓRICO DE CONSUMO) ──
+export const consumptionHistory = mysqlTable("consumption_history", {
+  id: int("id").autoincrement().primaryKey(),
+  inventoryItemId: int("inventoryItemId").notNull(),
+  consumptionDate: timestamp("consumptionDate").notNull(),
+  quantity: double("quantity").notNull(),
+  unitCost: double("unitCost").default(0),
+  failureType: varchar("failureType", { length: 100 }), // Tipo de falla (preventivo, correctivo, etc)
+  busId: varchar("busId", { length: 32 }), // ID del bus que consumió la referencia
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ConsumptionHistory = typeof consumptionHistory.$inferSelect;
+export type InsertConsumptionHistory = typeof consumptionHistory.$inferInsert;
+
+// ── Stock Predictions (PREDICCIONES DE STOCK) ──
+export const stockPredictions = mysqlTable("stock_predictions", {
+  id: int("id").autoincrement().primaryKey(),
+  inventoryItemId: int("inventoryItemId").notNull(),
+  predictionDate: timestamp("predictionDate").notNull(), // Fecha para la cual se predice
+  predictedDemand: double("predictedDemand").default(0), // Demanda predicha
+  confidenceLow: double("confidenceLow").default(0), // Intervalo de confianza bajo (95%)
+  confidenceHigh: double("confidenceHigh").default(0), // Intervalo de confianza alto (95%)
+  reorderPoint: double("reorderPoint").default(0), // Punto de reorden calculado
+  riskLevel: mysqlEnum("riskLevel", ["ALTO", "MEDIO", "BAJO"]).default("BAJO"), // Nivel de riesgo
+  daysUntilStockout: int("daysUntilStockout").default(0), // Días hasta que se agote el stock
+  recommendedOrderQty: double("recommendedOrderQty").default(0), // Cantidad recomendada a ordenar
+  modelAccuracy: double("modelAccuracy").default(0), // MAPE del modelo (0-100%)
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type StockPrediction = typeof stockPredictions.$inferSelect;
+export type InsertStockPrediction = typeof stockPredictions.$inferInsert;
+
+// ── ABC Classification (CLASIFICACIÓN ABC) ──
+export const abcClassification = mysqlTable("abc_classification", {
+  id: int("id").autoincrement().primaryKey(),
+  inventoryItemId: int("inventoryItemId").notNull(),
+  classification: mysqlEnum("classification", ["A", "B", "C"]).notNull(),
+  totalValue: double("totalValue").default(0), // Valor total (costo * cantidad consumida)
+  accumulatedPercentage: double("accumulatedPercentage").default(0), // % acumulado
+  consumptionPercentage: double("consumptionPercentage").default(0), // % de consumo
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AbcClassification = typeof abcClassification.$inferSelect;
+export type InsertAbcClassification = typeof abcClassification.$inferInsert;
+
+// ── Supplier Performance (DESEMPEÑO DE PROVEEDORES) ──
+export const supplierPerformance = mysqlTable("supplier_performance", {
+  id: int("id").autoincrement().primaryKey(),
+  supplierId: int("supplierId").notNull(),
+  totalOrders: int("totalOrders").default(0), // Total de órdenes
+  onTimeDeliveries: int("onTimeDeliveries").default(0), // Entregas a tiempo
+  lateDeliveries: int("lateDeliveries").default(0), // Entregas retrasadas
+  avgLeadTimeDays: double("avgLeadTimeDays").default(0), // Lead time promedio
+  leadTimeStdDev: double("leadTimeStdDev").default(0), // Desviación estándar del lead time
+  leadTimeP95: double("leadTimeP95").default(0), // Percentil 95 del lead time (para cálculos conservadores)
+  onTimePercentage: double("onTimePercentage").default(0), // % de entregas a tiempo
+  reliabilityScore: double("reliabilityScore").default(0), // Puntuación 0-100
+  lastUpdated: timestamp("lastUpdated").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SupplierPerformance = typeof supplierPerformance.$inferSelect;
+export type InsertSupplierPerformance = typeof supplierPerformance.$inferInsert;
+
+// ── Anomaly Detection (DETECCIÓN DE ANOMALÍAS) ──
+export const anomalies = mysqlTable("anomalies", {
+  id: int("id").autoincrement().primaryKey(),
+  inventoryItemId: int("inventoryItemId").notNull(),
+  anomalyDate: timestamp("anomalyDate").notNull(),
+  actualConsumption: double("actualConsumption").notNull(),
+  expectedConsumption: double("expectedConsumption").notNull(),
+  zScore: double("zScore").notNull(), // Z-score (|z| > 3 = anomalía)
+  probableCause: varchar("probableCause", { length: 255 }), // Causa probable
+  severity: mysqlEnum("severity", ["BAJO", "MEDIO", "ALTO"]).default("BAJO"),
+  resolved: tinyint("resolved").default(0), // 0 = false, 1 = true
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Anomaly = typeof anomalies.$inferSelect;
+export type InsertAnomaly = typeof anomalies.$inferInsert;
