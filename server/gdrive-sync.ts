@@ -219,7 +219,7 @@ async function parseExcelData(filePath: string) {
       stockSeguridad: safeFloat(row["STOCK SEGURIDAD"]),
       puntoReorden: safeFloat(row["PUNTO REORDEN"]),
       inventarioDias: safeFloat(row["INVENTARIO (dias)"]),
-      estado: safeStr(row["ESTADO"]),
+      estado: (safeStr(row["ESTADO"]) || "").toUpperCase().trim() || null,
       accionRequerida: safeStr(row["ACCION REQUERIDA"]),
       cantidadAPedir: safeFloat(row["CANTIDAD A PEDIR"]),
       valorAPedir: safeFloat(row["VALOR A PEDIR"]),
@@ -250,9 +250,9 @@ async function parseExcelData(filePath: string) {
       valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
       valorPendiente: safeFloat(row["VALOR PENDIENTE"]),
       diasRetraso: Math.round(safeFloat(row["DIAS RETRASO"])),
-      estado: safeStr(row["ESTADO"]),
+      estado: (safeStr(row["ESTADO"]) || "").toUpperCase().trim() || null,
       cumplimiento: safeFloat(row["CUMPLIMIENTO"]),
-      prioridad: safeStr(row["PRIORIDAD"]),
+      prioridad: (safeStr(row["PRIORIDAD"]) || "").toUpperCase().trim() || null,
     });
   }
 
