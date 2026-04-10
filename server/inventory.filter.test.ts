@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { getDb } from "./db";
 import { inventoryItems } from "../drizzle/schema";
+import { eq, inArray, and } from "drizzle-orm";
 
 /**
  * Test para validar que el filtro REORDEN funciona correctamente
@@ -29,7 +30,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Clean up test data
     await db.delete(inventoryItems).where(
-      db.inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
+      inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
     );
 
     // Insert test items
@@ -45,7 +46,7 @@ describe("Inventory Filter - REORDEN", () => {
     const result = await db
       .select()
       .from(inventoryItems)
-      .where(db.eq(inventoryItems.estado, "REORDEN"));
+      .where(eq(inventoryItems.estado, "REORDEN"));
 
     // Should find all 3 REORDEN items (normalized)
     expect(result.length).toBe(3);
@@ -53,7 +54,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Clean up
     await db.delete(inventoryItems).where(
-      db.inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
+      inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
     );
   });
 
@@ -66,7 +67,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Clean up
     await db.delete(inventoryItems).where(
-      db.inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
+      inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
     );
 
     // Insert test items
@@ -83,7 +84,7 @@ describe("Inventory Filter - REORDEN", () => {
     const reordenOnly = await db
       .select()
       .from(inventoryItems)
-      .where(db.eq(inventoryItems.estado, "REORDEN"));
+      .where(eq(inventoryItems.estado, "REORDEN"));
 
     expect(reordenOnly.length).toBe(2);
 
@@ -92,9 +93,9 @@ describe("Inventory Filter - REORDEN", () => {
       .select()
       .from(inventoryItems)
       .where(
-        db.and(
-          db.eq(inventoryItems.estado, "REORDEN"),
-          db.eq(inventoryItems.cuenta, "PLATAFORMA")
+        and(
+          eq(inventoryItems.estado, "REORDEN"),
+          eq(inventoryItems.cuenta, "PLATAFORMA")
         )
       );
 
@@ -103,7 +104,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Clean up
     await db.delete(inventoryItems).where(
-      db.inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
+      inArray(inventoryItems.referencia, testItems.map(i => i.referencia))
     );
   });
 
@@ -117,7 +118,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Clean up
     await db.delete(inventoryItems).where(
-      db.eq(inventoryItems.referencia, testItem.referencia)
+      eq(inventoryItems.referencia, testItem.referencia)
     );
 
     // Insert original
@@ -132,7 +133,7 @@ describe("Inventory Filter - REORDEN", () => {
     let result = await db
       .select()
       .from(inventoryItems)
-      .where(db.eq(inventoryItems.estado, "REORDEN"));
+      .where(eq(inventoryItems.estado, "REORDEN"));
     expect(result.some((r: any) => r.referencia === testItem.referencia)).toBe(true);
 
     // Simulate sync update (with normalized estado)
@@ -145,7 +146,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Delete and re-insert (simulating bulk upsert)
     await db.delete(inventoryItems).where(
-      db.eq(inventoryItems.referencia, testItem.referencia)
+      eq(inventoryItems.referencia, testItem.referencia)
     );
 
     await db.insert(inventoryItems).values({
@@ -159,7 +160,7 @@ describe("Inventory Filter - REORDEN", () => {
     result = await db
       .select()
       .from(inventoryItems)
-      .where(db.eq(inventoryItems.estado, "REORDEN"));
+      .where(eq(inventoryItems.estado, "REORDEN"));
 
     const updated = result.find((r: any) => r.referencia === testItem.referencia);
     expect(updated).toBeDefined();
@@ -168,7 +169,7 @@ describe("Inventory Filter - REORDEN", () => {
 
     // Clean up
     await db.delete(inventoryItems).where(
-      db.eq(inventoryItems.referencia, testItem.referencia)
+      eq(inventoryItems.referencia, testItem.referencia)
     );
   });
 });
