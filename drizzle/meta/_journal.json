@@ -22,6 +22,34 @@
       "when": 1775710575205,
       "tag": "0002_heavy_darkhawk",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1775786954526,
+      "tag": "0003_mysterious_warhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1775788350904,
+      "tag": "0004_easy_fallen_one",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1775788728764,
+      "tag": "0005_busy_zeigeist",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775789140042,
+      "tag": "0006_broken_reaper",
+      "breakpoints": true
     }
   ]
 }
