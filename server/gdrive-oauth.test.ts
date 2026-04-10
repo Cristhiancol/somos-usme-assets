@@ -13,7 +13,7 @@ describe("Google Drive OAuth configuration", () => {
     const redirectUri = "https://example.com/callback";
     const url = getGDriveAuthUrl(redirectUri);
     expect(url).toContain("accounts.google.com/o/oauth2/v2/auth");
-    expect(url).toContain("client_id=220183698829");
+    expect(url).toContain("client_id=327414420578");
     expect(url).toContain("drive.readonly");
     expect(url).toContain("offline");
     // state is now a base64url-encoded JSON containing gdrive_auth and redirectUri

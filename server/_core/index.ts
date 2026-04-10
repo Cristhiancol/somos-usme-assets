@@ -8,7 +8,8 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { syncFromGoogleDrive } from "../gdrive-sync";
-import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState } from "../gdrive-oauth";
+import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState, revokeGDriveToken } from "../gdrive-oauth";
+import { initializeBackgroundJobs } from "./jobs";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -88,6 +89,12 @@ async function startServer() {
     res.json({ authorized });
   });
 
+  // Revoke Google Drive token (force re-authorization)
+  app.post('/api/gdrive/revoke', async (_req, res) => {
+    await revokeGDriveToken();
+    res.json({ success: true, message: 'Token revocado. Por favor autoriza de nuevo.' });
+  });
+
   // Google Drive sync endpoint
   app.post('/api/sync-drive', async (_req, res) => {
     try {
@@ -107,6 +114,9 @@ async function startServer() {
       console.error('[AutoSync] Failed:', e);
     }
   }, 15 * 60 * 1000);
+
+  // Initialize background jobs (nightly analysis)
+  initializeBackgroundJobs();
   // tRPC API
   app.use(
     "/api/trpc",

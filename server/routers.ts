@@ -18,9 +18,11 @@ import {
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
+import { analyticsRouter } from "./routers/analytics";
 
 export const appRouter = router({
   system: systemRouter,
+  analytics: analyticsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
