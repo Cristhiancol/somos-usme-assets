@@ -3,7 +3,6 @@ import { getLoginUrl } from "@/const";
 import { LogOut, Bus, Zap, Menu, X, type LucideIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 
 type NavItem = {
   label: string;
@@ -11,6 +10,15 @@ type NavItem = {
   icon: LucideIcon;
 };
 
+/**
+ * DashboardLayout — STABLE ROOT WRAPPER
+ * 
+ * CRITICAL: To prevent React "insertBefore" errors on mobile, this component
+ * ALWAYS returns the same root <div> structure. The loading/login/app states
+ * are rendered as CHILDREN inside the same wrapper, never as completely 
+ * different return trees. This ensures React's reconciler never encounters
+ * incompatible DOM trees during state transitions.
+ */
 export default function DashboardLayout({
   children,
   navItems = [],
@@ -39,62 +47,73 @@ export default function DashboardLayout({
     }
   }, [userMenuOpen]);
 
-  // Stable root wrapper — always rendered to avoid React insertBefore errors
-  // caused by swapping entire trees (skeleton → login → app)
-  if (loading) {
-    return <DashboardLayoutSkeleton />;
-  }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background cyber-grid-bg">
-        <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full cyber-card rounded-xl">
-          <div className="flex flex-col items-center gap-4">
-            <div className="flex items-center gap-3">
-              <Bus className="h-10 w-10 text-neon-pink animate-pulse-neon" />
-              <Zap className="h-6 w-6 text-neon-cyan" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-wider text-neon-cyan" style={{ fontFamily: 'Orbitron' }}>
-              SOMOS USME
-            </h1>
-            <p className="text-sm text-muted-foreground text-center">
-              Sistema Inteligente JIT - Control de Inventario y Abastecimiento
-            </p>
-            <p className="text-xs text-neon-pink/60">
-              Gestión de Flota 260 Buses
-            </p>
-          </div>
-          <button
-            onClick={() => { window.location.href = getLoginUrl(); }}
-            className="w-full h-11 rounded-lg bg-neon-pink/20 border border-neon-pink/50 text-neon-pink hover:bg-neon-pink/30 hover:shadow-[0_0_20px_oklch(0.7_0.25_350/0.3)] transition-all font-bold tracking-wider"
-            style={{ fontFamily: 'Orbitron' }}
-          >
-            INICIAR SESIÓN
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   const activeMenuItem = navItems.find((item) => item.href === location);
 
+  // Determine what to show in the main area
+  const showLoading = loading;
+  const showLogin = !loading && !user;
+  const showApp = !loading && !!user;
+
+  // ALWAYS return the same root structure to prevent insertBefore errors
   return (
-    // Use a single stable wrapper — no position changes between renders
-    <div className="flex min-h-screen bg-background">
-      {/* Mobile overlay — always in DOM, visibility via opacity/pointer-events */}
+    <div className="flex min-h-screen bg-background" style={{ contain: "layout" }}>
+      {/* ===== LOADING STATE — overlays everything ===== */}
+      {showLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
+          <div className="flex flex-col items-center gap-4">
+            <Bus className="h-10 w-10 text-neon-cyan animate-pulse" />
+            <div className="text-sm text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+              Cargando sistema...
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== LOGIN STATE — overlays everything ===== */}
+      {showLogin && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background cyber-grid-bg">
+          <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full cyber-card rounded-xl">
+            <div className="flex flex-col items-center gap-4">
+              <div className="flex items-center gap-3">
+                <Bus className="h-10 w-10 text-neon-pink animate-pulse-neon" />
+                <Zap className="h-6 w-6 text-neon-cyan" />
+              </div>
+              <h1 className="text-2xl font-bold tracking-wider text-neon-cyan" style={{ fontFamily: 'Orbitron' }}>
+                SOMOS USME
+              </h1>
+              <p className="text-sm text-muted-foreground text-center">
+                Sistema Inteligente JIT - Control de Inventario y Abastecimiento
+              </p>
+              <p className="text-xs text-neon-pink/60">
+                Gestión de Flota 260 Buses
+              </p>
+            </div>
+            <button
+              onClick={() => { window.location.href = getLoginUrl(); }}
+              className="w-full h-11 rounded-lg bg-neon-pink/20 border border-neon-pink/50 text-neon-pink hover:bg-neon-pink/30 hover:shadow-[0_0_20px_oklch(0.7_0.25_350/0.3)] transition-all font-bold tracking-wider"
+              style={{ fontFamily: 'Orbitron' }}
+            >
+              INICIAR SESIÓN
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ===== MOBILE OVERLAY — always in DOM ===== */}
       <div
         aria-hidden="true"
-        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${
+          showApp && mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* Sidebar — fixed on mobile, sticky on desktop. 
-          IMPORTANT: We use a wrapper div that is always sticky on desktop 
-          and the inner aside is fixed on mobile. This avoids position 
-          changes that can cause React's insertBefore errors. */}
-      <div className="hidden md:flex md:flex-col md:w-[260px] md:shrink-0 md:sticky md:top-0 md:h-screen">
+      {/* ===== DESKTOP SIDEBAR — always in DOM, hidden when not app ===== */}
+      <div
+        className="hidden md:flex md:flex-col md:w-[260px] md:shrink-0 md:sticky md:top-0 md:h-screen"
+        style={{ visibility: showApp ? "visible" : "hidden" }}
+      >
         <aside className="flex flex-col h-full bg-background border-r border-neon-pink/10">
-          {/* Sidebar Header */}
           <div className="h-16 flex items-center gap-3 px-4 border-b border-neon-pink/10 shrink-0">
             <Bus className="h-5 w-5 text-neon-cyan shrink-0" />
             <span
@@ -104,7 +123,6 @@ export default function DashboardLayout({
               {title}
             </span>
           </div>
-          {/* Nav Items */}
           <nav className="flex-1 overflow-y-auto py-2 px-2">
             {navItems.map((item) => {
               const isActive = location === item.href;
@@ -124,7 +142,6 @@ export default function DashboardLayout({
               );
             })}
           </nav>
-          {/* User Footer */}
           <div className="p-3 border-t border-neon-pink/10 shrink-0 relative" ref={userMenuRef}>
             {userMenuOpen && (
               <div className="absolute bottom-full left-3 right-3 mb-2 rounded-lg border border-neon-pink/20 bg-background shadow-lg shadow-neon-pink/10 overflow-hidden">
@@ -143,7 +160,7 @@ export default function DashboardLayout({
             >
               <div className="h-9 w-9 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 flex items-center justify-center shrink-0">
                 <span className="text-xs font-medium text-neon-cyan">
-                  {user?.name?.charAt(0).toUpperCase()}
+                  {user?.name?.charAt(0).toUpperCase() || "?"}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
@@ -159,11 +176,13 @@ export default function DashboardLayout({
         </aside>
       </div>
 
-      {/* Mobile Sidebar — separate element, only shown on mobile via fixed positioning */}
+      {/* ===== MOBILE SIDEBAR — always in DOM, slides in/out ===== */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[260px] bg-background border-r border-neon-pink/10 z-50 flex flex-col transition-transform duration-300 md:hidden ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed top-0 left-0 h-full w-[260px] bg-background border-r border-neon-pink/10 z-50 flex flex-col transition-transform duration-300 md:hidden ${
+          showApp && mobileOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+        style={{ visibility: showApp ? "visible" : "hidden" }}
       >
-        {/* Sidebar Header */}
         <div className="h-16 flex items-center gap-3 px-4 border-b border-neon-pink/10 shrink-0">
           <Bus className="h-5 w-5 text-neon-cyan shrink-0" />
           <span
@@ -179,7 +198,6 @@ export default function DashboardLayout({
             <X className="h-4 w-4 text-neon-pink" />
           </button>
         </div>
-        {/* Nav Items */}
         <nav className="flex-1 overflow-y-auto py-2 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
@@ -202,7 +220,6 @@ export default function DashboardLayout({
             );
           })}
         </nav>
-        {/* User Footer */}
         <div className="p-3 border-t border-neon-pink/10 shrink-0">
           <button
             onClick={() => logout()}
@@ -214,7 +231,7 @@ export default function DashboardLayout({
           <div className="flex items-center gap-3 px-1 py-1 mt-1">
             <div className="h-9 w-9 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 flex items-center justify-center shrink-0">
               <span className="text-xs font-medium text-neon-cyan">
-                {user?.name?.charAt(0).toUpperCase()}
+                {user?.name?.charAt(0).toUpperCase() || "?"}
               </span>
             </div>
             <div className="flex-1 min-w-0">
@@ -229,8 +246,11 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* ===== MAIN CONTENT — always in DOM ===== */}
+      <div
+        className="flex-1 flex flex-col min-w-0"
+        style={{ visibility: showApp ? "visible" : "hidden" }}
+      >
         {/* Mobile Header */}
         <header className="md:hidden flex items-center justify-between h-14 px-4 border-b border-neon-pink/10 bg-background/95 backdrop-blur sticky top-0 z-30">
           <button
