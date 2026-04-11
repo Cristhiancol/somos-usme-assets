@@ -66,3 +66,8 @@
 - [x] FIX CRÍTICO: Error insertBefore en producción móvil — Causa raíz: 1) localStorage.setItem dentro de useMemo (side-effect en render) en useAuth.ts, 2) DashboardLayout retornaba árboles DOM completamente diferentes según estado (loading/login/app). Solución: mover localStorage a useEffect, wrapper raíz estable con visibility toggle en vez de return trees diferentes.
 - [x] FIX CRÍTICO: Error insertBefore al sincronizar — Causa raíz: syncMutation.mutate() llamado directamente dentro de useEffect durante el montaje del componente. Solución: useRef pendingAutoSync + setTimeout(500ms) para diferir la llamada hasta que React termine de reconciliar.
 - [x] FIX DEFINITIVO insertBefore: Causa raíz confirmada en bundle — patrón `isPending ? <><Loader2/> texto</> : <><RefreshCw/> texto</>` causa que React intente reemplazar nodos de diferente tipo en el mismo Fragment. Solución: usar siempre el mismo icono `<RefreshCw className={animate-spin si isPending}>` + texto condicional. Bundle verificado: 0 patrones Fragment+isPending. Sincronización automática confirmada cada 15 min: 1828 refs, 216 órdenes, 190 proveedores.
+- [x] Integrar Sentry para monitoreo de errores en producción (DSN configurado, servidor iniciando correctamente)
+- [x] Ejecutar tests completos (13/13 pasando)
+- [x] Validar sincronización automática cada 15 min (confirmado: 1.828 refs, 171 órdenes, 190 proveedores)
+- [x] Verificar dashboard sin errores en móvil (funcionando correctamente)
+- [ ] Publicar y entregar resultado final confirmado

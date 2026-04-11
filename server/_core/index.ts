@@ -9,6 +9,7 @@ import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { syncFromGoogleDrive } from "../gdrive-sync";
 import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState } from "../gdrive-oauth";
+import { initSentryServer, captureException } from "./sentry";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -30,6 +31,9 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Initialize Sentry for error tracking
+  initSentryServer();
+
   const app = express();
   const server = createServer(app);
   // Configure body parser with larger size limit for file uploads
@@ -105,6 +109,7 @@ async function startServer() {
       await syncFromGoogleDrive();
     } catch (e) {
       console.error('[AutoSync] Failed:', e);
+      captureException(e, { context: 'AutoSync' });
     }
   }, 15 * 60 * 1000);
   // tRPC API
