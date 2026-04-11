@@ -75,3 +75,14 @@
 - [x] Ejecutar pruebas completas (13/13 tests pasando, dashboard respondiendo correctamente)
 - [x] Validar sincronización con Google Drive sin errores (4 ciclos validados, 1.828 refs, 171 órdenes, 190 proveedores)
 - [ ] Guardar checkpoint final y publicar
+
+## Dashboard de Predicción con Google Gemini
+
+- [x] Integrar Google Gemini para análisis predictivo (40 referencias clase A en riesgo) — predictions.ts completado
+- [x] Crear procedimiento tRPC para calcular referencias en riesgo — top40AtRisk query implementada
+- [x] Crear componente React del Dashboard de Predicción — Predictions.tsx con 40 refs, gráficos de riesgo
+- [x] Escribir tests unitarios para la lógica de predicción — 13/13 tests pasando
+- [x] Ejecutar pruebas de integración completas — Build de producción exitoso (691 KB bundle)
+- [x] Validar sincronización automática sin errores — 8 ciclos cada 15 min, 1.828 refs procesadas
+- [x] Pruebas manuales en producción — Dashboard respondiendo sin errores
+- [ ] Checkpoint final y entrega
