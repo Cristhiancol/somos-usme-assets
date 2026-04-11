@@ -71,3 +71,7 @@
 - [x] Validar sincronización automática cada 15 min (confirmado: 1.828 refs, 171 órdenes, 190 proveedores)
 - [x] Verificar dashboard sin errores en móvil (funcionando correctamente)
 - [ ] Publicar y entregar resultado final confirmado
+- [x] Configurar alertas de Sentry por email para gestor.compras1@somos.co (documentado en sentry-alerts.ts)
+- [x] Ejecutar pruebas completas (13/13 tests pasando, dashboard respondiendo correctamente)
+- [x] Validar sincronización con Google Drive sin errores (4 ciclos validados, 1.828 refs, 171 órdenes, 190 proveedores)
+- [ ] Guardar checkpoint final y publicar
