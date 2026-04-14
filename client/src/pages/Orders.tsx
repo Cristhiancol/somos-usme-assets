@@ -10,65 +10,84 @@ function formatCurrency(val: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
 }
 
-// Prioridades actualizadas con los valores reales del Drive
+// Prioridades — Paleta corporativa + alertas
 function getPrioridadBadge(p: string | null) {
   if (!p) return null;
-  const map: Record<string, string> = {
-    "CRITICO":           "bg-red-600/30 text-red-300 border-red-500/50",
-    "REORDEN INMEDIATO": "bg-orange-500/30 text-orange-300 border-orange-500/50",
-    "PRECAUCION":        "bg-yellow-500/30 text-yellow-300 border-yellow-500/50",
-    "OPTIMO":            "bg-green-600/30 text-green-300 border-green-500/50",
-    "EXCESO":            "bg-blue-500/30 text-blue-300 border-blue-500/50",
+  // CRITICO y REORDEN INMEDIATO usan rojo alerta (no corporativo, solo alertas críticas)
+  // PRECAUCION usa naranja alerta
+  // OPTIMO usa Lima corporativo
+  // EXCESO usa Teal corporativo
+  const map: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
+    "CRITICO":           { bg: "#fee2e2", text: "#991b1b", border: "#f87171", shadow: "0 0 6px rgba(239,68,68,0.4)" },
+    "REORDEN INMEDIATO": { bg: "#fff7ed", text: "#9a3412", border: "#fb923c", shadow: "0 0 6px rgba(251,146,60,0.4)" },
+    "PRECAUCION":        { bg: "#fefce8", text: "#854d0e", border: "#eab308", shadow: "0 0 6px rgba(234,179,8,0.3)" },
+    "OPTIMO":            { bg: "#f0f9e8", text: "#281C19", border: "#8CB32A", shadow: "0 0 6px rgba(140,179,42,0.4)" },
+    "EXCESO":            { bg: "#f0fdfb", text: "#134e4a", border: "#009890", shadow: "0 0 6px rgba(0,152,144,0.3)" },
   };
-  return <Badge variant="outline" className={`text-[10px] font-bold ${map[p] || "bg-gray-500/20 text-gray-300"}`}>{p}</Badge>;
+  const s = map[p];
+  if (!s) return <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc' }}>{p}</span>;
+  return (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: s.bg, color: s.text, borderColor: s.border, boxShadow: s.shadow, fontFamily: 'Rajdhani' }}>
+      {p}
+    </span>
+  );
 }
 
 function getEstadoBadge(e: string | null) {
   if (!e) return null;
-  const map: Record<string, string> = {
-    "PENDIENTE":    "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-    "CASI COMPLETO":"bg-blue-500/20 text-blue-400 border-blue-500/30",
-    "VENCIDO":      "bg-red-500/20 text-red-400 border-red-500/30",
+  const map: Record<string, { bg: string; text: string; border: string }> = {
+    "PENDIENTE":     { bg: "#fefce8", text: "#854d0e", border: "#eab308" },
+    "CASI COMPLETO": { bg: "#f0fdfb", text: "#134e4a", border: "#009890" },
+    "VENCIDO":       { bg: "#fee2e2", text: "#991b1b", border: "#f87171" },
   };
-  return <Badge variant="outline" className={`text-[10px] ${map[e] || ""}`}>{e}</Badge>;
+  const s = map[e];
+  if (!s) return <span className="inline-block px-2 py-0.5 rounded text-[10px] border" style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc' }}>{e}</span>;
+  return (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: s.bg, color: s.text, borderColor: s.border, fontFamily: 'Rajdhani' }}>
+      {e}
+    </span>
+  );
 }
 
-// Badge de tipo de referencia: NUEVO (azul), REPARADO (ámbar), SERVICIO (morado)
+// Badge de tipo de referencia — Paleta Corporativa
+// NUEVO: Lima #8CB32A, texto oscuro #281C19, glow lima
+// REPARADO: Oscuro #281C19, texto blanco, borde Lima neón
+// SERVICIO: Teal #009890, texto blanco, glow teal
 function getTipoBadge(tipo: string) {
   if (tipo === "REPARADO") {
     return (
-      <Badge variant="outline" className="text-[10px] font-bold bg-amber-500/20 text-amber-300 border-amber-500/40 gap-1">
+      <span className="badge-reparado inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px]">
         <Wrench className="h-2.5 w-2.5" />REPARADO
-      </Badge>
+      </span>
     );
   }
   if (tipo === "SERVICIO") {
     return (
-      <Badge variant="outline" className="text-[10px] font-bold bg-purple-500/20 text-purple-300 border-purple-500/40 gap-1">
+      <span className="badge-servicio inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px]">
         <Settings className="h-2.5 w-2.5" />SERVICIO
-      </Badge>
+      </span>
     );
   }
   return (
-    <Badge variant="outline" className="text-[10px] font-bold bg-blue-500/20 text-blue-300 border-blue-500/40 gap-1">
+    <span className="badge-nuevo inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px]">
       <Package className="h-2.5 w-2.5" />NUEVO
-    </Badge>
+    </span>
   );
 }
 
-// Resaltar el sufijo -R en la referencia
+// Resaltar el sufijo -R en la referencia — Paleta corporativa
 function ReferenciaBadge({ ref: refStr }: { ref: string | null }) {
-  if (!refStr) return <span className="text-muted-foreground/40 text-xs">—</span>;
+  if (!refStr) return <span className="text-xs" style={{ color: '#9ca3af' }}>—</span>;
   const hasR = refStr.match(/^(.+)(-R)$/i);
   if (hasR) {
     return (
       <span className="font-mono text-xs font-bold">
-        <span className="text-neon-cyan">{hasR[1]}</span>
-        <span className="text-amber-400 bg-amber-500/20 px-0.5 rounded">-R</span>
+        <span style={{ color: '#009890' }}>{hasR[1]}</span>
+        <span className="px-0.5 rounded font-bold" style={{ color: '#ffffff', background: '#281C19', border: '1px solid #8CB32A', boxShadow: '0 0 4px rgba(140,179,42,0.5)' }}>-R</span>
       </span>
     );
   }
-  return <span className="font-mono text-neon-cyan text-xs font-bold">{refStr}</span>;
+  return <span className="font-mono text-xs font-bold" style={{ color: '#009890' }}>{refStr}</span>;
 }
 
 function CyberSelect({ value, onChange, placeholder, options }: {
@@ -81,8 +100,21 @@ function CyberSelect({ value, onChange, placeholder, options }: {
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 w-full rounded-md border border-neon-pink/20 bg-cyber-dark px-3 py-1 text-sm text-foreground shadow-xs outline-none focus:border-neon-pink/50 focus:ring-1 focus:ring-neon-pink/30 appearance-none cursor-pointer"
-      style={{ fontFamily: "Rajdhani", backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff2d95' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 8px center' }}
+      className="h-9 w-full rounded-md appearance-none cursor-pointer"
+      style={{
+        fontFamily: "Rajdhani",
+        background: '#f9fafb',
+        border: '1px solid rgba(140,179,42,0.3)',
+        color: '#281C19',
+        padding: '0 2rem 0 0.75rem',
+        fontSize: '0.875rem',
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23009890' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")`,
+        backgroundRepeat: 'no-repeat',
+        backgroundPosition: 'right 8px center',
+        outline: 'none',
+      }}
+      onFocus={(e) => { e.target.style.borderColor = '#8CB32A'; e.target.style.boxShadow = '0 0 0 2px rgba(140,179,42,0.15)'; }}
+      onBlur={(e) => { e.target.style.borderColor = 'rgba(140,179,42,0.3)'; e.target.style.boxShadow = 'none'; }}
     >
       <option value="">{placeholder}</option>
       {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -125,11 +157,12 @@ export default function OrdersPage() {
   const conteoServicios = useMemo(() =>
     (data || []).filter(o => (o as any).tipoReferencia === 'SERVICIO').length, [data]);
 
-  const tipoButtons: { key: TipoFiltro; label: string; count?: number; color: string }[] = [
-    { key: "TODOS",    label: "Todos",    count: data?.length,  color: tipoReferencia === "TODOS"    ? "bg-neon-pink/30 border-neon-pink text-neon-pink"    : "bg-transparent border-neon-pink/20 text-muted-foreground hover:border-neon-pink/50" },
-    { key: "NUEVO",    label: "Nuevos",   count: conteoNuevos,  color: tipoReferencia === "NUEVO"    ? "bg-blue-500/30 border-blue-400 text-blue-300"       : "bg-transparent border-blue-500/20 text-muted-foreground hover:border-blue-400/50" },
-    { key: "REPARADO", label: "Reparados",count: conteoReparados,color:tipoReferencia === "REPARADO" ? "bg-amber-500/30 border-amber-400 text-amber-300"    : "bg-transparent border-amber-500/20 text-muted-foreground hover:border-amber-400/50" },
-    { key: "SERVICIO", label: "Servicios",count: conteoServicios,color:tipoReferencia === "SERVICIO" ? "bg-purple-500/30 border-purple-400 text-purple-300" : "bg-transparent border-purple-500/20 text-muted-foreground hover:border-purple-400/50" },
+  // Clases activas con paleta corporativa
+  const tipoButtons: { key: TipoFiltro; label: string; count?: number; activeClass: string }[] = [
+    { key: "TODOS",    label: "Todos",     count: data?.length,   activeClass: "active-lime" },
+    { key: "NUEVO",    label: "Nuevos",    count: conteoNuevos,   activeClass: "active-lime" },
+    { key: "REPARADO", label: "Reparados", count: conteoReparados, activeClass: "active-dark" },
+    { key: "SERVICIO", label: "Servicios", count: conteoServicios, activeClass: "active-teal" },
   ];
 
   return (
@@ -137,8 +170,8 @@ export default function OrdersPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <ShoppingCart className="h-6 w-6 text-neon-yellow" />
-          <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+          <ShoppingCart className="h-6 w-6" style={{ color: '#8CB32A' }} />
+          <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
             ÓRDENES PENDIENTES
           </h1>
           <span className="text-xs text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
@@ -148,8 +181,8 @@ export default function OrdersPage() {
         <Button
           onClick={() => notifyDelayed.mutate()}
           disabled={notifyDelayed.isPending}
-          className="bg-neon-pink/20 border border-neon-pink/40 text-neon-pink hover:bg-neon-pink/30 gap-2"
-          style={{ fontFamily: "Orbitron" }}
+          className="gap-2 font-bold"
+          style={{ background: '#281C19', color: '#ffffff', border: '1px solid #8CB32A', boxShadow: '0 0 8px rgba(140,179,42,0.3)', fontFamily: 'Orbitron' }}
           size="sm"
         >
           <Bell className="h-4 w-4" />
@@ -170,7 +203,7 @@ export default function OrdersPage() {
           <button
             key={btn.key}
             onClick={() => setTipoReferencia(btn.key)}
-            className={`px-3 py-1.5 rounded-md border text-xs font-bold transition-all flex items-center gap-1.5 ${btn.color}`}
+            className={`filter-btn px-3 py-1.5 rounded-md text-xs flex items-center gap-1.5 ${tipoReferencia === btn.key ? btn.activeClass : ''}`}
             style={{ fontFamily: "Rajdhani" }}
           >
             {btn.key === "NUEVO" && <Package className="h-3 w-3" />}
@@ -241,56 +274,58 @@ export default function OrdersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
               <thead>
-                <tr className="border-b border-neon-pink/20 bg-neon-pink/5">
-                  <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">TIPO</th>
-                  <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">OC</th>
-                  <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">REFERENCIA</th>
-                  <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">DESCRIPCIÓN</th>
-                  <th className="text-left py-3 px-2 text-neon-pink font-semibold text-xs">PROVEEDOR</th>
-                  <th className="text-right py-3 px-2 text-neon-pink font-semibold text-xs">PEDIDO</th>
-                  <th className="text-right py-3 px-2 text-neon-pink font-semibold text-xs">RECIBIDO</th>
-                  <th className="text-right py-3 px-2 text-neon-pink font-semibold text-xs">PENDIENTE</th>
-                  <th className="text-right py-3 px-2 text-neon-pink font-semibold text-xs">VALOR PEND.</th>
-                  <th className="text-center py-3 px-2 text-neon-pink font-semibold text-xs">CUMPL.</th>
-                  <th className="text-center py-3 px-2 text-neon-pink font-semibold text-xs">RETRASO</th>
-                  <th className="text-center py-3 px-2 text-neon-pink font-semibold text-xs">ESTADO</th>
-                  <th className="text-center py-3 px-2 text-neon-pink font-semibold text-xs">PRIORIDAD</th>
+                <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
+                  <th className="text-left py-3 px-2 font-semibold text-xs">TIPO</th>
+                  <th className="text-left py-3 px-2 font-semibold text-xs">OC</th>
+                  <th className="text-left py-3 px-2 font-semibold text-xs">REFERENCIA</th>
+                  <th className="text-left py-3 px-2 font-semibold text-xs">DESCRIPCIÓN</th>
+                  <th className="text-left py-3 px-2 font-semibold text-xs">PROVEEDOR</th>
+                  <th className="text-right py-3 px-2 font-semibold text-xs">PEDIDO</th>
+                  <th className="text-right py-3 px-2 font-semibold text-xs">RECIBIDO</th>
+                  <th className="text-right py-3 px-2 font-semibold text-xs">PENDIENTE</th>
+                  <th className="text-right py-3 px-2 font-semibold text-xs">VALOR PEND.</th>
+                  <th className="text-center py-3 px-2 font-semibold text-xs">CUMPL.</th>
+                  <th className="text-center py-3 px-2 font-semibold text-xs">RETRASO</th>
+                  <th className="text-center py-3 px-2 font-semibold text-xs">ESTADO</th>
+                  <th className="text-center py-3 px-2 font-semibold text-xs">PRIORIDAD</th>
                 </tr>
               </thead>
               <tbody>
                 {(data || []).map((o, i) => {
                   const tipo = (o as any).tipoReferencia as string || 'NUEVO';
+                  // Fondo de fila sutil con paleta corporativa
                   const rowBg = tipo === 'SERVICIO'
-                    ? 'bg-purple-500/5'
+                    ? 'bg-teal-50'
                     : tipo === 'REPARADO'
-                    ? 'bg-amber-500/5'
+                    ? 'bg-stone-50'
                     : '';
                   return (
                     <tr
                       key={`${o.ordenCompra}-${o.mainsaver}-${i}`}
-                      className={`border-b border-border/20 hover:bg-neon-cyan/5 transition-colors ${(o.diasRetraso || 0) > 0 ? "bg-red-500/5" : rowBg}`}
+                      className={`border-b transition-colors hover:bg-lime-50 ${(o.diasRetraso || 0) > 0 ? 'bg-red-50' : rowBg}`}
+                      style={{ borderColor: 'rgba(140,179,42,0.12)' }}
                     >
                       <td className="py-2 px-2 text-center">{getTipoBadge(tipo)}</td>
-                      <td className="py-2 px-2 font-mono text-neon-cyan text-xs">{o.ordenCompra}</td>
+                      <td className="py-2 px-2 font-mono text-xs font-bold" style={{ color: '#009890' }}>{o.ordenCompra}</td>
                       <td className="py-2 px-2 text-xs">
                         <ReferenciaBadge ref={o.mainsaver} />
                       </td>
                       <td className="py-2 px-2 text-xs max-w-[160px] truncate" title={o.descripcion ?? ""}>{o.descripcion}</td>
                       <td className="py-2 px-2 text-xs max-w-[140px] truncate text-muted-foreground" title={o.proveedor ?? ""}>{o.proveedor}</td>
                       <td className="py-2 px-2 text-right font-mono text-xs">{o.qtyOrdenada?.toFixed(0)}</td>
-                      <td className="py-2 px-2 text-right font-mono text-neon-green text-xs">{o.qtyRecibida?.toFixed(0)}</td>
-                      <td className="py-2 px-2 text-right font-mono text-orange-400 text-xs">{o.qtyPendiente?.toFixed(0)}</td>
-                      <td className="py-2 px-2 text-right font-mono text-neon-cyan text-xs">{formatCurrency(o.valorPendiente || 0)}</td>
+                      <td className="py-2 px-2 text-right font-mono text-xs" style={{ color: '#8CB32A' }}>{o.qtyRecibida?.toFixed(0)}</td>
+                      <td className="py-2 px-2 text-right font-mono text-xs" style={{ color: '#9a3412' }}>{o.qtyPendiente?.toFixed(0)}</td>
+                      <td className="py-2 px-2 text-right font-mono text-xs font-bold" style={{ color: '#281C19' }}>{formatCurrency(o.valorPendiente || 0)}</td>
                       <td className="py-2 px-2 text-center">
                         <div className="flex flex-col items-center gap-0.5">
                           <span className="text-xs font-mono">{((o.cumplimiento || 0) * 100).toFixed(0)}%</span>
                           <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-neon-cyan rounded-full" style={{ width: `${(o.cumplimiento || 0) * 100}%` }} />
+                            <div className="h-full rounded-full" style={{ width: `${(o.cumplimiento || 0) * 100}%`, background: '#009890' }} />
                           </div>
                         </div>
                       </td>
                       <td className="py-2 px-2 text-center">
-                        <span className={`font-mono text-xs font-bold ${(o.diasRetraso || 0) > 90 ? "text-red-400" : (o.diasRetraso || 0) > 30 ? "text-orange-400" : (o.diasRetraso || 0) > 0 ? "text-yellow-400" : "text-green-400"}`}>
+                        <span className="font-mono text-xs font-bold" style={{ color: (o.diasRetraso || 0) > 90 ? '#991b1b' : (o.diasRetraso || 0) > 30 ? '#9a3412' : (o.diasRetraso || 0) > 0 ? '#854d0e' : '#8CB32A' }}>
                           {(o.diasRetraso || 0) > 0 ? `${o.diasRetraso}d` : "OK"}
                         </span>
                       </td>
@@ -306,15 +341,15 @@ export default function OrdersPage() {
       </Card>
 
       {/* Footer informativo */}
-      <div className="text-xs text-muted-foreground/60 text-right" style={{ fontFamily: "Rajdhani" }}>
+      <div className="text-xs text-right" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>
         <span className="inline-flex items-center gap-1 mr-4">
-          <Package className="h-3 w-3 text-blue-400" /> NUEVO = repuesto nuevo en espera de entrega
+          <Package className="h-3 w-3" style={{ color: '#8CB32A' }} /> NUEVO = repuesto nuevo en espera de entrega
         </span>
         <span className="inline-flex items-center gap-1 mr-4">
-          <Wrench className="h-3 w-3 text-amber-400" /> REPARADO (-R) = repuesto en taller/reparación
+          <Wrench className="h-3 w-3" style={{ color: '#281C19' }} /> REPARADO (-R) = repuesto en taller/reparación
         </span>
         <span className="inline-flex items-center gap-1">
-          <Settings className="h-3 w-3 text-purple-400" /> SERVICIO (SVR) = requiere cierre por Mantenimiento
+          <Settings className="h-3 w-3" style={{ color: '#009890' }} /> SERVICIO (SVR) = requiere cierre por Mantenimiento
         </span>
       </div>
     </div>

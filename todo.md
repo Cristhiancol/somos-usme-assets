@@ -114,3 +114,17 @@
 - [x] PRUEBA 3: X(10)+Y(137)+Z(0)=147 = total
 - [x] PRUEBA 4: Filtros funcionales validados
 - [x] PRUEBA 5: Regresión — 53/53 tests pasan
+
+## Rediseño Light Cyberpunk — Paleta Corporativa
+
+- [x] Migrar index.css a tema Light Cyberpunk (fondo blanco, variables CSS corporativas)
+- [x] Actualizar sidebar/DashboardLayout con nueva paleta
+- [x] Actualizar KPI cards con nueva paleta
+- [x] Actualizar badges NUEVO (#8CB32A neón), REPARADO (#281C19 borde #8CB32A), SERVICIO (#009890 neón)
+- [x] Actualizar tablas: cabeceras teal 10% opacidad, texto #281C19
+- [x] Actualizar botones de filtro con paleta corporativa e interactividad neón
+- [x] Actualizar prioridades y estados con nueva paleta
+- [x] PRUEBA 1: Contraste WCAG — #281C19 sobre blanco = 14.7:1 ✔ | Lima solo como acento/borde
+- [x] PRUEBA 2: Consistencia paleta — DashboardLayout, Home, StockCeroConOC usan paleta corporativa
+- [x] PRUEBA 3: Badges NUEVO/REPARADO/SERVICIO con colores corporativos y PrioridadBadge/EstadoBadge
+- [x] PRUEBA 4: Regresión — 75/75 tests pasan (22 nuevos + 53 previos)

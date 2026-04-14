@@ -1,27 +1,54 @@
 import { trpc } from "@/lib/trpc";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { useState, useMemo } from "react";
+import { AlertTriangle, Siren, ShoppingCart, Banknote, Search } from "lucide-react";
 
-function getPrioridadColor(prioridad: string | null) {
+// ── Paleta corporativa para prioridades ─────────────────────────────
+const PRIORIDAD_STYLE: Record<string, { bg: string; text: string; border: string; shadow: string }> = {
+  "CRITICO":           { bg: "#fee2e2", text: "#991b1b", border: "#f87171", shadow: "0 0 6px rgba(239,68,68,0.4)" },
+  "REORDEN INMEDIATO": { bg: "#fff7ed", text: "#9a3412", border: "#fb923c", shadow: "0 0 6px rgba(251,146,60,0.4)" },
+  "PRECAUCION":        { bg: "#fefce8", text: "#854d0e", border: "#eab308", shadow: "0 0 6px rgba(234,179,8,0.3)" },
+  "OPTIMO":            { bg: "#f0f9e8", text: "#281C19", border: "#8CB32A", shadow: "0 0 6px rgba(140,179,42,0.4)" },
+  "EXCESO":            { bg: "#f0fdfb", text: "#134e4a", border: "#009890", shadow: "0 0 6px rgba(0,152,144,0.3)" },
+};
+
+function PrioridadBadge({ prioridad }: { prioridad: string | null }) {
   const p = (prioridad || "").toUpperCase();
-  if (p === "CRITICO") return "bg-red-600 text-white border-red-700";
-  if (p === "REORDEN INMEDIATO") return "bg-orange-500 text-white border-orange-600";
-  if (p === "PRECAUCION") return "bg-yellow-500 text-black border-yellow-600";
-  if (p === "OPTIMO") return "bg-green-600 text-white border-green-700";
-  if (p === "EXCESO") return "bg-blue-500 text-white border-blue-600";
-  return "bg-gray-500 text-white border-gray-600";
+  const s = PRIORIDAD_STYLE[p];
+  if (!s) return (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
+      style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc', fontFamily: 'Rajdhani' }}>
+      {prioridad || "—"}
+    </span>
+  );
+  return (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
+      style={{ background: s.bg, color: s.text, borderColor: s.border, boxShadow: s.shadow, fontFamily: 'Rajdhani' }}>
+      {prioridad}
+    </span>
+  );
 }
 
-function getPrioridadLabel(prioridad: string | null) {
-  const p = (prioridad || "").toUpperCase();
-  if (p === "CRITICO") return "🔴 CRÍTICO";
-  if (p === "REORDEN INMEDIATO") return "🟠 REORDEN INMEDIATO";
-  if (p === "PRECAUCION") return "🟡 PRECAUCIÓN";
-  if (p === "OPTIMO") return "🟢 ÓPTIMO";
-  if (p === "EXCESO") return "🔵 EXCESO";
-  return prioridad || "—";
+function EstadoBadge({ estado }: { estado: string | null }) {
+  const e = (estado || "").toUpperCase();
+  const map: Record<string, { bg: string; text: string; border: string }> = {
+    "PENDIENTE":     { bg: "#fefce8", text: "#854d0e", border: "#eab308" },
+    "CASI COMPLETO": { bg: "#f0fdfb", text: "#134e4a", border: "#009890" },
+    "VENCIDO":       { bg: "#fee2e2", text: "#991b1b", border: "#f87171" },
+  };
+  const s = map[e];
+  if (!s) return (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] border"
+      style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc', fontFamily: 'Rajdhani' }}>
+      {estado || "—"}
+    </span>
+  );
+  return (
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
+      style={{ background: s.bg, color: s.text, borderColor: s.border, fontFamily: 'Rajdhani' }}>
+      {estado}
+    </span>
+  );
 }
 
 function formatCurrency(val: number | null) {
@@ -58,164 +85,181 @@ export default function StockCeroConOC() {
 
   const criticos = useMemo(() => filtered.filter(r => (r.prioridadOC || "").toUpperCase() === "CRITICO").length, [filtered]);
   const reordenInmediato = useMemo(() => filtered.filter(r => (r.prioridadOC || "").toUpperCase() === "REORDEN INMEDIATO").length, [filtered]);
+  const valorTotal = useMemo(() => filtered.reduce((s, r) => s + (r.valorPendiente || 0), 0), [filtered]);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-3 mb-2">
-          <span className="text-3xl">⚠️</span>
-          <h1 className="text-2xl font-bold text-orange-400 font-mono tracking-wide">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Siren className="h-6 w-6 animate-pulse-neon" style={{ color: '#dc2626' }} />
+          <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
             STOCK CERO — OC ACTIVA
           </h1>
         </div>
-        <p className="text-gray-400 text-sm">
-          Referencias sin stock que tienen una Orden de Compra pendiente. Estas son las que debes presionar al proveedor.
+        <p className="text-sm" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>
+          Referencias sin stock con Orden de Compra pendiente — presionar al proveedor
         </p>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-gray-900 border border-red-800">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #dc2626' }}>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs text-gray-400 font-mono mb-1">TOTAL AFECTADAS</div>
-            <div className="text-3xl font-bold text-red-400 font-mono">
+            <AlertTriangle className="h-4 w-4 mb-2" style={{ color: '#dc2626' }} />
+            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>TOTAL AFECTADAS</div>
+            <div className="text-3xl font-black" style={{ fontFamily: "Orbitron", color: '#dc2626' }}>
               {isLoading ? "..." : (data?.length ?? 0)}
             </div>
-            <div className="text-xs text-gray-500 mt-1">refs con stock=0 + OC activa</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>refs stock=0 + OC activa</div>
           </CardContent>
         </Card>
-        <Card className="bg-gray-900 border border-red-700">
+        <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #f87171' }}>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs text-gray-400 font-mono mb-1">🔴 CRÍTICO</div>
-            <div className="text-3xl font-bold text-red-500 font-mono">{criticos}</div>
-            <div className="text-xs text-gray-500 mt-1">acción inmediata</div>
+            <AlertTriangle className="h-4 w-4 mb-2" style={{ color: '#f87171' }} />
+            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>CRÍTICO</div>
+            <div className="text-3xl font-black" style={{ fontFamily: "Orbitron", color: '#f87171' }}>{criticos}</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>acción inmediata</div>
           </CardContent>
         </Card>
-        <Card className="bg-gray-900 border border-orange-700">
+        <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #fb923c' }}>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs text-gray-400 font-mono mb-1">🟠 REORDEN INMEDIATO</div>
-            <div className="text-3xl font-bold text-orange-400 font-mono">{reordenInmediato}</div>
-            <div className="text-xs text-gray-500 mt-1">presionar proveedor</div>
+            <ShoppingCart className="h-4 w-4 mb-2" style={{ color: '#fb923c' }} />
+            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>REORDEN INMEDIATO</div>
+            <div className="text-3xl font-black" style={{ fontFamily: "Orbitron", color: '#fb923c' }}>{reordenInmediato}</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>presionar proveedor</div>
           </CardContent>
         </Card>
-        <Card className="bg-gray-900 border border-yellow-700">
+        <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #8CB32A' }}>
           <CardContent className="pt-4 pb-3">
-            <div className="text-xs text-gray-400 font-mono mb-1">VALOR PENDIENTE</div>
-            <div className="text-2xl font-bold text-yellow-400 font-mono">
-              {isLoading ? "..." : formatCurrency(filtered.reduce((s, r) => s + (r.valorPendiente || 0), 0))}
+            <Banknote className="h-4 w-4 mb-2" style={{ color: '#8CB32A' }} />
+            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>VALOR PENDIENTE</div>
+            <div className="text-xl font-black" style={{ fontFamily: "Orbitron", color: '#8CB32A' }}>
+              {isLoading ? "..." : formatCurrency(valorTotal)}
             </div>
-            <div className="text-xs text-gray-500 mt-1">en órdenes activas</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>en órdenes activas</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-col md:flex-row gap-3 mb-5">
-        <Input
-          placeholder="Buscar por referencia, descripción, proveedor u OC..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="bg-gray-900 border-gray-700 text-gray-100 placeholder-gray-500 font-mono text-sm max-w-md"
-        />
+      <div className="flex flex-col md:flex-row gap-3">
+        <div className="relative max-w-md flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: '#009890' }} />
+          <input
+            type="text"
+            placeholder="Buscar por referencia, descripción, proveedor u OC..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="cyber-input w-full h-9 pl-9 pr-3 rounded-md text-sm"
+            style={{ fontFamily: "Rajdhani" }}
+          />
+        </div>
         <div className="flex gap-2 flex-wrap">
-          {prioridades.map(p => (
-            <button
-              key={p}
-              onClick={() => setFilterPrioridad(p)}
-              className={`px-3 py-1.5 rounded text-xs font-mono font-bold border transition-all ${
-                filterPrioridad === p
-                  ? "bg-cyan-600 border-cyan-400 text-white"
-                  : "bg-gray-800 border-gray-600 text-gray-300 hover:border-cyan-600"
-              }`}
-            >
-              {p}
-            </button>
-          ))}
+          {prioridades.map(p => {
+            const isActive = filterPrioridad === p;
+            const s = PRIORIDAD_STYLE[p];
+            return (
+              <button
+                key={p}
+                onClick={() => setFilterPrioridad(p)}
+                className="px-3 py-1.5 rounded text-xs font-bold border transition-all"
+                style={{
+                  fontFamily: "Rajdhani",
+                  background: isActive ? (s ? s.bg : 'rgba(0,152,144,0.12)') : '#ffffff',
+                  color: isActive ? (s ? s.text : '#009890') : '#6b7280',
+                  borderColor: isActive ? (s ? s.border : '#009890') : 'rgba(140,179,42,0.3)',
+                  boxShadow: isActive ? (s ? s.shadow : '0 0 8px rgba(0,152,144,0.3)') : 'none',
+                }}
+              >
+                {p}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Tabla */}
-      {isLoading ? (
-        <div className="text-center py-20 text-cyan-400 font-mono animate-pulse">
-          Cargando datos del cruce inventario × órdenes...
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="text-center py-20 text-gray-500 font-mono">
-          No se encontraron referencias con los filtros aplicados.
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-800">
-          <table className="w-full text-xs font-mono">
-            <thead>
-              <tr className="bg-gray-900 border-b border-gray-700">
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">PRIORIDAD OC</th>
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">REFERENCIA</th>
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">DESCRIPCIÓN</th>
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">OC</th>
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">PROVEEDOR</th>
-                <th className="text-right px-3 py-3 text-cyan-400 font-bold">DÍAS RETRASO</th>
-                <th className="text-right px-3 py-3 text-cyan-400 font-bold">QTY PEND.</th>
-                <th className="text-right px-3 py-3 text-cyan-400 font-bold">VALOR PEND.</th>
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">ESTADO OC</th>
-                <th className="text-left px-3 py-3 text-cyan-400 font-bold">COMPRADOR</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((r, i) => {
-                const diasRetraso = r.diasRetraso ?? 0;
-                const rowBg = i % 2 === 0 ? "bg-gray-950" : "bg-gray-900";
-                const retrasoColor =
-                  diasRetraso > 90 ? "text-red-400 font-bold" :
-                  diasRetraso > 30 ? "text-orange-400 font-bold" :
-                  diasRetraso > 0 ? "text-yellow-400" : "text-gray-400";
-                return (
-                  <tr
-                    key={`${r.referencia}-${r.ordenCompra}-${i}`}
-                    className={`${rowBg} border-b border-gray-800 hover:bg-gray-800 transition-colors`}
-                  >
-                    <td className="px-3 py-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold border ${getPrioridadColor(r.prioridadOC)}`}>
-                        {getPrioridadLabel(r.prioridadOC)}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-cyan-300 font-bold">{r.referencia}</td>
-                    <td className="px-3 py-2 text-gray-200 max-w-[200px] truncate" title={r.descripcion ?? ""}>
-                      {r.descripcion}
-                    </td>
-                    <td className="px-3 py-2 text-yellow-300">{r.ordenCompra}</td>
-                    <td className="px-3 py-2 text-gray-300 max-w-[160px] truncate" title={r.proveedorOC ?? ""}>
-                      {r.proveedorOC}
-                    </td>
-                    <td className={`px-3 py-2 text-right ${retrasoColor}`}>
-                      {diasRetraso > 0 ? `${diasRetraso}d` : "—"}
-                    </td>
-                    <td className="px-3 py-2 text-right text-gray-300">
-                      {r.qtyPendiente?.toLocaleString("es-CO") ?? "—"}
-                    </td>
-                    <td className="px-3 py-2 text-right text-green-400">
-                      {formatCurrency(r.valorPendiente)}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                        (r.estadoOC || "").toUpperCase() === "CASI COMPLETO"
-                          ? "bg-blue-900 text-blue-300 border border-blue-700"
-                          : "bg-orange-900 text-orange-300 border border-orange-700"
-                      }`}>
-                        {r.estadoOC || "—"}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-gray-400">{r.comprador}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <Card className="cyber-card rounded-xl overflow-hidden">
+        {isLoading ? (
+          <div className="text-center py-20 animate-pulse" style={{ fontFamily: "Rajdhani", color: '#009890' }}>
+            Cargando datos del cruce inventario × órdenes...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>
+            No se encontraron referencias con los filtros aplicados.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs" style={{ fontFamily: "Rajdhani" }}>
+              <thead>
+                <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
+                  <th className="text-left px-3 py-3 font-semibold">PRIORIDAD OC</th>
+                  <th className="text-left px-3 py-3 font-semibold">REFERENCIA</th>
+                  <th className="text-left px-3 py-3 font-semibold">DESCRIPCIÓN</th>
+                  <th className="text-left px-3 py-3 font-semibold">OC</th>
+                  <th className="text-left px-3 py-3 font-semibold">PROVEEDOR</th>
+                  <th className="text-right px-3 py-3 font-semibold">DÍAS RETRASO</th>
+                  <th className="text-right px-3 py-3 font-semibold">QTY PEND.</th>
+                  <th className="text-right px-3 py-3 font-semibold">VALOR PEND.</th>
+                  <th className="text-left px-3 py-3 font-semibold">ESTADO OC</th>
+                  <th className="text-left px-3 py-3 font-semibold">COMPRADOR</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((r, i) => {
+                  const diasRetraso = r.diasRetraso ?? 0;
+                  const retrasoColor =
+                    diasRetraso > 90 ? '#991b1b' :
+                    diasRetraso > 30 ? '#9a3412' :
+                    diasRetraso > 0  ? '#854d0e' : '#8CB32A';
+                  return (
+                    <tr
+                      key={`${r.referencia}-${r.ordenCompra}-${i}`}
+                      className="border-b transition-colors hover:bg-lime-50"
+                      style={{ borderColor: 'rgba(140,179,42,0.12)' }}
+                    >
+                      <td className="px-3 py-2.5">
+                        <PrioridadBadge prioridad={r.prioridadOC} />
+                      </td>
+                      <td className="px-3 py-2.5 font-bold" style={{ color: '#009890' }}>
+                        {r.referencia}
+                      </td>
+                      <td className="px-3 py-2.5 max-w-[200px] truncate" title={r.descripcion ?? ""} style={{ color: '#281C19' }}>
+                        {r.descripcion}
+                      </td>
+                      <td className="px-3 py-2.5 font-bold" style={{ color: '#8CB32A' }}>
+                        {r.ordenCompra}
+                      </td>
+                      <td className="px-3 py-2.5 max-w-[160px] truncate" title={r.proveedorOC ?? ""} style={{ color: '#6b7280' }}>
+                        {r.proveedorOC}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-bold" style={{ color: retrasoColor }}>
+                        {diasRetraso > 0 ? `${diasRetraso}d` : "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-right" style={{ color: '#281C19' }}>
+                        {r.qtyPendiente?.toLocaleString("es-CO") ?? "—"}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-bold" style={{ color: '#281C19' }}>
+                        {formatCurrency(r.valorPendiente)}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <EstadoBadge estado={r.estadoOC} />
+                      </td>
+                      <td className="px-3 py-2.5" style={{ color: '#6b7280' }}>
+                        {r.comprador}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </Card>
 
       {/* Footer */}
-      <div className="mt-4 text-xs text-gray-600 font-mono text-right">
+      <div className="text-xs text-right" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>
         Mostrando {filtered.length} de {data?.length ?? 0} referencias | Cruce: inventario × órdenes de compra activas
       </div>
     </div>

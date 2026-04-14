@@ -3,6 +3,16 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════════════════════════════
+   SOMOS USME — LIGHT CYBERPUNK THEME
+   Paleta Corporativa:
+     Primario oscuro : #281C19  → oklch(0.18 0.03 30)
+     Verde Lima      : #8CB32A  → oklch(0.68 0.17 120)
+     Verde Teal      : #009890  → oklch(0.58 0.12 185)
+     Fondo           : #FFFFFF  → oklch(1 0 0)
+     Fondo sutil     : #F5F5F5  → oklch(0.96 0 0)
+   ═══════════════════════════════════════════════════════════════════ */
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -40,56 +50,104 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --color-neon-pink: oklch(0.7 0.25 350);
-  --color-neon-cyan: oklch(0.8 0.18 195);
-  --color-neon-purple: oklch(0.6 0.25 300);
-  --color-neon-green: oklch(0.75 0.2 145);
-  --color-neon-yellow: oklch(0.85 0.2 90);
-  --color-neon-red: oklch(0.65 0.25 25);
-  --color-neon-orange: oklch(0.75 0.2 55);
-  --color-cyber-dark: oklch(0.12 0.02 280);
-  --color-cyber-darker: oklch(0.08 0.015 280);
-  --color-cyber-card: oklch(0.16 0.025 280);
-  --color-cyber-surface: oklch(0.2 0.03 280);
+
+  /* ── Colores Corporativos Neón ── */
+  --color-corp-dark:  oklch(0.18 0.03 30);    /* #281C19 */
+  --color-corp-lime:  oklch(0.68 0.17 120);   /* #8CB32A */
+  --color-corp-teal:  oklch(0.58 0.12 185);   /* #009890 */
+
+  /* ── Alias neón (compatibilidad con clases existentes) ── */
+  --color-neon-pink:   oklch(0.68 0.17 120);  /* → Verde Lima corporativo */
+  --color-neon-cyan:   oklch(0.58 0.12 185);  /* → Teal corporativo */
+  --color-neon-purple: oklch(0.18 0.03 30);   /* → Oscuro corporativo */
+  --color-neon-green:  oklch(0.68 0.17 120);  /* → Verde Lima */
+  --color-neon-yellow: oklch(0.68 0.17 120);  /* → Verde Lima */
+  --color-neon-red:    oklch(0.55 0.22 25);   /* Rojo alerta (no corporativo, solo alertas) */
+  --color-neon-orange: oklch(0.65 0.18 50);   /* Naranja alerta */
+
+  /* ── Superficies Light ── */
+  --color-cyber-dark:    oklch(0.96 0 0);     /* Fondo tarjeta claro */
+  --color-cyber-darker:  oklch(0.92 0 0);     /* Fondo ligeramente más oscuro */
+  --color-cyber-card:    oklch(1 0 0);        /* Blanco puro para cards */
+  --color-cyber-surface: oklch(0.97 0.005 120); /* Superficie con toque verde muy sutil */
 }
 
 :root {
   --radius: 0.5rem;
+
+  /* ── Light Cyberpunk Theme ── */
+  --background:            oklch(1 0 0);                  /* Blanco puro */
+  --foreground:            oklch(0.18 0.03 30);           /* #281C19 oscuro */
+  --card:                  oklch(1 0 0);                  /* Blanco */
+  --card-foreground:       oklch(0.18 0.03 30);
+  --popover:               oklch(1 0 0);
+  --popover-foreground:    oklch(0.18 0.03 30);
+  --primary:               oklch(0.18 0.03 30);           /* #281C19 */
+  --primary-foreground:    oklch(1 0 0);                  /* Blanco sobre oscuro */
+  --secondary:             oklch(0.68 0.17 120);          /* #8CB32A Lima */
+  --secondary-foreground:  oklch(0.18 0.03 30);           /* Oscuro sobre Lima */
+  --muted:                 oklch(0.95 0.005 120);         /* Fondo muy sutil verde */
+  --muted-foreground:      oklch(0.45 0.04 30);           /* Gris cálido */
+  --accent:                oklch(0.58 0.12 185);          /* #009890 Teal */
+  --accent-foreground:     oklch(1 0 0);                  /* Blanco sobre Teal */
+  --destructive:           oklch(0.55 0.22 25);           /* Rojo alerta */
+  --destructive-foreground: oklch(1 0 0);
+  --border:                oklch(0.85 0.02 120);          /* Borde verde muy sutil */
+  --input:                 oklch(0.96 0.005 120);         /* Input fondo */
+  --ring:                  oklch(0.68 0.17 120);          /* Focus ring Lima */
+
+  /* Charts */
+  --chart-1: oklch(0.68 0.17 120);   /* Lima */
+  --chart-2: oklch(0.58 0.12 185);   /* Teal */
+  --chart-3: oklch(0.18 0.03 30);    /* Oscuro */
+  --chart-4: oklch(0.55 0.22 25);    /* Rojo */
+  --chart-5: oklch(0.65 0.18 50);    /* Naranja */
+
+  /* Sidebar */
+  --sidebar:                    oklch(0.18 0.03 30);      /* #281C19 oscuro */
+  --sidebar-foreground:         oklch(0.95 0.01 120);     /* Texto claro sobre oscuro */
+  --sidebar-primary:            oklch(0.68 0.17 120);     /* Lima activo */
+  --sidebar-primary-foreground: oklch(0.18 0.03 30);      /* Oscuro sobre Lima */
+  --sidebar-accent:             oklch(0.25 0.04 30);      /* Hover oscuro */
+  --sidebar-accent-foreground:  oklch(0.95 0.01 120);
+  --sidebar-border:             oklch(0.28 0.04 30);      /* Borde sutil en sidebar */
+  --sidebar-ring:               oklch(0.68 0.17 120);
 }
 
+/* Mantener clase .dark por compatibilidad pero apuntando al mismo tema light */
 .dark {
-  --primary: oklch(0.7 0.25 350);
-  --primary-foreground: oklch(0.98 0 0);
-  --sidebar-primary: oklch(0.7 0.25 350);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --background: oklch(0.1 0.02 280);
-  --foreground: oklch(0.92 0.01 250);
-  --card: oklch(0.14 0.025 280);
-  --card-foreground: oklch(0.92 0.01 250);
-  --popover: oklch(0.14 0.025 280);
-  --popover-foreground: oklch(0.92 0.01 250);
-  --secondary: oklch(0.2 0.03 280);
-  --secondary-foreground: oklch(0.85 0.01 250);
-  --muted: oklch(0.22 0.025 280);
-  --muted-foreground: oklch(0.65 0.02 260);
-  --accent: oklch(0.2 0.04 300);
-  --accent-foreground: oklch(0.92 0.01 250);
-  --destructive: oklch(0.65 0.25 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.3 0.04 280);
-  --input: oklch(0.25 0.035 280);
-  --ring: oklch(0.7 0.25 350);
-  --chart-1: oklch(0.7 0.25 350);
-  --chart-2: oklch(0.8 0.18 195);
-  --chart-3: oklch(0.6 0.25 300);
-  --chart-4: oklch(0.75 0.2 145);
-  --chart-5: oklch(0.85 0.2 90);
-  --sidebar: oklch(0.12 0.02 280);
-  --sidebar-foreground: oklch(0.92 0.01 250);
-  --sidebar-accent: oklch(0.2 0.04 300);
-  --sidebar-accent-foreground: oklch(0.92 0.01 250);
-  --sidebar-border: oklch(0.3 0.04 280);
-  --sidebar-ring: oklch(0.7 0.25 350);
+  --background:            oklch(1 0 0);
+  --foreground:            oklch(0.18 0.03 30);
+  --card:                  oklch(1 0 0);
+  --card-foreground:       oklch(0.18 0.03 30);
+  --popover:               oklch(1 0 0);
+  --popover-foreground:    oklch(0.18 0.03 30);
+  --primary:               oklch(0.18 0.03 30);
+  --primary-foreground:    oklch(1 0 0);
+  --secondary:             oklch(0.68 0.17 120);
+  --secondary-foreground:  oklch(0.18 0.03 30);
+  --muted:                 oklch(0.95 0.005 120);
+  --muted-foreground:      oklch(0.45 0.04 30);
+  --accent:                oklch(0.58 0.12 185);
+  --accent-foreground:     oklch(1 0 0);
+  --destructive:           oklch(0.55 0.22 25);
+  --destructive-foreground: oklch(1 0 0);
+  --border:                oklch(0.85 0.02 120);
+  --input:                 oklch(0.96 0.005 120);
+  --ring:                  oklch(0.68 0.17 120);
+  --chart-1: oklch(0.68 0.17 120);
+  --chart-2: oklch(0.58 0.12 185);
+  --chart-3: oklch(0.18 0.03 30);
+  --chart-4: oklch(0.55 0.22 25);
+  --chart-5: oklch(0.65 0.18 50);
+  --sidebar:                    oklch(0.18 0.03 30);
+  --sidebar-foreground:         oklch(0.95 0.01 120);
+  --sidebar-primary:            oklch(0.68 0.17 120);
+  --sidebar-primary-foreground: oklch(0.18 0.03 30);
+  --sidebar-accent:             oklch(0.25 0.04 30);
+  --sidebar-accent-foreground:  oklch(0.95 0.01 120);
+  --sidebar-border:             oklch(0.28 0.04 30);
+  --sidebar-ring:               oklch(0.68 0.17 120);
 }
 
 @layer base {
@@ -98,6 +156,9 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Rajdhani', 'Inter', system-ui, sans-serif;
+  }
+  h1, h2, h3, .font-orbitron {
     font-family: 'Orbitron', 'Inter', system-ui, sans-serif;
   }
 }
@@ -129,30 +190,95 @@
   }
 }
 
-/* ── Cyberpunk Glow Effects ── */
-.cyber-glow-pink {
-  box-shadow: 0 0 15px oklch(0.7 0.25 350 / 0.3), 0 0 30px oklch(0.7 0.25 350 / 0.1), inset 0 1px 0 oklch(0.7 0.25 350 / 0.2);
+/* ═══════════════════════════════════════════════════════════════════
+   LIGHT CYBERPUNK — GLOW EFFECTS (Paleta Corporativa)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Glow Lima (#8CB32A) — para NUEVO, acciones positivas */
+.cyber-glow-lime {
+  box-shadow:
+    0 0 8px oklch(0.68 0.17 120 / 0.5),
+    0 0 20px oklch(0.68 0.17 120 / 0.2),
+    inset 0 1px 0 oklch(0.68 0.17 120 / 0.3);
 }
-.cyber-glow-cyan {
-  box-shadow: 0 0 15px oklch(0.8 0.18 195 / 0.3), 0 0 30px oklch(0.8 0.18 195 / 0.1), inset 0 1px 0 oklch(0.8 0.18 195 / 0.2);
-}
-.cyber-glow-purple {
-  box-shadow: 0 0 15px oklch(0.6 0.25 300 / 0.3), 0 0 30px oklch(0.6 0.25 300 / 0.1), inset 0 1px 0 oklch(0.6 0.25 300 / 0.2);
-}
-.cyber-glow-green {
-  box-shadow: 0 0 15px oklch(0.75 0.2 145 / 0.3), 0 0 30px oklch(0.75 0.2 145 / 0.1), inset 0 1px 0 oklch(0.75 0.2 145 / 0.2);
-}
-.cyber-glow-red {
-  box-shadow: 0 0 15px oklch(0.65 0.25 25 / 0.4), 0 0 30px oklch(0.65 0.25 25 / 0.15), inset 0 1px 0 oklch(0.65 0.25 25 / 0.2);
-}
-.cyber-glow-yellow {
-  box-shadow: 0 0 15px oklch(0.85 0.2 90 / 0.3), 0 0 30px oklch(0.85 0.2 90 / 0.1), inset 0 1px 0 oklch(0.85 0.2 90 / 0.2);
+.cyber-glow-lime:hover {
+  box-shadow:
+    0 0 12px oklch(0.68 0.17 120 / 0.7),
+    0 0 30px oklch(0.68 0.17 120 / 0.3),
+    inset 0 1px 0 oklch(0.68 0.17 120 / 0.4);
 }
 
+/* Glow Teal (#009890) — para SERVICIO, información */
+.cyber-glow-teal {
+  box-shadow:
+    0 0 8px oklch(0.58 0.12 185 / 0.5),
+    0 0 20px oklch(0.58 0.12 185 / 0.2),
+    inset 0 1px 0 oklch(0.58 0.12 185 / 0.3);
+}
+.cyber-glow-teal:hover {
+  box-shadow:
+    0 0 12px oklch(0.58 0.12 185 / 0.7),
+    0 0 30px oklch(0.58 0.12 185 / 0.3),
+    inset 0 1px 0 oklch(0.58 0.12 185 / 0.4);
+}
+
+/* Glow Oscuro (#281C19) — para REPARADO, énfasis */
+.cyber-glow-dark {
+  box-shadow:
+    0 0 8px oklch(0.18 0.03 30 / 0.4),
+    0 0 20px oklch(0.18 0.03 30 / 0.15),
+    0 0 0 1px oklch(0.68 0.17 120 / 0.4);
+}
+
+/* Glow Rojo — solo alertas críticas */
+.cyber-glow-red {
+  box-shadow:
+    0 0 8px oklch(0.55 0.22 25 / 0.4),
+    0 0 20px oklch(0.55 0.22 25 / 0.15),
+    inset 0 1px 0 oklch(0.55 0.22 25 / 0.2);
+}
+
+/* Alias para compatibilidad con clases existentes */
+.cyber-glow-pink {
+  box-shadow:
+    0 0 8px oklch(0.68 0.17 120 / 0.5),
+    0 0 20px oklch(0.68 0.17 120 / 0.2),
+    inset 0 1px 0 oklch(0.68 0.17 120 / 0.3);
+}
+.cyber-glow-cyan {
+  box-shadow:
+    0 0 8px oklch(0.58 0.12 185 / 0.5),
+    0 0 20px oklch(0.58 0.12 185 / 0.2),
+    inset 0 1px 0 oklch(0.58 0.12 185 / 0.3);
+}
+.cyber-glow-purple {
+  box-shadow:
+    0 0 8px oklch(0.18 0.03 30 / 0.4),
+    0 0 20px oklch(0.18 0.03 30 / 0.15),
+    0 0 0 1px oklch(0.68 0.17 120 / 0.4);
+}
+.cyber-glow-green {
+  box-shadow:
+    0 0 8px oklch(0.68 0.17 120 / 0.5),
+    0 0 20px oklch(0.68 0.17 120 / 0.2),
+    inset 0 1px 0 oklch(0.68 0.17 120 / 0.3);
+}
+.cyber-glow-yellow {
+  box-shadow:
+    0 0 8px oklch(0.68 0.17 120 / 0.5),
+    0 0 20px oklch(0.68 0.17 120 / 0.2),
+    inset 0 1px 0 oklch(0.68 0.17 120 / 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CYBER CARD — Light Version
+   ═══════════════════════════════════════════════════════════════════ */
 .cyber-card {
-  background: linear-gradient(135deg, oklch(0.14 0.025 280) 0%, oklch(0.18 0.03 290) 100%);
-  border: 1px solid oklch(0.3 0.04 280);
-  backdrop-filter: blur(10px);
+  background: oklch(1 0 0);
+  border: 1px solid oklch(0.85 0.02 120);
+  box-shadow:
+    0 2px 8px oklch(0.18 0.03 30 / 0.06),
+    0 1px 2px oklch(0.18 0.03 30 / 0.04);
   position: relative;
   overflow: hidden;
 }
@@ -162,49 +288,66 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, oklch(0.7 0.25 350 / 0.5), oklch(0.8 0.18 195 / 0.5), transparent);
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    oklch(0.68 0.17 120 / 0.6),
+    oklch(0.58 0.12 185 / 0.6),
+    transparent
+  );
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   CYBER TEXT GLOW — Adaptado para Light
+   ═══════════════════════════════════════════════════════════════════ */
 .cyber-text-glow {
-  text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+  text-shadow:
+    0 0 8px currentColor,
+    0 0 16px currentColor;
 }
 
 .cyber-border-glow {
-  border: 1px solid oklch(0.7 0.25 350 / 0.3);
-  box-shadow: inset 0 0 20px oklch(0.7 0.25 350 / 0.05);
+  border: 1px solid oklch(0.68 0.17 120 / 0.4);
+  box-shadow: inset 0 0 12px oklch(0.68 0.17 120 / 0.04);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   CYBER GRID BG — Sutil en gris claro (#F0F0F0)
+   ═══════════════════════════════════════════════════════════════════ */
 .cyber-grid-bg {
   background-image:
-    linear-gradient(oklch(0.3 0.04 280 / 0.3) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(0.3 0.04 280 / 0.3) 1px, transparent 1px);
+    linear-gradient(oklch(0.88 0.01 120 / 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(0.88 0.01 120 / 0.6) 1px, transparent 1px);
   background-size: 40px 40px;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   SCANLINES — Muy sutil en light
+   ═══════════════════════════════════════════════════════════════════ */
 .cyber-scanline {
   position: relative;
 }
 .cyber-scanline::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: repeating-linear-gradient(
     0deg,
     transparent,
-    transparent 2px,
-    oklch(0 0 0 / 0.03) 2px,
-    oklch(0 0 0 / 0.03) 4px
+    transparent 3px,
+    oklch(0 0 0 / 0.008) 3px,
+    oklch(0 0 0 / 0.008) 4px
   );
   pointer-events: none;
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   ANIMACIONES
+   ═══════════════════════════════════════════════════════════════════ */
 @keyframes pulse-neon {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.75; }
 }
 .animate-pulse-neon {
   animation: pulse-neon 2s ease-in-out infinite;
@@ -213,27 +356,153 @@
 @keyframes cyber-flicker {
   0%, 100% { opacity: 1; }
   92% { opacity: 1; }
-  93% { opacity: 0.8; }
+  93% { opacity: 0.85; }
   94% { opacity: 1; }
-  96% { opacity: 0.9; }
+  96% { opacity: 0.92; }
   97% { opacity: 1; }
 }
 .animate-cyber-flicker {
   animation: cyber-flicker 4s ease-in-out infinite;
 }
 
-/* Scrollbar Cyberpunk */
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLLBAR — Light Cyberpunk
+   ═══════════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: oklch(0.12 0.02 280);
+  background: oklch(0.95 0.005 120);
 }
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.7 0.25 350 / 0.4);
+  background: oklch(0.68 0.17 120 / 0.5);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: oklch(0.7 0.25 350 / 0.6);
+  background: oklch(0.68 0.17 120 / 0.8);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BADGES CORPORATIVOS — NUEVO / REPARADO / SERVICIO
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* NUEVO: Fondo Lima, texto oscuro, borde Lima neón */
+.badge-nuevo {
+  background-color: oklch(0.68 0.17 120);
+  color: oklch(0.18 0.03 30);
+  border: 1px solid oklch(0.68 0.17 120);
+  box-shadow: 0 0 6px oklch(0.68 0.17 120 / 0.5), 0 0 12px oklch(0.68 0.17 120 / 0.2);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+}
+.badge-nuevo:hover {
+  box-shadow: 0 0 10px oklch(0.68 0.17 120 / 0.7), 0 0 20px oklch(0.68 0.17 120 / 0.3);
+}
+
+/* REPARADO: Fondo oscuro, texto blanco, borde Lima neón */
+.badge-reparado {
+  background-color: oklch(0.18 0.03 30);
+  color: oklch(1 0 0);
+  border: 1px solid oklch(0.68 0.17 120);
+  box-shadow: 0 0 6px oklch(0.68 0.17 120 / 0.4), 0 0 12px oklch(0.68 0.17 120 / 0.15);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+}
+.badge-reparado:hover {
+  box-shadow: 0 0 10px oklch(0.68 0.17 120 / 0.6), 0 0 20px oklch(0.68 0.17 120 / 0.25);
+}
+
+/* SERVICIO: Fondo Teal, texto blanco, borde Teal neón */
+.badge-servicio {
+  background-color: oklch(0.58 0.12 185);
+  color: oklch(1 0 0);
+  border: 1px solid oklch(0.58 0.12 185);
+  box-shadow: 0 0 6px oklch(0.58 0.12 185 / 0.5), 0 0 12px oklch(0.58 0.12 185 / 0.2);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+}
+.badge-servicio:hover {
+  box-shadow: 0 0 10px oklch(0.58 0.12 185 / 0.7), 0 0 20px oklch(0.58 0.12 185 / 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   TABLA — Cabeceras con Teal 10% opacidad
+   ═══════════════════════════════════════════════════════════════════ */
+.table-header-corp {
+  background-color: oklch(0.58 0.12 185 / 0.1);
+  color: oklch(0.18 0.03 30);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BOTONES DE FILTRO — Interactividad corporativa
+   ═══════════════════════════════════════════════════════════════════ */
+.filter-btn {
+  border: 1px solid oklch(0.85 0.02 120);
+  background: oklch(1 0 0);
+  color: oklch(0.45 0.04 30);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+.filter-btn:hover {
+  border-color: oklch(0.68 0.17 120 / 0.6);
+  color: oklch(0.18 0.03 30);
+  box-shadow: 0 0 8px oklch(0.68 0.17 120 / 0.3);
+}
+.filter-btn.active-lime {
+  background: oklch(0.68 0.17 120 / 0.12);
+  border-color: oklch(0.68 0.17 120);
+  color: oklch(0.18 0.03 30);
+  box-shadow: 0 0 10px oklch(0.68 0.17 120 / 0.4);
+}
+.filter-btn.active-teal {
+  background: oklch(0.58 0.12 185 / 0.12);
+  border-color: oklch(0.58 0.12 185);
+  color: oklch(0.18 0.03 30);
+  box-shadow: 0 0 10px oklch(0.58 0.12 185 / 0.4);
+}
+.filter-btn.active-dark {
+  background: oklch(0.18 0.03 30 / 0.08);
+  border-color: oklch(0.18 0.03 30);
+  color: oklch(0.18 0.03 30);
+  box-shadow: 0 0 10px oklch(0.18 0.03 30 / 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   KPI CARDS — Light Cyberpunk
+   ═══════════════════════════════════════════════════════════════════ */
+.kpi-card-corp {
+  background: oklch(1 0 0);
+  border: 1px solid oklch(0.88 0.015 120);
+  box-shadow:
+    0 2px 12px oklch(0.18 0.03 30 / 0.06),
+    0 1px 3px oklch(0.18 0.03 30 / 0.04);
+}
+.kpi-card-corp:hover {
+  box-shadow:
+    0 4px 20px oklch(0.68 0.17 120 / 0.15),
+    0 2px 6px oklch(0.18 0.03 30 / 0.06);
+  border-color: oklch(0.68 0.17 120 / 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INPUTS Y SELECTS — Light
+   ═══════════════════════════════════════════════════════════════════ */
+.cyber-input {
+  background: oklch(0.97 0.005 120);
+  border: 1px solid oklch(0.85 0.02 120);
+  color: oklch(0.18 0.03 30);
+}
+.cyber-input:focus {
+  border-color: oklch(0.68 0.17 120 / 0.7);
+  box-shadow: 0 0 0 2px oklch(0.68 0.17 120 / 0.15);
+  outline: none;
+}
+.cyber-input::placeholder {
+  color: oklch(0.6 0.02 120);
 }

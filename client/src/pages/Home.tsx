@@ -17,15 +17,16 @@ function formatCurrencyFull(val: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
 }
 
+// Paleta corporativa para categorías
 const CATEGORY_COLORS: Record<string, string> = {
-  PLATAFORMA: "#e879f9",
-  LLANTAS: "#22d3ee",
-  LUBRICANTES: "#a78bfa",
-  CARROCERIA: "#f472b6",
-  COMUNICACIONES: "#34d399",
-  ELECTRICIDAD: "#fbbf24",
-  CAJA: "#fb923c",
-  COMBUSTIBLE: "#60a5fa",
+  PLATAFORMA:      "#8CB32A",  // Lima
+  LLANTAS:         "#009890",  // Teal
+  LUBRICANTES:     "#5a8c1a",  // Lima oscuro
+  CARROCERIA:      "#007a74",  // Teal oscuro
+  COMUNICACIONES:  "#a3c940",  // Lima claro
+  ELECTRICIDAD:    "#00b8af",  // Teal claro
+  CAJA:            "#281C19",  // Oscuro corporativo
+  COMBUSTIBLE:     "#4a3530",  // Oscuro cálido
 };
 
 export default function Home() {
@@ -38,8 +39,8 @@ export default function Home() {
     return (
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-neon-pink" />
-          <span className="text-neon-cyan text-sm" style={{ fontFamily: "Orbitron" }}>CARGANDO SISTEMA...</span>
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#8CB32A' }} />
+          <span className="text-sm" style={{ fontFamily: "Orbitron", color: '#009890' }}>CARGANDO SISTEMA...</span>
         </div>
       </div>
     );
@@ -55,9 +56,9 @@ export default function Home() {
   const maxCatValue = Math.max(...categoryData.map((c) => c.value), 1);
 
   const abcData = [
-    { name: "Clase A", value: Number(kpis?.classA) || 0, color: "#e879f9", label: "Alto Valor" },
-    { name: "Clase B", value: Number(kpis?.classB) || 0, color: "#22d3ee", label: "Medio" },
-    { name: "Clase C", value: Number(kpis?.classC) || 0, color: "#a78bfa", label: "Normal" },
+    { name: "Clase A", value: Number(kpis?.classA) || 0, color: "#8CB32A", label: "Alto Valor" },
+    { name: "Clase B", value: Number(kpis?.classB) || 0, color: "#009890", label: "Medio" },
+    { name: "Clase C", value: Number(kpis?.classC) || 0, color: "#281C19", label: "Normal" },
   ];
   const abcTotal = abcData.reduce((s, d) => s + d.value, 0) || 1;
 
@@ -67,11 +68,11 @@ export default function Home() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Bus className="h-7 w-7 text-neon-pink" />
-            <h1 className="text-2xl md:text-3xl font-black tracking-wider text-neon-cyan" style={{ fontFamily: "Orbitron" }}>
+            <Bus className="h-7 w-7" style={{ color: '#8CB32A' }} />
+            <h1 className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
               SISTEMA JIT
             </h1>
-            <Zap className="h-5 w-5 text-neon-yellow animate-pulse-neon" />
+            <Zap className="h-5 w-5 animate-pulse-neon" style={{ color: '#009890' }} />
           </div>
           <p className="text-muted-foreground text-sm" style={{ fontFamily: "Rajdhani" }}>
             Control de Inventario y Abastecimiento — Gestión de Flota 260 Buses — Somos Bogotá Usme
@@ -92,24 +93,21 @@ export default function Home() {
           value={formatNumber(Number(kpis?.totalRefs) || 0)}
           subtitle="Sin límite de crecimiento"
           icon={Package}
-          glowClass="cyber-glow-cyan"
-          color="text-neon-cyan"
+          accentColor="#009890"
         />
         <KPICard
           title="Valor Inventario"
           value={formatCurrency(Number(kpis?.totalValue) || 0)}
           subtitle={`${formatCurrencyFull(Number(kpis?.totalValue) || 0)}`}
           icon={Banknote}
-          glowClass="cyber-glow-pink"
-          color="text-neon-pink"
+          accentColor="#8CB32A"
         />
         <KPICard
           title="Stock CERO"
           value={formatNumber(Number(kpis?.zeroStock) || 0)}
           subtitle="Riesgo parada de flota"
           icon={AlertTriangle}
-          glowClass="cyber-glow-red"
-          color="text-neon-red"
+          accentColor="#dc2626"
           pulse
         />
         <KPICard
@@ -117,16 +115,14 @@ export default function Home() {
           value={formatNumber(Number(kpis?.totalPending) || 0)}
           subtitle={`${Number(kpis?.urgentOrders) || 0} crítico + reorden`}
           icon={ShoppingCart}
-          glowClass="cyber-glow-yellow"
-          color="text-neon-yellow"
+          accentColor="#8CB32A"
         />
         <KPICard
           title="Stock 0 + OC Activa"
           value={formatNumber(Number(kpis?.stockCeroConOC) || 0)}
           subtitle="Presionar proveedor"
           icon={Siren}
-          glowClass="cyber-glow-red"
-          color="text-neon-red"
+          accentColor="#dc2626"
           pulse
         />
       </div>
@@ -138,38 +134,34 @@ export default function Home() {
           value={formatNumber(Number(kpis?.classA) || 0)}
           subtitle="Control estricto"
           icon={TrendingUp}
-          glowClass="cyber-glow-pink"
-          color="text-neon-pink"
+          accentColor="#8CB32A"
         />
         <KPICard
           title="Clase B (Medio)"
           value={formatNumber(Number(kpis?.classB) || 0)}
           subtitle="Control moderado"
           icon={TrendingDown}
-          glowClass="cyber-glow-cyan"
-          color="text-neon-cyan"
+          accentColor="#009890"
         />
         <KPICard
           title="Clase C (Normal)"
           value={formatNumber(Number(kpis?.classC) || 0)}
           subtitle="Control estándar"
           icon={Shield}
-          glowClass="cyber-glow-purple"
-          color="text-neon-purple"
+          accentColor="#281C19"
         />
         <KPICard
           title="Con Stock"
           value={formatNumber(Number(kpis?.withStock) || 0)}
           subtitle={`Promedio: ${(Number(kpis?.avgStock) || 0).toFixed(1)} und/ref`}
           icon={Package}
-          glowClass="cyber-glow-green"
-          color="text-neon-green"
+          accentColor="#8CB32A"
         />
       </div>
 
       {/* JIT Semaphore */}
       <Card className="cyber-card p-6 rounded-xl">
-        <h2 className="text-lg font-bold text-neon-cyan mb-4 tracking-wider" style={{ fontFamily: "Orbitron" }}>
+        <h2 className="text-lg font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
           SEMÁFORO DE ALERTAS — SISTEMA JIT
         </h2>
         <p className="text-xs text-muted-foreground mb-4" style={{ fontFamily: "Rajdhani" }}>
@@ -180,38 +172,30 @@ export default function Home() {
             count={Number(jit?.critico) || 0}
             label="CRÍTICO"
             sublabel="Stock Cero — Riesgo Parada"
-            bgColor="bg-red-500/10"
-            borderColor="border-red-500/40"
-            textColor="text-red-400"
-            glowClass="cyber-glow-red"
+            accentColor="#dc2626"
+            bgHex="#fee2e2"
             pulse
           />
           <SemaphoreCard
             count={Number(jit?.reorden) || 0}
             label="REORDEN"
             sublabel="Stock ≤ Punto Reorden"
-            bgColor="bg-orange-500/10"
-            borderColor="border-orange-500/40"
-            textColor="text-orange-400"
-            glowClass="cyber-glow-yellow"
+            accentColor="#ea580c"
+            bgHex="#fff7ed"
           />
           <SemaphoreCard
             count={Number(jit?.precaucion) || 0}
             label="PRECAUCIÓN"
             sublabel="Revisar en 48 horas"
-            bgColor="bg-yellow-500/10"
-            borderColor="border-yellow-500/40"
-            textColor="text-yellow-400"
-            glowClass="cyber-glow-yellow"
+            accentColor="#ca8a04"
+            bgHex="#fefce8"
           />
           <SemaphoreCard
             count={Number(jit?.optimo) || 0}
             label="SEGURO"
             sublabel="Nivel Óptimo JIT"
-            bgColor="bg-green-500/10"
-            borderColor="border-green-500/40"
-            textColor="text-green-400"
-            glowClass="cyber-glow-green"
+            accentColor="#8CB32A"
+            bgHex="#f0f9e8"
           />
         </div>
       </Card>
@@ -220,7 +204,7 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Value by Category — Horizontal CSS Bars */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h2 className="text-sm font-bold text-neon-cyan mb-4 tracking-wider" style={{ fontFamily: "Orbitron" }}>
+          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
             VALOR POR CATEGORÍA
           </h2>
           <div className="space-y-3">
@@ -250,7 +234,7 @@ export default function Home() {
 
         {/* ABC Classification — CSS Donut */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h2 className="text-sm font-bold text-neon-cyan mb-4 tracking-wider" style={{ fontFamily: "Orbitron" }}>
+          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
             CLASIFICACIÓN ABC — PARETO 80/20
           </h2>
           <div className="flex flex-col items-center gap-4">
@@ -271,14 +255,14 @@ export default function Home() {
                   const y2 = 100 + 70 * Math.sin(endRad);
                   const largeArc = angle > 180 ? 1 : 0;
                   const pathD = `M 100 100 L ${x1} ${y1} A 70 70 0 ${largeArc} 1 ${x2} ${y2} Z`;
-                  return <path key={d.name} d={pathD} fill={d.color} fillOpacity={0.85} stroke="oklch(0.12 0.025 280)" strokeWidth="2" />;
+                  return <path key={d.name} d={pathD} fill={d.color} fillOpacity={0.9} stroke="#ffffff" strokeWidth="2" />;
                 });
               })()}
-              <circle cx="100" cy="100" r="40" fill="oklch(0.12 0.025 280)" />
-              <text x="100" y="95" textAnchor="middle" fill="#22d3ee" fontSize="14" fontFamily="Orbitron" fontWeight="bold">
+              <circle cx="100" cy="100" r="40" fill="#ffffff" stroke="#e5e7eb" strokeWidth="1" />
+              <text x="100" y="95" textAnchor="middle" fill="#281C19" fontSize="14" fontFamily="Orbitron" fontWeight="bold">
                 {formatNumber(abcTotal)}
               </text>
-              <text x="100" y="115" textAnchor="middle" fill="#999" fontSize="10" fontFamily="Rajdhani">
+              <text x="100" y="115" textAnchor="middle" fill="#6b7280" fontSize="10" fontFamily="Rajdhani">
                 Total Refs
               </text>
             </svg>
@@ -301,18 +285,18 @@ export default function Home() {
 
       {/* Category Detail Table */}
       <Card className="cyber-card p-6 rounded-xl overflow-hidden">
-        <h2 className="text-sm font-bold text-neon-cyan mb-4 tracking-wider" style={{ fontFamily: "Orbitron" }}>
-          DISTRIBUCIÓN POR CUENTA
-        </h2>
+          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+            DISTRIBUCIÓN POR CUENTA
+          </h2>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
             <thead>
-              <tr className="border-b border-neon-pink/20">
-                <th className="text-left py-3 px-3 text-neon-pink font-semibold">Categoría</th>
-                <th className="text-right py-3 px-3 text-neon-pink font-semibold">Valor Total</th>
-                <th className="text-right py-3 px-3 text-neon-pink font-semibold">Items</th>
-                <th className="text-right py-3 px-3 text-neon-pink font-semibold">Stock Cero</th>
-                <th className="text-right py-3 px-3 text-neon-pink font-semibold">% del Total</th>
+              <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
+                <th className="text-left py-3 px-3 font-semibold">Categoría</th>
+                <th className="text-right py-3 px-3 font-semibold">Valor Total</th>
+                <th className="text-right py-3 px-3 font-semibold">Items</th>
+                <th className="text-right py-3 px-3 font-semibold">Stock Cero</th>
+                <th className="text-right py-3 px-3 font-semibold">% del Total</th>
               </tr>
             </thead>
             <tbody>
@@ -320,14 +304,14 @@ export default function Home() {
                 const totalVal = categoryData.reduce((s, c) => s + c.value, 0);
                 const pct = totalVal > 0 ? ((cat.value / totalVal) * 100).toFixed(1) : "0";
                 return (
-                  <tr key={i} className="border-b border-border/30 hover:bg-neon-cyan/5 transition-colors">
+                  <tr key={i} className="border-b transition-colors hover:bg-lime-50" style={{ borderColor: 'rgba(140,179,42,0.12)' }}>
                     <td className="py-2.5 px-3">
                       <div className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat.name] || "#a78bfa" }} />
-                        <span className="font-medium">{cat.name}</span>
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: CATEGORY_COLORS[cat.name] || "#009890" }} />
+                        <span className="font-medium" style={{ color: '#281C19' }}>{cat.name}</span>
                       </div>
                     </td>
-                    <td className="text-right py-2.5 px-3 font-mono text-neon-cyan">{formatCurrency(cat.value)}</td>
+                    <td className="text-right py-2.5 px-3 font-mono font-bold" style={{ color: '#009890' }}>{formatCurrency(cat.value)}</td>
                     <td className="text-right py-2.5 px-3">{cat.items}</td>
                     <td className="text-right py-2.5 px-3">
                       <span className={cat.zero > 0 ? "text-red-400 font-semibold" : "text-green-400"}>{cat.zero}</span>
@@ -357,38 +341,51 @@ export default function Home() {
 }
 
 function KPICard({
-  title, value, subtitle, icon: Icon, glowClass, color, pulse,
+  title, value, subtitle, icon: Icon, accentColor, pulse,
 }: {
-  title: string; value: string; subtitle: string; icon: any; glowClass: string; color: string; pulse?: boolean;
+  title: string; value: string; subtitle: string; icon: any; accentColor: string; pulse?: boolean;
 }) {
   return (
-    <Card className={`cyber-card p-4 rounded-xl ${glowClass} transition-all hover:scale-[1.02]`}>
+    <Card
+      className="kpi-card-corp p-4 rounded-xl transition-all hover:scale-[1.02]"
+      style={{ borderLeft: `3px solid ${accentColor}` }}
+    >
       <div className="flex items-start justify-between mb-2">
-        <Icon className={`h-5 w-5 ${color} ${pulse ? "animate-pulse-neon" : ""}`} />
+        <Icon className={`h-5 w-5 ${pulse ? 'animate-pulse-neon' : ''}`} style={{ color: accentColor }} />
       </div>
-      <div className={`text-2xl md:text-3xl font-black ${color} tracking-wider`} style={{ fontFamily: "Orbitron" }}>
+      <div className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "Orbitron", color: accentColor }}>
         {value}
       </div>
-      <div className="text-xs font-semibold text-foreground mt-1" style={{ fontFamily: "Rajdhani" }}>{title}</div>
-      <div className="text-[10px] text-muted-foreground mt-0.5" style={{ fontFamily: "Rajdhani" }}>{subtitle}</div>
+      <div className="text-xs font-semibold mt-1" style={{ fontFamily: "Rajdhani", color: '#281C19' }}>{title}</div>
+      <div className="text-[10px] mt-0.5" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>{subtitle}</div>
     </Card>
   );
 }
 
 function SemaphoreCard({
-  count, label, sublabel, bgColor, borderColor, textColor, glowClass, pulse,
+  count, label, sublabel, accentColor, bgHex, pulse,
 }: {
-  count: number; label: string; sublabel: string; bgColor: string; borderColor: string; textColor: string; glowClass: string; pulse?: boolean;
+  count: number; label: string; sublabel: string; accentColor: string; bgHex: string; pulse?: boolean;
 }) {
   return (
-    <div className={`${bgColor} border ${borderColor} rounded-xl p-4 ${glowClass} transition-all hover:scale-[1.02]`}>
-      <div className={`text-3xl md:text-4xl font-black ${textColor} ${pulse ? "animate-pulse-neon" : ""}`} style={{ fontFamily: "Orbitron" }}>
+    <div
+      className="rounded-xl p-4 transition-all hover:scale-[1.02]"
+      style={{
+        background: bgHex,
+        border: `1px solid ${accentColor}40`,
+        boxShadow: `0 0 8px ${accentColor}30`,
+      }}
+    >
+      <div
+        className={`text-3xl md:text-4xl font-black ${pulse ? 'animate-pulse-neon' : ''}`}
+        style={{ fontFamily: "Orbitron", color: accentColor }}
+      >
         {formatNumber(count)}
       </div>
-      <div className={`text-xs font-bold ${textColor} mt-2 tracking-wider`} style={{ fontFamily: "Orbitron" }}>
+      <div className="text-xs font-bold mt-2 tracking-wider" style={{ fontFamily: "Orbitron", color: accentColor }}>
         {label}
       </div>
-      <div className="text-[10px] text-muted-foreground mt-1" style={{ fontFamily: "Rajdhani" }}>
+      <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>
         {sublabel}
       </div>
     </div>

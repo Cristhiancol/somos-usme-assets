@@ -4,25 +4,22 @@ import { LogOut, Bus, Zap, Menu, X, type LucideIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 
+// ── Paleta Corporativa ──────────────────────────────────────────────
+// Sidebar: #281C19 (fondo oscuro) con texto #f5f5f5
+// Activo:  borde izquierdo #8CB32A, fondo #8CB32A/15, texto #8CB32A
+// Hover:   fondo #009890/10, texto #009890
+// ───────────────────────────────────────────────────────────────────
+
 type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
 };
 
-/**
- * DashboardLayout — STABLE ROOT WRAPPER
- * 
- * CRITICAL: To prevent React "insertBefore" errors on mobile, this component
- * ALWAYS returns the same root <div> structure. The loading/login/app states
- * are rendered as CHILDREN inside the same wrapper, never as completely 
- * different return trees. This ensures React's reconciler never encounters
- * incompatible DOM trees during state transitions.
- */
 export default function DashboardLayout({
   children,
   navItems = [],
-  title = "SOMOS USME // JIT SYSTEM",
+  title = "SOMOS USME // JIT",
 }: {
   children: React.ReactNode;
   navItems?: NavItem[];
@@ -34,7 +31,6 @@ export default function DashboardLayout({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Close user menu on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
@@ -49,49 +45,70 @@ export default function DashboardLayout({
 
   const activeMenuItem = navItems.find((item) => item.href === location);
 
-  // Determine what to show in the main area
   const showLoading = loading;
   const showLogin = !loading && !user;
   const showApp = !loading && !!user;
 
-  // ALWAYS return the same root structure to prevent insertBefore errors
   return (
     <div className="flex min-h-screen bg-background" style={{ contain: "layout" }}>
-      {/* ===== LOADING STATE — overlays everything ===== */}
+
+      {/* ── LOADING ── */}
       {showLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-4">
-            <Bus className="h-10 w-10 text-neon-cyan animate-pulse" />
-            <div className="text-sm text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+            <Bus className="h-10 w-10 animate-pulse" style={{ color: '#8CB32A' }} />
+            <div className="text-sm" style={{ fontFamily: "Rajdhani", color: '#009890' }}>
               Cargando sistema...
             </div>
           </div>
         </div>
       )}
 
-      {/* ===== LOGIN STATE — overlays everything ===== */}
+      {/* ── LOGIN ── */}
       {showLogin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background cyber-grid-bg">
-          <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full cyber-card rounded-xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center cyber-grid-bg" style={{ background: '#f8f9fa' }}>
+          <div
+            className="flex flex-col items-center gap-8 p-8 max-w-md w-full rounded-xl"
+            style={{
+              background: '#ffffff',
+              border: '1px solid rgba(140,179,42,0.3)',
+              boxShadow: '0 8px 40px rgba(40,28,25,0.12), 0 0 0 1px rgba(140,179,42,0.1)',
+            }}
+          >
             <div className="flex flex-col items-center gap-4">
               <div className="flex items-center gap-3">
-                <Bus className="h-10 w-10 text-neon-pink animate-pulse-neon" />
-                <Zap className="h-6 w-6 text-neon-cyan" />
+                <Bus className="h-10 w-10 animate-pulse-neon" style={{ color: '#8CB32A' }} />
+                <Zap className="h-6 w-6" style={{ color: '#009890' }} />
               </div>
-              <h1 className="text-2xl font-bold tracking-wider text-neon-cyan" style={{ fontFamily: 'Orbitron' }}>
+              <h1
+                className="text-2xl font-bold tracking-wider"
+                style={{ fontFamily: 'Orbitron', color: '#281C19' }}
+              >
                 SOMOS USME
               </h1>
-              <p className="text-sm text-muted-foreground text-center">
-                Sistema Inteligente JIT - Control de Inventario y Abastecimiento
+              <p className="text-sm text-center" style={{ color: '#6b7280' }}>
+                Sistema Inteligente JIT — Control de Inventario y Abastecimiento
               </p>
-              <p className="text-xs text-neon-pink/60">
+              <p className="text-xs font-semibold" style={{ color: '#009890', fontFamily: 'Rajdhani' }}>
                 Gestión de Flota 260 Buses
               </p>
             </div>
             <button
               onClick={() => { window.location.href = getLoginUrl(); }}
-              className="w-full h-11 rounded-lg bg-neon-pink/20 border border-neon-pink/50 text-neon-pink hover:bg-neon-pink/30 hover:shadow-[0_0_20px_oklch(0.7_0.25_350/0.3)] transition-all font-bold tracking-wider"
-              style={{ fontFamily: 'Orbitron' }}
+              className="w-full h-11 rounded-lg font-bold tracking-wider transition-all"
+              style={{
+                fontFamily: 'Orbitron',
+                background: '#281C19',
+                color: '#ffffff',
+                border: '1px solid #8CB32A',
+                boxShadow: '0 0 12px rgba(140,179,42,0.3)',
+              }}
+              onMouseEnter={(e) => {
+                (e.target as HTMLButtonElement).style.boxShadow = '0 0 20px rgba(140,179,42,0.5)';
+              }}
+              onMouseLeave={(e) => {
+                (e.target as HTMLButtonElement).style.boxShadow = '0 0 12px rgba(140,179,42,0.3)';
+              }}
             >
               INICIAR SESIÓN
             </button>
@@ -99,55 +116,98 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* ===== MOBILE OVERLAY — always in DOM ===== */}
+      {/* ── MOBILE OVERLAY ── */}
       <div
         aria-hidden="true"
-        className={`fixed inset-0 bg-black/60 z-40 md:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ${
           showApp && mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setMobileOpen(false)}
       />
 
-      {/* ===== DESKTOP SIDEBAR — always in DOM, hidden when not app ===== */}
+      {/* ── DESKTOP SIDEBAR ── */}
       <div
-        className="hidden md:flex md:flex-col md:w-[260px] md:shrink-0 md:sticky md:top-0 md:h-screen"
+        className="hidden md:flex md:flex-col md:w-[240px] md:shrink-0 md:sticky md:top-0 md:h-screen"
         style={{ visibility: showApp ? "visible" : "hidden" }}
       >
-        <aside className="flex flex-col h-full bg-background border-r border-neon-pink/10">
-          <div className="h-16 flex items-center gap-3 px-4 border-b border-neon-pink/10 shrink-0">
-            <Bus className="h-5 w-5 text-neon-cyan shrink-0" />
+        <aside
+          className="flex flex-col h-full"
+          style={{ background: '#281C19', borderRight: '1px solid rgba(140,179,42,0.2)' }}
+        >
+          {/* Logo */}
+          <div
+            className="h-16 flex items-center gap-3 px-4 shrink-0"
+            style={{ borderBottom: '1px solid rgba(140,179,42,0.2)' }}
+          >
+            <Bus className="h-5 w-5 shrink-0" style={{ color: '#8CB32A' }} />
             <span
-              className="font-bold tracking-wider text-neon-cyan truncate text-xs"
-              style={{ fontFamily: "Orbitron" }}
+              className="font-bold tracking-wider truncate text-xs"
+              style={{ fontFamily: "Orbitron", color: '#8CB32A' }}
             >
               {title}
             </span>
           </div>
-          <nav className="flex-1 overflow-y-auto py-2 px-2">
+
+          {/* Nav */}
+          <nav className="flex-1 overflow-y-auto py-3 px-2">
             {navItems.map((item) => {
               const isActive = location === item.href;
               return (
                 <button
                   key={item.href}
                   onClick={() => setLocation(item.href)}
-                  className={`w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left ${
-                    isActive
-                      ? "bg-neon-pink/10 text-neon-pink border-l-2 border-neon-pink"
-                      : "hover:bg-neon-cyan/5 hover:text-neon-cyan text-muted-foreground"
-                  }`}
+                  className="w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left"
+                  style={{
+                    background: isActive ? 'rgba(140,179,42,0.15)' : 'transparent',
+                    borderLeft: isActive ? '2px solid #8CB32A' : '2px solid transparent',
+                    color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.7)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,152,144,0.12)';
+                      (e.currentTarget as HTMLButtonElement).style.color = '#009890';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
+                      (e.currentTarget as HTMLButtonElement).style.color = 'rgba(245,245,245,0.7)';
+                    }
+                  }}
                 >
-                  <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-neon-pink" : "text-muted-foreground"}`} />
-                  <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 500 }}>{item.label}</span>
+                  <item.icon
+                    className="h-4 w-4 shrink-0"
+                    style={{ color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.5)' }}
+                  />
+                  <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 600 }}>
+                    {item.label}
+                  </span>
                 </button>
               );
             })}
           </nav>
-          <div className="p-3 border-t border-neon-pink/10 shrink-0 relative" ref={userMenuRef}>
+
+          {/* User menu */}
+          <div
+            className="p-3 shrink-0 relative"
+            style={{ borderTop: '1px solid rgba(140,179,42,0.2)' }}
+            ref={userMenuRef}
+          >
             {userMenuOpen && (
-              <div className="absolute bottom-full left-3 right-3 mb-2 rounded-lg border border-neon-pink/20 bg-background shadow-lg shadow-neon-pink/10 overflow-hidden">
+              <div
+                className="absolute bottom-full left-3 right-3 mb-2 rounded-lg overflow-hidden"
+                style={{
+                  background: '#1a1210',
+                  border: '1px solid rgba(140,179,42,0.3)',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                }}
+              >
                 <button
                   onClick={() => { setUserMenuOpen(false); logout(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors"
+                  style={{ color: '#f87171' }}
+                  onMouseEnter={(e) => { (e.currentTarget).style.background = 'rgba(239,68,68,0.1)'; }}
+                  onMouseLeave={(e) => { (e.currentTarget).style.background = 'transparent'; }}
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Cerrar Sesión</span>
@@ -156,18 +216,22 @@ export default function DashboardLayout({
             )}
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-3 rounded-lg px-1 py-1 hover:bg-neon-pink/10 transition-colors w-full text-left focus:outline-none"
+              className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors w-full text-left focus:outline-none"
+              style={{ background: 'transparent' }}
+              onMouseEnter={(e) => { (e.currentTarget).style.background = 'rgba(140,179,42,0.08)'; }}
+              onMouseLeave={(e) => { (e.currentTarget).style.background = 'transparent'; }}
             >
-              <div className="h-9 w-9 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 flex items-center justify-center shrink-0">
-                <span className="text-xs font-medium text-neon-cyan">
-                  {user?.name?.charAt(0).toUpperCase() || "?"}
-                </span>
+              <div
+                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs"
+                style={{ background: '#8CB32A', color: '#281C19' }}
+              >
+                {user?.name?.charAt(0).toUpperCase() || "?"}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate leading-none text-foreground">
+                <p className="text-sm font-semibold truncate leading-none" style={{ color: '#f5f5f5' }}>
                   {user?.name || "-"}
                 </p>
-                <p className="text-xs text-neon-pink/60 truncate mt-1">
+                <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: 'Rajdhani' }}>
                   {user?.email || "Gestor"}
                 </p>
               </div>
@@ -176,69 +240,85 @@ export default function DashboardLayout({
         </aside>
       </div>
 
-      {/* ===== MOBILE SIDEBAR — always in DOM, slides in/out ===== */}
+      {/* ── MOBILE SIDEBAR ── */}
       <aside
-        className={`fixed top-0 left-0 h-full w-[260px] bg-background border-r border-neon-pink/10 z-50 flex flex-col transition-transform duration-300 md:hidden ${
+        className={`fixed top-0 left-0 h-full w-[240px] z-50 flex flex-col transition-transform duration-300 md:hidden ${
           showApp && mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ visibility: showApp ? "visible" : "hidden" }}
+        style={{
+          visibility: showApp ? "visible" : "hidden",
+          background: '#281C19',
+          borderRight: '1px solid rgba(140,179,42,0.2)',
+        }}
       >
-        <div className="h-16 flex items-center gap-3 px-4 border-b border-neon-pink/10 shrink-0">
-          <Bus className="h-5 w-5 text-neon-cyan shrink-0" />
+        <div
+          className="h-16 flex items-center gap-3 px-4 shrink-0"
+          style={{ borderBottom: '1px solid rgba(140,179,42,0.2)' }}
+        >
+          <Bus className="h-5 w-5 shrink-0" style={{ color: '#8CB32A' }} />
           <span
-            className="font-bold tracking-wider text-neon-cyan truncate text-xs"
-            style={{ fontFamily: "Orbitron" }}
+            className="font-bold tracking-wider truncate text-xs flex-1"
+            style={{ fontFamily: "Orbitron", color: '#8CB32A' }}
           >
             {title}
           </span>
           <button
-            className="ml-auto h-8 w-8 flex items-center justify-center hover:bg-neon-pink/10 rounded-lg"
+            className="ml-auto h-8 w-8 flex items-center justify-center rounded-lg"
+            style={{ color: '#8CB32A' }}
             onClick={() => setMobileOpen(false)}
           >
-            <X className="h-4 w-4 text-neon-pink" />
+            <X className="h-4 w-4" />
           </button>
         </div>
-        <nav className="flex-1 overflow-y-auto py-2 px-2">
+        <nav className="flex-1 overflow-y-auto py-3 px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
             return (
               <button
                 key={item.href}
-                onClick={() => {
-                  setLocation(item.href);
-                  setMobileOpen(false);
+                onClick={() => { setLocation(item.href); setMobileOpen(false); }}
+                className="w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left"
+                style={{
+                  background: isActive ? 'rgba(140,179,42,0.15)' : 'transparent',
+                  borderLeft: isActive ? '2px solid #8CB32A' : '2px solid transparent',
+                  color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.7)',
                 }}
-                className={`w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left ${
-                  isActive
-                    ? "bg-neon-pink/10 text-neon-pink border-l-2 border-neon-pink"
-                    : "hover:bg-neon-cyan/5 hover:text-neon-cyan text-muted-foreground"
-                }`}
               >
-                <item.icon className={`h-4 w-4 shrink-0 ${isActive ? "text-neon-pink" : "text-muted-foreground"}`} />
-                <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 500 }}>{item.label}</span>
+                <item.icon
+                  className="h-4 w-4 shrink-0"
+                  style={{ color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.5)' }}
+                />
+                <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 600 }}>
+                  {item.label}
+                </span>
               </button>
             );
           })}
         </nav>
-        <div className="p-3 border-t border-neon-pink/10 shrink-0">
+        <div
+          className="p-3 shrink-0"
+          style={{ borderTop: '1px solid rgba(140,179,42,0.2)' }}
+        >
           <button
             onClick={() => logout()}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors w-full rounded-lg"
+            className="flex items-center gap-2 px-3 py-2.5 text-sm transition-colors w-full rounded-lg"
+            style={{ color: '#f87171' }}
           >
             <LogOut className="h-4 w-4" />
             <span>Cerrar Sesión</span>
           </button>
-          <div className="flex items-center gap-3 px-1 py-1 mt-1">
-            <div className="h-9 w-9 rounded-full border border-neon-cyan/30 bg-neon-cyan/10 flex items-center justify-center shrink-0">
-              <span className="text-xs font-medium text-neon-cyan">
-                {user?.name?.charAt(0).toUpperCase() || "?"}
-              </span>
+          <div className="flex items-center gap-3 px-2 py-1.5 mt-1">
+            <div
+              className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs"
+              style={{ background: '#8CB32A', color: '#281C19' }}
+            >
+              {user?.name?.charAt(0).toUpperCase() || "?"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate leading-none text-foreground">
+              <p className="text-sm font-semibold truncate leading-none" style={{ color: '#f5f5f5' }}>
                 {user?.name || "-"}
               </p>
-              <p className="text-xs text-neon-pink/60 truncate mt-1">
+              <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: 'Rajdhani' }}>
                 {user?.email || "Gestor"}
               </p>
             </div>
@@ -246,25 +326,39 @@ export default function DashboardLayout({
         </div>
       </aside>
 
-      {/* ===== MAIN CONTENT — always in DOM ===== */}
+      {/* ── MAIN CONTENT ── */}
       <div
         className="flex-1 flex flex-col min-w-0"
         style={{ visibility: showApp ? "visible" : "hidden" }}
       >
         {/* Mobile Header */}
-        <header className="md:hidden flex items-center justify-between h-14 px-4 border-b border-neon-pink/10 bg-background/95 backdrop-blur sticky top-0 z-30">
+        <header
+          className="md:hidden flex items-center justify-between h-14 px-4 sticky top-0 z-30 backdrop-blur"
+          style={{
+            background: 'rgba(255,255,255,0.95)',
+            borderBottom: '1px solid rgba(140,179,42,0.2)',
+          }}
+        >
           <button
             onClick={() => setMobileOpen(true)}
-            className="h-9 w-9 flex items-center justify-center hover:bg-neon-pink/10 rounded-lg"
+            className="h-9 w-9 flex items-center justify-center rounded-lg"
+            style={{ color: '#8CB32A' }}
           >
-            <Menu className="h-5 w-5 text-neon-pink" />
+            <Menu className="h-5 w-5" />
           </button>
-          <span className="text-neon-cyan text-sm font-bold" style={{ fontFamily: "Orbitron" }}>
+          <span
+            className="text-sm font-bold"
+            style={{ fontFamily: "Orbitron", color: '#281C19' }}
+          >
             {activeMenuItem?.label ?? "SOMOS USME"}
           </span>
           <div className="w-9" />
         </header>
-        <main className="flex-1 p-4 md:p-6 cyber-grid-bg min-h-screen">{children}</main>
+
+        {/* Main */}
+        <main className="flex-1 p-4 md:p-6 cyber-grid-bg min-h-screen">
+          {children}
+        </main>
       </div>
     </div>
   );
