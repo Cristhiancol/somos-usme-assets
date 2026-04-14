@@ -68,12 +68,24 @@ export async function getDashboardKPIs() {
   const [ordersResult] = await db.select({
     totalPending: sql<number>`COUNT(*)`,
     totalPendingValue: sql<number>`COALESCE(SUM(${purchaseOrders.valorPendiente}), 0)`,
-    urgentOrders: sql<number>`SUM(CASE WHEN ${purchaseOrders.prioridad} = 'URGENTE' OR ${purchaseOrders.prioridad} = 'CRITICO' THEN 1 ELSE 0 END)`,
+    // Urgentes: CRITICO o REORDEN INMEDIATO (valores reales del Drive)
+    urgentOrders: sql<number>`SUM(CASE WHEN ${purchaseOrders.prioridad} IN ('CRITICO','REORDEN INMEDIATO') THEN 1 ELSE 0 END)`,
   }).from(purchaseOrders).where(
-    or(eq(purchaseOrders.estado, 'PENDIENTE'), eq(purchaseOrders.estado, 'RECIBIDO PARCIAL'), eq(purchaseOrders.estado, 'VENCIDO'))
+    or(eq(purchaseOrders.estado, 'PENDIENTE'), eq(purchaseOrders.estado, 'RECIBIDO PARCIAL'), eq(purchaseOrders.estado, 'VENCIDO'), eq(purchaseOrders.estado, 'CASI COMPLETO'))
   );
 
-  return { ...totalResult, ...ordersResult };
+  // Contar referencias con stock=0 que tienen OC activa (SQL nativo para evitar alias conflict en Drizzle)
+  const stockCeroConOCRows = await db.execute(sql`
+    SELECT COUNT(DISTINCT inv.id) as stockCeroConOC
+    FROM inventory_items inv
+    INNER JOIN purchase_orders po
+      ON UPPER(TRIM(inv.descripcion)) = UPPER(TRIM(po.descripcion))
+    WHERE inv.stockActual = 0
+      AND po.estado IN ('PENDIENTE', 'CASI COMPLETO')
+  `);
+  const stockCeroConOC = Number((stockCeroConOCRows as any[])[0]?.[0]?.stockCeroConOC ?? 0);
+
+  return { ...totalResult, ...ordersResult, stockCeroConOC };
 }
 
 // ── JIT Alerts (Semaforo) ──
@@ -287,4 +299,68 @@ export async function getCriticalStockItems() {
   return db.select().from(inventoryItems)
     .where(sql`${inventoryItems.stockActual} = 0 AND ${inventoryItems.consumoAnual} > 0`)
     .orderBy(desc(inventoryItems.consumoAnual));
+}
+
+// ── Referencias Stock=0 con OC Activa (cruce inventario x órdenes) ──
+export async function getStockCeroConOC() {
+  const db = await getDb();
+  if (!db) return [];
+
+  // Cruce por descripción: referencias con stock=0 que tienen una OC pendiente
+  const rows = await db.execute(sql`
+    SELECT
+      i.id,
+      i.referencia,
+      i.descripcion,
+      i.stockActual,
+      i.claseAbc,
+      i.cuenta,
+      i.proveedor AS proveedorInventario,
+      i.consumoAnual,
+      i.consumoDiario,
+      i.costoUnitario,
+      i.estado AS estadoInventario,
+      i.prioridad AS prioridadInventario,
+      p.id AS ocId,
+      p.ordenCompra,
+      p.estado AS estadoOC,
+      p.prioridad AS prioridadOC,
+      p.proveedor AS proveedorOC,
+      p.diasRetraso,
+      p.qtyPendiente,
+      p.valorPendiente,
+      p.fechaPromesa,
+      p.comprador
+    FROM inventory_items i
+    INNER JOIN purchase_orders p
+      ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
+    WHERE i.stockActual = 0
+      AND p.estado IN ('PENDIENTE', 'CASI COMPLETO')
+    ORDER BY p.diasRetraso DESC, i.costoUnitario DESC
+  `);
+
+  return (rows as any[])[0] as Array<{
+    id: number;
+    referencia: string;
+    descripcion: string | null;
+    stockActual: number | null;
+    claseAbc: string | null;
+    cuenta: string | null;
+    proveedorInventario: string | null;
+    consumoAnual: number | null;
+    consumoDiario: number | null;
+    costoUnitario: number | null;
+    estadoInventario: string | null;
+    prioridadInventario: string | null;
+    ocId: number;
+    ordenCompra: string | null;
+    estadoOC: string | null;
+    prioridadOC: string | null;
+    proveedorOC: string | null;
+    diasRetraso: number | null;
+    qtyPendiente: number | null;
+    valorPendiente: number | null;
+    fechaPromesa: Date | null;
+    comprador: string | null;
+  }>;
 }

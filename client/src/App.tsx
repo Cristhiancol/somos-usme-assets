@@ -10,6 +10,7 @@ import SuppliersPage from "./pages/Suppliers";
 import Top20ValuePage from "./pages/Top20Value";
 import Top20ZeroPage from "./pages/Top20Zero";
 import SyncPage from "./pages/Sync";
+import StockCeroConOCPage from "./pages/StockCeroConOC";
 import {
   LayoutDashboard,
   Package,
@@ -18,6 +19,7 @@ import {
   TrendingUp,
   AlertTriangle,
   RefreshCw,
+  Siren,
 } from "lucide-react";
 
 const navItems = [
@@ -26,6 +28,7 @@ const navItems = [
   { label: "Top 20 Valor", href: "/top-valor", icon: TrendingUp },
   { label: "Stock Cero", href: "/stock-cero", icon: AlertTriangle },
   { label: "Órdenes", href: "/ordenes", icon: ShoppingCart },
+  { label: "Stock 0 + OC", href: "/stock-cero-oc", icon: Siren },
   { label: "Proveedores", href: "/proveedores", icon: Users },
   { label: "Sincronizar", href: "/sync", icon: RefreshCw },
 ];
@@ -39,6 +42,7 @@ function Router() {
         <Route path="/top-valor" component={Top20ValuePage} />
         <Route path="/stock-cero" component={Top20ZeroPage} />
         <Route path="/ordenes" component={OrdersPage} />
+        <Route path="/stock-cero-oc" component={StockCeroConOCPage} />
         <Route path="/proveedores" component={SuppliersPage} />
         <Route path="/sync" component={SyncPage} />
         <Route path="/404" component={NotFound} />

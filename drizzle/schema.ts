@@ -83,7 +83,7 @@ export const purchaseOrders = mysqlTable("purchase_orders", {
   diasRetraso: int("diasRetraso").default(0),
   estado: varchar("estado", { length: 32 }), // PENDIENTE, RECIBIDO PARCIAL, VENCIDO
   cumplimiento: double("cumplimiento").default(0),
-  prioridad: varchar("prioridad", { length: 16 }), // NORMAL, URGENTE, CRITICO
+  prioridad: varchar("prioridad", { length: 32 }), // REORDEN INMEDIATO, OPTIMO, PRECAUCION, CRITICO, EXCESO (valores del Drive)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

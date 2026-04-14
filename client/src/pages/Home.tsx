@@ -1,6 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap, Banknote } from "lucide-react";
+import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap, Banknote, Siren } from "lucide-react";
 
 function formatCurrency(val: number) {
   if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
@@ -115,10 +115,19 @@ export default function Home() {
         <KPICard
           title="Órdenes Pendientes"
           value={formatNumber(Number(kpis?.totalPending) || 0)}
-          subtitle={`${Number(kpis?.urgentOrders) || 0} urgentes`}
+          subtitle={`${Number(kpis?.urgentOrders) || 0} crítico + reorden`}
           icon={ShoppingCart}
           glowClass="cyber-glow-yellow"
           color="text-neon-yellow"
+        />
+        <KPICard
+          title="Stock 0 + OC Activa"
+          value={formatNumber(Number(kpis?.stockCeroConOC) || 0)}
+          subtitle="Presionar proveedor"
+          icon={Siren}
+          glowClass="cyber-glow-red"
+          color="text-neon-red"
+          pulse
         />
       </div>
 

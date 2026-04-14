@@ -86,3 +86,15 @@
 - [x] Validar sincronización automática sin errores — 8 ciclos cada 15 min, 1.828 refs procesadas
 - [x] Pruebas manuales en producción — Dashboard respondiendo sin errores
 - [ ] Checkpoint final y entrega
+
+## Testing: Referencias Stock=0 con OC Activa
+
+- [x] Conectar a Google Drive y descargar Excel actualizado
+- [x] Cruzar referencias stock=0 con órdenes de compra activas
+- [x] Identificar causa raíz: estado "NORMAL" en OC con stock=0 — varchar(16) truncaba "REORDEN INMEDIATO"
+- [x] Implementar lógica de estado SIN STOCK - OC ACTIVA
+- [x] Crear vista priorizada de referencias sin stock con OC pendiente (/stock-cero-oc)
+- [x] Actualizar KPI de órdenes pendientes — 147 total, 84 urgentes (CRITICO+REORDEN INMEDIATO)
+- [x] Ejecutar 3+ casos de prueba simulados — 32/32 tests pasados
+- [x] Validar consistencia en dashboard y vista de órdenes
+- [x] Guardar checkpoint y reportar resultado

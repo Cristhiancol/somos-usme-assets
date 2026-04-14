@@ -246,9 +246,10 @@ async function parseExcelData(filePath: string) {
       valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
       valorPendiente: safeFloat(row["VALOR PENDIENTE"]),
       diasRetraso: Math.round(safeFloat(row["DIAS RETRASO"])),
-      estado: safeStr(row["ESTADO"]),
+      estado: (safeStr(row["ESTADO"]) || "").toUpperCase().trim() || null,
       cumplimiento: safeFloat(row["CUMPLIMIENTO"]),
-      prioridad: safeStr(row["PRIORIDAD"]),
+      // Preservar prioridad original del Drive (REORDEN INMEDIATO, CRITICO, OPTIMO, PRECAUCION, EXCESO)
+      prioridad: (safeStr(row["PRIORIDAD"]) || "").toUpperCase().trim() || null,
     });
   }
 

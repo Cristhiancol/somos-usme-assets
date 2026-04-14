@@ -15,6 +15,7 @@ import {
   getLastSync,
   getDelayedOrders,
   getCriticalStockItems,
+  getStockCeroConOC,
 } from "./db";
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
@@ -90,6 +91,11 @@ export const appRouter = router({
 
     critical: publicProcedure.query(async () => {
       return getCriticalStockItems();
+    }),
+
+    // Referencias con stock=0 que tienen Orden de Compra activa — vista priorizada
+    stockCeroConOC: publicProcedure.query(async () => {
+      return getStockCeroConOC();
     }),
   }),
 
