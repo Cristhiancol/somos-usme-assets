@@ -160,7 +160,7 @@ export async function getTop20ZeroStock() {
 }
 
 // ── Purchase Orders ──
-export async function getPurchaseOrders(filters?: { estado?: string; prioridad?: string; search?: string }) {
+export async function getPurchaseOrders(filters?: { estado?: string; prioridad?: string; search?: string; tipoReferencia?: string }) {
   const db = await getDb();
   if (!db) return [];
 
@@ -171,15 +171,32 @@ export async function getPurchaseOrders(filters?: { estado?: string; prioridad?:
     or(
       like(purchaseOrders.descripcion, `%${filters.search}%`),
       like(purchaseOrders.ordenCompra, `%${filters.search}%`),
-      like(purchaseOrders.proveedor, `%${filters.search}%`)
+      like(purchaseOrders.proveedor, `%${filters.search}%`),
+      like(purchaseOrders.mainsaver, `%${filters.search}%`)
     )
   );
+  // Filtro por tipo: NUEVO (sin -R, sin SVR), REPARADO (-R), SERVICIO (SVR)
+  if (filters?.tipoReferencia === 'SERVICIO') {
+    conditions.push(eq(purchaseOrders.um, 'SVR'));
+  } else if (filters?.tipoReferencia === 'REPARADO') {
+    conditions.push(sql`${purchaseOrders.um} != 'SVR' AND ${purchaseOrders.mainsaver} REGEXP '-R$'`);
+  } else if (filters?.tipoReferencia === 'NUEVO') {
+    conditions.push(sql`${purchaseOrders.um} != 'SVR' AND (${purchaseOrders.mainsaver} IS NULL OR ${purchaseOrders.mainsaver} NOT REGEXP '-R$')`);
+  }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-  return db.select().from(purchaseOrders)
+  // Devolver con campo tipoReferencia calculado
+  const rows = await db.select().from(purchaseOrders)
     .where(where)
     .orderBy(desc(purchaseOrders.diasRetraso));
+
+  return rows.map(r => ({
+    ...r,
+    tipoReferencia: r.um === 'SVR' ? 'SERVICIO'
+      : (r.mainsaver || '').match(/-R$/i) ? 'REPARADO'
+      : 'NUEVO',
+  })) as typeof rows[0] extends object ? Array<typeof rows[0] & { tipoReferencia: string }> : never;
 }
 
 // ── Inventory with filters ──
@@ -306,7 +323,8 @@ export async function getStockCeroConOC() {
   const db = await getDb();
   if (!db) return [];
 
-  // Cruce por descripción: referencias con stock=0 que tienen una OC pendiente
+  // Cruce por mainsaver (referencia exacta) para evitar duplicados por descripción compartida
+  // mainsaver contiene la referencia específica (ej: 43000048-R) que identifica la OC en inventario
   const rows = await db.execute(sql`
     SELECT
       i.id,
@@ -330,10 +348,16 @@ export async function getStockCeroConOC() {
       p.qtyPendiente,
       p.valorPendiente,
       p.fechaPromesa,
-      p.comprador
+      p.comprador,
+      p.um,
+      CASE
+        WHEN p.um = 'SVR' THEN 'SERVICIO'
+        WHEN i.referencia REGEXP '-R$' THEN 'REPARADO'
+        ELSE 'NUEVO'
+      END AS tipoReferencia
     FROM inventory_items i
     INNER JOIN purchase_orders p
-      ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
+      ON UPPER(TRIM(p.mainsaver)) = UPPER(TRIM(i.referencia))
     WHERE i.stockActual = 0
       AND p.estado IN ('PENDIENTE', 'CASI COMPLETO')
     ORDER BY p.diasRetraso DESC, i.costoUnitario DESC
@@ -362,5 +386,7 @@ export async function getStockCeroConOC() {
     valorPendiente: number | null;
     fechaPromesa: Date | null;
     comprador: string | null;
+    um: string | null;
+    tipoReferencia: 'NUEVO' | 'REPARADO' | 'SERVICIO';
   }>;
 }

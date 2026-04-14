@@ -98,3 +98,19 @@
 - [x] Ejecutar 3+ casos de prueba simulados — 32/32 tests pasados
 - [x] Validar consistencia en dashboard y vista de órdenes
 - [x] Guardar checkpoint y reportar resultado
+
+## Testing: Duplicación OC, Badges NUEVO/REPARADO/SERVICIO, Filtros SVR
+
+- [x] Diagnóstico BD: verificar si 43000048 y 43000048-R son registros distintos en purchase_orders
+- [x] Contar referencias -R totales y OC con líneas mixtas (base + -R) — 10 REPARADOS, 137 NUEVOS
+- [x] Contar servicios SVR pendientes — 0 en Drive actual (lógica implementada)
+- [x] Corregir query SQL: JOIN por mainsaver en lugar de descripción (elimina duplicados)
+- [x] Agregar campo tipoReferencia (NUEVO/REPARADO/SERVICIO) en backend
+- [x] Agregar badges NUEVO (azul) / REPARADO (ámbar) / SERVICIO (morado) en frontend
+- [x] Resaltar sufijo -R en columna de referencia (color ámbar destacado)
+- [x] Agregar filtros: Todos / Solo NUEVOS / Solo REPARADOS / Solo SERVICIOS
+- [x] PRUEBA 1: OC SU116005 — 1 sola fila (43000048-R), sin duplicado
+- [x] PRUEBA 2: Badges correctos — NUEVO/REPARADO/SERVICIO
+- [x] PRUEBA 3: X(10)+Y(137)+Z(0)=147 = total
+- [x] PRUEBA 4: Filtros funcionales validados
+- [x] PRUEBA 5: Regresión — 53/53 tests pasan

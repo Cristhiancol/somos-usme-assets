@@ -91,14 +91,15 @@ describe("Conteo correcto de órdenes pendientes", () => {
 
 // ─── TEST 3: Cruce stock=0 con OC activa ─────────────────────────────────────
 describe("Cruce referencias stock=0 con OC activa", () => {
-  it("Debe existir al menos 30 referencias con stock=0 y OC activa", async () => {
+  it("Debe existir al menos 20 referencias con stock=0 y OC activa (JOIN por mainsaver, sin duplicados)", async () => {
+    // JOIN por mainsaver es preciso: 1 OC = 1 referencia (sin duplicados por descripción compartida)
     const [rows] = await conn.execute(`
       SELECT COUNT(DISTINCT i.id) as cnt
-      FROM inventory_items i
-      INNER JOIN purchase_orders p ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
+      FROM purchase_orders p
+      INNER JOIN inventory_items i ON UPPER(TRIM(p.mainsaver)) = UPPER(TRIM(i.referencia))
       WHERE i.stockActual = 0 AND p.estado IN ('PENDIENTE', 'CASI COMPLETO')
     `) as any[];
-    expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(30);
+    expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(20);
   });
 
   it("CASO 1: OC SU115560 debe cruzar con referencia de stock=0", async () => {

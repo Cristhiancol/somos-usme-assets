@@ -65,9 +65,14 @@ export const appRouter = router({
         estado: z.string().optional(),
         prioridad: z.string().optional(),
         search: z.string().optional(),
+        tipoReferencia: z.enum(['TODOS', 'NUEVO', 'REPARADO', 'SERVICIO']).optional(),
       }).optional())
       .query(async ({ input }) => {
-        return getPurchaseOrders(input ?? undefined);
+        const filters = input ? {
+          ...input,
+          tipoReferencia: input.tipoReferencia === 'TODOS' ? undefined : input.tipoReferencia,
+        } : undefined;
+        return getPurchaseOrders(filters);
       }),
 
     delayed: publicProcedure.query(async () => {
