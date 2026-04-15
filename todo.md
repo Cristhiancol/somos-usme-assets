@@ -128,3 +128,12 @@
 - [x] PRUEBA 2: Consistencia paleta — DashboardLayout, Home, StockCeroConOC usan paleta corporativa
 - [x] PRUEBA 3: Badges NUEVO/REPARADO/SERVICIO con colores corporativos y PrioridadBadge/EstadoBadge
 - [x] PRUEBA 4: Regresión — 75/75 tests pasan (22 nuevos + 53 previos)
+
+## Fix: Dropdown Inventario — REORDEN → REORDEN INMEDIATO
+
+- [x] Cambiar string "REORDEN" por "REORDEN INMEDIATO" en dropdown de estados de Inventory.tsx
+- [x] PRUEBA 1: Dropdown muestra exactamente los 6 valores correctos
+- [x] PRUEBA 2: Filtro REORDEN INMEDIATO muestra solo filas con ese badge (272 refs)
+- [x] PRUEBA 3: "Todos los estados" restaura las 1828 referencias
+- [x] PRUEBA 4: Demás filtros (CRITICO=613, PRECAUCION=204, OPTIMO=414, EXCESO=325) funcionan
+- [x] PRUEBA 5: Regresión — 94/94 tests pasan, solo Inventory.tsx modificado

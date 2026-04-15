@@ -8,7 +8,7 @@ import { useState, useMemo } from "react";
 
 const CUENTAS = ["PLATAFORMA", "CAJA", "CARROCERIA", "COMBUSTIBLE", "COMUNICACIONES", "ELECTRICIDAD", "LLANTAS", "LUBRICANTES"];
 const CLASES = ["A", "B", "C"];
-const ESTADOS = ["CRITICO", "REORDEN", "PRECAUCION", "OPTIMO", "EXCESO"];
+const ESTADOS = ["CRITICO", "REORDEN INMEDIATO", "PRECAUCION", "OPTIMO", "EXCESO"];
 
 function formatCurrency(val: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
@@ -18,7 +18,7 @@ function getEstadoBadge(estado: string | null) {
   if (!estado) return null;
   const map: Record<string, string> = {
     CRITICO: "bg-red-500/20 text-red-400 border-red-500/30",
-    REORDEN: "bg-orange-500/20 text-orange-400 border-orange-500/30",
+    "REORDEN INMEDIATO": "bg-orange-500/20 text-orange-400 border-orange-500/30",
     PRECAUCION: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
     OPTIMO: "bg-green-500/20 text-green-400 border-green-500/30",
     EXCESO: "bg-blue-500/20 text-blue-400 border-blue-500/30",
