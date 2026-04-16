@@ -64,10 +64,7 @@ function buildRow(item: StockCeroEmailItem, index: number): string {
       <td style="padding: 10px 8px; border-bottom: 1px solid #E5E7EB; font-size: 12px; font-weight: 700; color: #009890; font-family: Arial, Helvetica, sans-serif; white-space: nowrap;">
         ${item.referencia || '—'}
       </td>
-      <td style="padding: 10px 8px; border-bottom: 1px solid #E5E7EB; font-size: 12px; color: #281C19; font-family: Arial, Helvetica, sans-serif; max-width: 200px;">
-        ${desc}
-      </td>
-      <td style="padding: 10px 8px; border-bottom: 1px solid #E5E7EB; font-size: 12px; font-weight: 700; color: #281C19; font-family: Arial, Helvetica, sans-serif; white-space: nowrap;">
+      <td style="padding: 10px 8px; border-bottom: 1px solid #E5E7EB; font-size: 13px; font-weight: 800; color: #009890; font-family: Arial, Helvetica, sans-serif; white-space: nowrap; letter-spacing: 0.5px;">
         ${item.ordenCompra || '—'}
       </td>
       <td style="padding: 10px 8px; border-bottom: 1px solid #E5E7EB; font-size: 12px; color: #374151; font-family: Arial, Helvetica, sans-serif; max-width: 160px;">
@@ -300,8 +297,8 @@ export function buildStockCeroEmailHTML(
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 16px;">
                 <tr>
                   <td>
-                    <h2 style="margin: 0; font-size: 14px; font-weight: 700; color: #281C19; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 1px;">
-                      🔴 TOP ${Math.min(15, mainItems.length)} REFERENCIAS CRÍTICAS
+                    <h2 style="margin: 0; font-size: 14px; font-weight: 700; color: #281C19; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 1px; border-bottom: 3px solid #8CB32A; padding-bottom: 6px; display: inline-block;">
+                      TOP 15 — MAYOR RETRASO
                     </h2>
                     <p style="margin: 4px 0 0 0; font-size: 12px; color: #6B7280; font-family: Arial, Helvetica, sans-serif;">
                       Ordenadas por mayor días de retraso. Total en sistema: <strong>${totalAfectadas} referencias</strong>.
@@ -327,8 +324,7 @@ export function buildStockCeroEmailHTML(
                   <tr style="background-color: #281C19;">
                     <th style="padding: 12px 8px; text-align: center; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">PRIORIDAD</th>
                     <th style="padding: 12px 8px; text-align: left; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">REFERENCIA</th>
-                    <th style="padding: 12px 8px; text-align: left; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">DESCRIPCIÓN</th>
-                    <th style="padding: 12px 8px; text-align: left; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">OC</th>
+                    <th style="padding: 12px 8px; text-align: left; font-size: 10px; font-weight: 700; color: #009890; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; background-color: #0D2E2C;">OC</th>
                     <th style="padding: 12px 8px; text-align: left; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px;">PROVEEDOR</th>
                     <th style="padding: 12px 8px; text-align: center; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">DÍAS RET.</th>
                     <th style="padding: 12px 8px; text-align: right; font-size: 10px; font-weight: 700; color: #8CB32A; font-family: Arial, Helvetica, sans-serif; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">VALOR PEND.</th>
@@ -340,8 +336,8 @@ export function buildStockCeroEmailHTML(
               </table>
 
               ${mainItems.length > 15 ? `
-              <p style="margin: 8px 0 0 0; font-size: 11px; color: #9CA3AF; font-family: Arial, Helvetica, sans-serif; text-align: right;">
-                Mostrando 15 de ${mainItems.length} referencias. Acceda al sistema para ver el listado completo.
+              <p style="margin: 8px 0 0 0; font-size: 11px; color: #9CA3AF; font-family: Arial, Helvetica, sans-serif; text-align: center; font-style: italic;">
+                Mostrando Top 15 de mayor retraso. ${mainItems.length - 15} órdenes restantes no mostradas.
               </p>
               ` : ''}
 

@@ -190,7 +190,7 @@ describe('PRUEBA 3 — Autonomía: correo funciona sin acceso al dashboard', () 
     expect(html).toContain('No hay referencias con stock cero');
   });
 
-  it('3.2 — El template con 20 items muestra "Mostrando 15 de 20"', () => {
+  it('3.2 — El template con 20 items muestra texto de órdenes restantes', () => {
     const items20: StockCeroEmailItem[] = Array.from({ length: 20 }, (_, i) => ({
       referencia: `REF${i.toString().padStart(5, '0')}`,
       descripcion: `Descripción ${i}`,
@@ -205,7 +205,8 @@ describe('PRUEBA 3 — Autonomía: correo funciona sin acceso al dashboard', () 
       tipoReferencia: 'NUEVO' as const,
     }));
     const html = buildStockCeroEmailHTML(items20, new Date());
-    expect(html).toContain('Mostrando 15 de 20');
+    // El nuevo texto es: "Mostrando Top 15 de mayor retraso. 5 órdenes restantes no mostradas."
+    expect(html).toContain('5 órdenes restantes no mostradas');
   });
 
   it('3.3 — El template no contiene imágenes externas (solo inline CSS)', () => {

@@ -46,9 +46,7 @@ export async function sendStockCeroReport(options?: {
   // 3. Construir asunto con resumen ejecutivo
   const mainItems = items.filter(i => i.um !== 'SVR');
   const criticos = mainItems.filter(i => (i.diasRetraso ?? 0) > 30).length;
-  const subject = criticos > 0
-    ? `🔴 [CRÍTICO] Asset Tracker — ${mainItems.length} refs sin stock, ${criticos} OC vencidas >30d`
-    : `⚠️ Asset Tracker — Alerta Stock Cero: ${mainItems.length} referencias con OC activa`;
+  const subject = `ALERTA STOCK CERO — ${mainItems.length} Refs${criticos > 0 ? ` (${criticos} CRÍTICAS)` : ''} — Somos Usme`;
 
   // 4. Enviar
   const transport = createTransport();

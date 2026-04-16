@@ -150,3 +150,21 @@
 - [x] PRUEBA 2: Template HTML generado correctamente — KPIs, tabla Top 15, sección SVR, badges
 - [x] PRUEBA 3: Autonomía confirmada — sin enlaces privados, sin imágenes externas, 0 items = mensaje correcto
 - [x] Regresión: 120/120 tests pasan
+
+## Corrección Template Correo — HTML Profesional (Mockup v2)
+
+- [x] Reemplazar texto plano por template HTML inline con tabla estructurada
+- [x] Banner superior #281C19 con "ASSET TRACKER — ALERTA STOCK CERO"
+- [x] KPI cards: Total órdenes afectadas + Valor total pendiente
+- [x] Tabla Top 15 ordenada por días DESC con columnas: PRIORIDAD | REF | OC | PROVEEDOR | DÍAS | VALOR
+- [x] Columna OC en color teal #009890 y negrita
+- [x] Badges de prioridad: >30d CRÍTICO (rojo), 15-30d ALERTA (naranja), <15d SEGUIMIENTO (amarillo)
+- [x] Texto al final: "Mostrando Top 15 de mayor retraso. X órdenes restantes no mostradas."
+- [x] Sección SVR separada al final del correo
+- [x] Sin enlaces ni botones — correo 100% autónomo
+- [x] PRUEBA 1: Correo renderiza tabla HTML limpia (no texto plano) — 5/5 sub-tests
+- [x] PRUEBA 2: Solo Top 15 ítems, no toda la BD — 4/4 sub-tests
+- [x] PRUEBA 3: Badges correctos por días de retraso — 7/7 sub-tests
+- [x] PRUEBA 4: Número de OC claramente visible en cada fila — 5/5 sub-tests
+- [x] PRUEBA 5: Sin enlaces rotos ni botones inútiles — 7/7 sub-tests
+- [x] Regresión: 148/148 tests pasan
