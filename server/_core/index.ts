@@ -10,6 +10,8 @@ import { serveStatic, setupVite } from "./vite";
 import { syncFromGoogleDrive } from "../gdrive-sync";
 import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState } from "../gdrive-oauth";
 import { initSentryServer, captureException } from "./sentry";
+import cron from "node-cron";
+import { sendStockCeroReport } from "../email-service";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -112,6 +114,39 @@ async function startServer() {
       captureException(e, { context: 'AutoSync' });
     }
   }, 15 * 60 * 1000);
+
+  // ── Cron Job: Reporte diario Stock Cero OC — 7:00 AM Colombia (UTC-5 = 12:00 UTC) ──
+  // Expresión cron: 0 12 * * * (seg min hora día mes díaSemana)
+  cron.schedule('0 12 * * *', async () => {
+    console.log('[CronJob] Enviando reporte diario Stock Cero OC...');
+    try {
+      const result = await sendStockCeroReport();
+      console.log('[CronJob] Reporte enviado:', result.message);
+    } catch (e: any) {
+      console.error('[CronJob] Error enviando reporte:', e.message);
+      captureException(e, { context: 'CronJob-StockCeroReport' });
+    }
+  }, {
+    timezone: 'America/Bogota',
+  });
+  console.log('[CronJob] Reporte diario Stock Cero OC programado: 7:00 AM hora Colombia');
+
+  // Endpoint REST para disparar el reporte manualmente (usado por cron externo o admin)
+  app.post('/api/cron/stock-cero-report', async (req, res) => {
+    const apiKey = req.headers['x-cron-key'];
+    const expectedKey = process.env.CRON_SECRET_KEY;
+    // Si hay clave configurada, validarla; si no, solo permitir desde localhost
+    if (expectedKey && apiKey !== expectedKey) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      const result = await sendStockCeroReport({ to: req.body?.to });
+      return res.json(result);
+    } catch (e: any) {
+      console.error('[CronEndpoint] Error:', e.message);
+      return res.status(500).json({ success: false, message: e.message });
+    }
+  });
   // tRPC API
   app.use(
     "/api/trpc",

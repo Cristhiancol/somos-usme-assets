@@ -20,6 +20,7 @@ import {
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
 import * as predictionsModule from "./routers/predictions";
+import { sendStockCeroReport, previewStockCeroReport } from "./email-service";
 
 export const appRouter = router({
   system: systemRouter,
@@ -119,6 +120,24 @@ export const appRouter = router({
 
     lastSync: publicProcedure.query(async () => {
       return getLastSync();
+    }),
+  }),
+
+  email: router({
+    // Enviar reporte manual de Stock Cero OC (protegido — solo admin/owner)
+    sendStockCeroReport: protectedProcedure
+      .input(z.object({
+        to: z.string().email().optional(),
+      }).optional())
+      .mutation(async ({ input }) => {
+        const result = await sendStockCeroReport({ to: input?.to });
+        return result;
+      }),
+
+    // Preview del HTML del correo (para verificar sin enviar)
+    previewStockCeroReport: protectedProcedure.query(async () => {
+      const html = await previewStockCeroReport();
+      return { html };
     }),
   }),
 

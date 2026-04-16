@@ -137,3 +137,16 @@
 - [x] PRUEBA 3: "Todos los estados" restaura las 1828 referencias
 - [x] PRUEBA 4: Demás filtros (CRITICO=613, PRECAUCION=204, OPTIMO=414, EXCESO=325) funcionan
 - [x] PRUEBA 5: Regresión — 94/94 tests pasan, solo Inventory.tsx modificado
+
+## Sistema de Notificaciones por Correo — Stock Cero OC
+
+- [x] Leer db.ts y routers.ts para entender estructura de datos de stock-cero-oc
+- [x] Implementar template HTML inline: header #281C19, KPIs, tabla Top 15, badges prioridad, sección SVR
+- [x] Instalar nodemailer y configurar transporte SMTP
+- [x] Implementar función getStockCeroEmailData() en db.ts con query Top 15 por días retraso
+- [x] Crear endpoint /api/cron/stock-cero-report en server/routers.ts
+- [x] Configurar cron job diario 7AM Colombia (UTC-5 = 12:00 UTC)
+- [x] PRUEBA 1: Datos SQL correctos — campos, orden DESC por días, sin duplicados del mismo par ref+OC
+- [x] PRUEBA 2: Template HTML generado correctamente — KPIs, tabla Top 15, sección SVR, badges
+- [x] PRUEBA 3: Autonomía confirmada — sin enlaces privados, sin imágenes externas, 0 items = mensaje correcto
+- [x] Regresión: 120/120 tests pasan
