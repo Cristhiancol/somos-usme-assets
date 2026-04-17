@@ -278,6 +278,7 @@ export default function OrdersPage() {
                   <th className="text-left py-3 px-2 font-semibold text-xs">TIPO</th>
                   <th className="text-left py-3 px-2 font-semibold text-xs">OC</th>
                   <th className="text-left py-3 px-2 font-semibold text-xs">REFERENCIA</th>
+                  <th className="text-left py-3 px-2 font-semibold text-xs">PF</th>
                   <th className="text-left py-3 px-2 font-semibold text-xs">DESCRIPCIÓN</th>
                   <th className="text-left py-3 px-2 font-semibold text-xs">PROVEEDOR</th>
                   <th className="text-right py-3 px-2 font-semibold text-xs">PEDIDO</th>
@@ -309,6 +310,9 @@ export default function OrdersPage() {
                       <td className="py-2 px-2 font-mono text-xs font-bold" style={{ color: '#009890' }}>{o.ordenCompra}</td>
                       <td className="py-2 px-2 text-xs">
                         <ReferenciaBadge ref={o.mainsaver} />
+                      </td>
+                      <td className="py-2 px-2 text-xs font-mono max-w-[100px] truncate" title={o.parteFabricante ?? ""} style={{ color: '#6b7280' }}>
+                        {o.parteFabricante || "—"}
                       </td>
                       <td className="py-2 px-2 text-xs max-w-[160px] truncate" title={o.descripcion ?? ""}>{o.descripcion}</td>
                       <td className="py-2 px-2 text-xs max-w-[140px] truncate text-muted-foreground" title={o.proveedor ?? ""}>{o.proveedor}</td>

@@ -339,6 +339,7 @@ export async function getStockCeroConOC() {
       i.costoUnitario,
       i.estado AS estadoInventario,
       i.prioridad AS prioridadInventario,
+      i.parteFabricante,
       p.id AS ocId,
       p.ordenCompra,
       p.estado AS estadoOC,
@@ -376,6 +377,7 @@ export async function getStockCeroConOC() {
     costoUnitario: number | null;
     estadoInventario: string | null;
     prioridadInventario: string | null;
+    parteFabricante: string | null;
     ocId: number;
     ordenCompra: string | null;
     estadoOC: string | null;

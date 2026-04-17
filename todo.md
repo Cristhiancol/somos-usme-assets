@@ -211,3 +211,14 @@
 - [x] TEST 8: Template Email compatible Gmail/Outlook (3/3)
 - [x] TEST 9: Inventario total consistente (1/1)
 - [x] TEST 10: Regresión — 176/176 tests pasan (3/3)
+
+## Agregar Parte Fabricante en Órdenes y Stock 0 + OC
+
+- [x] Verificar que las queries de Órdenes y Stock 0 + OC traen parteFabricante desde la BD — purchase_orders ya tiene columna propia, inventory_items ya tenía parteFabricante
+- [x] getPurchaseOrders() ya trae parteFabricante — la tabla purchase_orders tiene su propia columna (no necesita JOIN)
+- [x] Actualizar getStockCeroConOC() en db.ts — i.parteFabricante agregado al SELECT + tipo de retorno actualizado
+- [x] Agregar columna PF (Parte Fabricante) en Orders.tsx — columna después de REFERENCIA, font-mono, truncate 100px
+- [x] Agregar columna PF (Parte Fabricante) en StockCeroConOC.tsx — columna después de REFERENCIA, font-mono, truncate 100px, búsqueda incluye PF
+- [x] PRUEBA 1: parteFabricante aparece en purchase_orders (columna propia) — 10/10 tests
+- [x] PRUEBA 2: parteFabricante aparece en cruce stock-cero-oc (via inventory_items) — 10/10 tests
+- [x] PRUEBA 3: Regresión — 186/186 tests pasan (10 nuevos + 176 previos)

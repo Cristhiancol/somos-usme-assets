@@ -75,7 +75,8 @@ export default function StockCeroConOC() {
         (r.referencia || "").toLowerCase().includes(search.toLowerCase()) ||
         (r.descripcion || "").toLowerCase().includes(search.toLowerCase()) ||
         (r.proveedorOC || "").toLowerCase().includes(search.toLowerCase()) ||
-        (r.ordenCompra || "").toLowerCase().includes(search.toLowerCase());
+        (r.ordenCompra || "").toLowerCase().includes(search.toLowerCase()) ||
+        (r.parteFabricante || "").toLowerCase().includes(search.toLowerCase());
       const matchPrioridad =
         filterPrioridad === "TODAS" ||
         (r.prioridadOC || "").toUpperCase() === filterPrioridad;
@@ -196,6 +197,7 @@ export default function StockCeroConOC() {
                 <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
                   <th className="text-left px-3 py-3 font-semibold">PRIORIDAD OC</th>
                   <th className="text-left px-3 py-3 font-semibold">REFERENCIA</th>
+                  <th className="text-left px-3 py-3 font-semibold">PF</th>
                   <th className="text-left px-3 py-3 font-semibold">DESCRIPCIÓN</th>
                   <th className="text-left px-3 py-3 font-semibold">OC</th>
                   <th className="text-left px-3 py-3 font-semibold">PROVEEDOR</th>
@@ -224,6 +226,9 @@ export default function StockCeroConOC() {
                       </td>
                       <td className="px-3 py-2.5 font-bold" style={{ color: '#009890' }}>
                         {r.referencia}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono max-w-[100px] truncate" title={r.parteFabricante ?? ""} style={{ color: '#6b7280' }}>
+                        {r.parteFabricante || "—"}
                       </td>
                       <td className="px-3 py-2.5 max-w-[200px] truncate" title={r.descripcion ?? ""} style={{ color: '#281C19' }}>
                         {r.descripcion}
