@@ -17,13 +17,13 @@ function PrioridadBadge({ prioridad }: { prioridad: string | null }) {
   const s = PRIORIDAD_STYLE[p];
   if (!s) return (
     <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
-      style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc', fontFamily: 'Rajdhani' }}>
+      style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc', fontFamily: "'Space Grotesk', sans-serif" }}>
       {prioridad || "—"}
     </span>
   );
   return (
     <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
-      style={{ background: s.bg, color: s.text, borderColor: s.border, boxShadow: s.shadow, fontFamily: 'Rajdhani' }}>
+      style={{ background: s.bg, color: s.text, borderColor: s.border, boxShadow: s.shadow, fontFamily: "'Space Grotesk', sans-serif" }}>
       {prioridad}
     </span>
   );
@@ -39,13 +39,13 @@ function EstadoBadge({ estado }: { estado: string | null }) {
   const s = map[e];
   if (!s) return (
     <span className="inline-block px-2 py-0.5 rounded text-[10px] border"
-      style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc', fontFamily: 'Rajdhani' }}>
+      style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc', fontFamily: "'Space Grotesk', sans-serif" }}>
       {estado || "—"}
     </span>
   );
   return (
     <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border"
-      style={{ background: s.bg, color: s.text, borderColor: s.border, fontFamily: 'Rajdhani' }}>
+      style={{ background: s.bg, color: s.text, borderColor: s.border, fontFamily: "'Space Grotesk', sans-serif" }}>
       {estado}
     </span>
   );
@@ -93,11 +93,11 @@ export default function StockCeroConOC() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Siren className="h-6 w-6 animate-pulse-neon" style={{ color: '#dc2626' }} />
-          <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+          <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
             STOCK CERO — OC ACTIVA
           </h1>
         </div>
-        <p className="text-sm" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>
+        <p className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>
           Referencias sin stock con Orden de Compra pendiente — presionar al proveedor
         </p>
       </div>
@@ -107,37 +107,37 @@ export default function StockCeroConOC() {
         <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #dc2626' }}>
           <CardContent className="pt-4 pb-3">
             <AlertTriangle className="h-4 w-4 mb-2" style={{ color: '#dc2626' }} />
-            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>TOTAL AFECTADAS</div>
-            <div className="text-3xl font-black" style={{ fontFamily: "Orbitron", color: '#dc2626' }}>
+            <div className="text-xs mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>TOTAL AFECTADAS</div>
+            <div className="text-3xl font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#dc2626' }}>
               {isLoading ? "..." : (data?.length ?? 0)}
             </div>
-            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>refs stock=0 + OC activa</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9ca3af' }}>refs stock=0 + OC activa</div>
           </CardContent>
         </Card>
         <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #f87171' }}>
           <CardContent className="pt-4 pb-3">
             <AlertTriangle className="h-4 w-4 mb-2" style={{ color: '#f87171' }} />
-            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>CRÍTICO</div>
-            <div className="text-3xl font-black" style={{ fontFamily: "Orbitron", color: '#f87171' }}>{criticos}</div>
-            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>acción inmediata</div>
+            <div className="text-xs mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>CRÍTICO</div>
+            <div className="text-3xl font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#f87171' }}>{criticos}</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9ca3af' }}>acción inmediata</div>
           </CardContent>
         </Card>
         <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #fb923c' }}>
           <CardContent className="pt-4 pb-3">
             <ShoppingCart className="h-4 w-4 mb-2" style={{ color: '#fb923c' }} />
-            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>REORDEN INMEDIATO</div>
-            <div className="text-3xl font-black" style={{ fontFamily: "Orbitron", color: '#fb923c' }}>{reordenInmediato}</div>
-            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>presionar proveedor</div>
+            <div className="text-xs mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>REORDEN INMEDIATO</div>
+            <div className="text-3xl font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#fb923c' }}>{reordenInmediato}</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9ca3af' }}>presionar proveedor</div>
           </CardContent>
         </Card>
         <Card className="kpi-card-corp rounded-xl" style={{ borderLeft: '3px solid #8CB32A' }}>
           <CardContent className="pt-4 pb-3">
             <Banknote className="h-4 w-4 mb-2" style={{ color: '#8CB32A' }} />
-            <div className="text-xs mb-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>VALOR PENDIENTE</div>
-            <div className="text-xl font-black" style={{ fontFamily: "Orbitron", color: '#8CB32A' }}>
+            <div className="text-xs mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>VALOR PENDIENTE</div>
+            <div className="text-xl font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#8CB32A' }}>
               {isLoading ? "..." : formatCurrency(valorTotal)}
             </div>
-            <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>en órdenes activas</div>
+            <div className="text-[10px] mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9ca3af' }}>en órdenes activas</div>
           </CardContent>
         </Card>
       </div>
@@ -152,7 +152,7 @@ export default function StockCeroConOC() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="cyber-input w-full h-9 pl-9 pr-3 rounded-md text-sm"
-            style={{ fontFamily: "Rajdhani" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           />
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -165,7 +165,7 @@ export default function StockCeroConOC() {
                 onClick={() => setFilterPrioridad(p)}
                 className="px-3 py-1.5 rounded text-xs font-bold border transition-all"
                 style={{
-                  fontFamily: "Rajdhani",
+                  fontFamily: "'Space Grotesk', sans-serif",
                   background: isActive ? (s ? s.bg : 'rgba(0,152,144,0.12)') : '#ffffff',
                   color: isActive ? (s ? s.text : '#009890') : '#6b7280',
                   borderColor: isActive ? (s ? s.border : '#009890') : 'rgba(140,179,42,0.3)',
@@ -182,16 +182,16 @@ export default function StockCeroConOC() {
       {/* Tabla */}
       <Card className="cyber-card rounded-xl overflow-hidden">
         {isLoading ? (
-          <div className="text-center py-20 animate-pulse" style={{ fontFamily: "Rajdhani", color: '#009890' }}>
+          <div className="text-center py-20 animate-pulse" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#009890' }}>
             Cargando datos del cruce inventario × órdenes...
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-20" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>
+          <div className="text-center py-20" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9ca3af' }}>
             No se encontraron referencias con los filtros aplicados.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-xs" style={{ fontFamily: "Rajdhani" }}>
+            <table className="w-full text-xs" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <thead>
                 <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
                   <th className="text-left px-3 py-3 font-semibold">PRIORIDAD OC</th>
@@ -259,7 +259,7 @@ export default function StockCeroConOC() {
       </Card>
 
       {/* Footer */}
-      <div className="text-xs text-right" style={{ fontFamily: "Rajdhani", color: '#9ca3af' }}>
+      <div className="text-xs text-right" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#9ca3af' }}>
         Mostrando {filtered.length} de {data?.length ?? 0} referencias | Cruce: inventario × órdenes de compra activas
       </div>
     </div>

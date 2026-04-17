@@ -100,14 +100,14 @@ export default function SyncPage() {
           statusMsg.type === "success" ? "bg-green-500/10 border-green-500/30 text-green-400" :
           statusMsg.type === "error" ? "bg-red-500/10 border-red-500/30 text-red-400" :
           "bg-cyan-500/10 border-cyan-500/30 text-cyan-400"
-        }`} style={{ fontFamily: "Rajdhani" }}>
+        }`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           {statusMsg.text}
           <button onClick={() => setStatusMsg(null)} className="ml-2 opacity-60 hover:opacity-100">✕</button>
         </div>
       )}
       <div className="flex items-center gap-3">
         <RefreshCw className="h-6 w-6 text-neon-green" />
-        <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+        <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           SINCRONIZACIÓN &amp; NOTIFICACIONES
         </h1>
       </div>
@@ -119,10 +119,10 @@ export default function SyncPage() {
             <div className="flex items-center gap-3 flex-1">
               <ShieldAlert className="h-8 w-8 text-orange-400 shrink-0" />
               <div>
-                <h3 className="text-sm font-bold text-orange-400 tracking-wider" style={{ fontFamily: "Orbitron" }}>
+                <h3 className="text-sm font-bold text-orange-400 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   GOOGLE DRIVE NO AUTORIZADO
                 </h3>
-                <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: "Rajdhani" }}>
+                <p className="text-xs text-muted-foreground mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                   Autoriza el acceso a Google Drive una sola vez para activar la sincronización automática cada 15 minutos.
                   El token se guarda de forma permanente y se renueva automáticamente.
                 </p>
@@ -132,7 +132,7 @@ export default function SyncPage() {
               onClick={handleAuthorizeGDrive}
               disabled={authLoading}
               className="bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 gap-2 shrink-0"
-              style={{ fontFamily: "Orbitron", fontSize: "11px" }}
+              style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: "11px" }}
             >
               <Link className={`h-4 w-4 ${authLoading ? 'animate-spin' : ''}`} />
               {authLoading ? 'CONECTANDO...' : 'AUTORIZAR GOOGLE DRIVE'}
@@ -146,10 +146,10 @@ export default function SyncPage() {
           <div className="flex items-center gap-3">
             <ShieldCheck className="h-6 w-6 text-neon-green shrink-0" />
             <div className="flex-1">
-              <span className="text-sm font-bold text-neon-green" style={{ fontFamily: "Orbitron" }}>
+              <span className="text-sm font-bold text-neon-green" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 GOOGLE DRIVE CONECTADO
               </span>
-              <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "Rajdhani" }}>
+              <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                 Sincronización automática activa cada 15 minutos. El token se renueva automáticamente.
               </p>
             </div>
@@ -159,7 +159,7 @@ export default function SyncPage() {
               variant="outline"
               size="sm"
               className="text-xs border-green-500/30 text-green-400 hover:bg-green-500/10 shrink-0"
-              style={{ fontFamily: "Rajdhani" }}
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
               Re-autorizar
             </Button>
@@ -172,28 +172,28 @@ export default function SyncPage() {
         <Card className="cyber-card p-6 rounded-xl cyber-glow-cyan">
           <div className="flex items-center gap-3 mb-4">
             <Cloud className="h-6 w-6 text-neon-cyan" />
-            <h2 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+            <h2 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               GOOGLE DRIVE SYNC
             </h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4" style={{ fontFamily: "Rajdhani" }}>
+          <p className="text-sm text-muted-foreground mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Sincroniza los datos del archivo <span className="text-neon-pink font-semibold">DASBOARD SOMOS U - GESTOR 1.xlsx</span> desde Google Drive.
             La sincronización automática se ejecuta cada 15 minutos.
           </p>
           <div className="space-y-3 mb-6">
-            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <CheckCircle className="h-4 w-4 text-neon-green" />
               <span>Inventario completo (sin límite de referencias)</span>
             </div>
-            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <CheckCircle className="h-4 w-4 text-neon-green" />
               <span>Órdenes de compra pendientes</span>
             </div>
-            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <CheckCircle className="h-4 w-4 text-neon-green" />
               <span>Directorio de proveedores</span>
             </div>
-            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <div className="flex items-center gap-2 text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <CheckCircle className="h-4 w-4 text-neon-green" />
               <span>Auto-sync cada 15 minutos</span>
             </div>
@@ -202,7 +202,7 @@ export default function SyncPage() {
             onClick={triggerSync}
             disabled={syncMutation.isPending}
             className="w-full bg-neon-cyan/20 border border-neon-cyan/40 text-neon-cyan hover:bg-neon-cyan/30 gap-2"
-            style={{ fontFamily: "Orbitron" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             <RefreshCw className={`h-4 w-4 transition-transform ${syncMutation.isPending ? 'animate-spin' : ''}`} />
             {syncMutation.isPending ? 'SINCRONIZANDO...' : 'SINCRONIZAR AHORA'}
@@ -213,14 +213,14 @@ export default function SyncPage() {
         <Card className="cyber-card p-6 rounded-xl">
           <div className="flex items-center gap-3 mb-4">
             <Clock className="h-6 w-6 text-neon-yellow" />
-            <h2 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+            <h2 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               ÚLTIMA SINCRONIZACIÓN
             </h2>
           </div>
           {isLoading ? (
             <Loader2 className="h-6 w-6 animate-spin text-neon-pink" />
           ) : lastSync ? (
-            <div className="space-y-4" style={{ fontFamily: "Rajdhani" }}>
+            <div className="space-y-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <div className="flex items-center gap-2">
                 {lastSync.status === "success" ? (
                   <CheckCircle className="h-5 w-5 text-neon-green" />
@@ -254,11 +254,11 @@ export default function SyncPage() {
       <Card className="cyber-card p-6 rounded-xl">
         <div className="flex items-center gap-3 mb-4">
           <Bell className="h-6 w-6 text-neon-pink" />
-          <h2 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+          <h2 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             NOTIFICACIONES
           </h2>
         </div>
-        <p className="text-sm text-muted-foreground mb-6" style={{ fontFamily: "Rajdhani" }}>
+        <p className="text-sm text-muted-foreground mb-6" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           Envía alertas sobre situaciones críticas del inventario y órdenes de compra.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -266,10 +266,10 @@ export default function SyncPage() {
             onClick={() => notifyDelayed.mutate()}
             disabled={notifyDelayed.isPending}
             className="bg-orange-500/20 border border-orange-500/40 text-orange-400 hover:bg-orange-500/30 gap-2 h-auto py-4"
-            style={{ fontFamily: "Rajdhani" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             <div className="text-left">
-              <div className="font-bold text-sm" style={{ fontFamily: "Orbitron" }}>ÓRDENES CON RETRASO</div>
+              <div className="font-bold text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>ÓRDENES CON RETRASO</div>
               <div className="text-xs opacity-70 mt-1">Notifica sobre órdenes pendientes vencidas</div>
             </div>
           </Button>
@@ -277,10 +277,10 @@ export default function SyncPage() {
             onClick={() => notifyCritical.mutate()}
             disabled={notifyCritical.isPending}
             className="bg-red-500/20 border border-red-500/40 text-red-400 hover:bg-red-500/30 gap-2 h-auto py-4"
-            style={{ fontFamily: "Rajdhani" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             <div className="text-left">
-              <div className="font-bold text-sm" style={{ fontFamily: "Orbitron" }}>STOCK CERO CRÍTICO</div>
+              <div className="font-bold text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>STOCK CERO CRÍTICO</div>
               <div className="text-xs opacity-70 mt-1">Alerta sobre productos sin stock con consumo activo</div>
             </div>
           </Button>

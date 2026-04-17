@@ -27,7 +27,7 @@ function getPrioridadBadge(p: string | null) {
   const s = map[p];
   if (!s) return <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc' }}>{p}</span>;
   return (
-    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: s.bg, color: s.text, borderColor: s.border, boxShadow: s.shadow, fontFamily: 'Rajdhani' }}>
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: s.bg, color: s.text, borderColor: s.border, boxShadow: s.shadow, fontFamily: "'Space Grotesk', sans-serif" }}>
       {p}
     </span>
   );
@@ -43,7 +43,7 @@ function getEstadoBadge(e: string | null) {
   const s = map[e];
   if (!s) return <span className="inline-block px-2 py-0.5 rounded text-[10px] border" style={{ background: '#f5f5f5', color: '#281C19', borderColor: '#ccc' }}>{e}</span>;
   return (
-    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: s.bg, color: s.text, borderColor: s.border, fontFamily: 'Rajdhani' }}>
+    <span className="inline-block px-2 py-0.5 rounded text-[10px] font-bold border" style={{ background: s.bg, color: s.text, borderColor: s.border, fontFamily: "'Space Grotesk', sans-serif" }}>
       {e}
     </span>
   );
@@ -102,7 +102,7 @@ function CyberSelect({ value, onChange, placeholder, options }: {
       onChange={(e) => onChange(e.target.value)}
       className="h-9 w-full rounded-md appearance-none cursor-pointer"
       style={{
-        fontFamily: "Rajdhani",
+        fontFamily: "'Space Grotesk', sans-serif",
         background: '#f9fafb',
         border: '1px solid rgba(140,179,42,0.3)',
         color: '#281C19',
@@ -171,10 +171,10 @@ export default function OrdersPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <ShoppingCart className="h-6 w-6" style={{ color: '#8CB32A' }} />
-          <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+          <h1 className="text-xl font-bold tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
             ÓRDENES PENDIENTES
           </h1>
-          <span className="text-xs text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+          <span className="text-xs text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             {data?.length ?? "..."} órdenes — {formatCurrency(totalPendingValue)}
           </span>
         </div>
@@ -182,7 +182,7 @@ export default function OrdersPage() {
           onClick={() => notifyDelayed.mutate()}
           disabled={notifyDelayed.isPending}
           className="gap-2 font-bold"
-          style={{ background: '#281C19', color: '#ffffff', border: '1px solid #8CB32A', boxShadow: '0 0 8px rgba(140,179,42,0.3)', fontFamily: 'Orbitron' }}
+          style={{ background: '#281C19', color: '#ffffff', border: '1px solid #8CB32A', boxShadow: '0 0 8px rgba(140,179,42,0.3)', fontFamily: "'Space Grotesk', sans-serif" }}
           size="sm"
         >
           <Bell className="h-4 w-4" />
@@ -191,7 +191,7 @@ export default function OrdersPage() {
       </div>
 
       {alertMsg && (
-        <div className="p-3 rounded-lg border border-neon-cyan/30 bg-neon-cyan/10 text-neon-cyan text-sm" style={{ fontFamily: "Rajdhani" }}>
+        <div className="p-3 rounded-lg border border-neon-cyan/30 bg-neon-cyan/10 text-neon-cyan text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           {alertMsg}
           <button onClick={() => setAlertMsg(null)} className="ml-3 text-xs opacity-60 hover:opacity-100">✕</button>
         </div>
@@ -204,7 +204,7 @@ export default function OrdersPage() {
             key={btn.key}
             onClick={() => setTipoReferencia(btn.key)}
             className={`filter-btn px-3 py-1.5 rounded-md text-xs flex items-center gap-1.5 ${tipoReferencia === btn.key ? btn.activeClass : ''}`}
-            style={{ fontFamily: "Rajdhani" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           >
             {btn.key === "NUEVO" && <Package className="h-3 w-3" />}
             {btn.key === "REPARADO" && <Wrench className="h-3 w-3" />}
@@ -216,7 +216,7 @@ export default function OrdersPage() {
           </button>
         ))}
         {tipoReferencia === "SERVICIO" && (
-          <span className="text-xs text-purple-300 self-center ml-2" style={{ fontFamily: "Rajdhani" }}>
+          <span className="text-xs text-purple-300 self-center ml-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             ⚠ Estos servicios requieren cierre por Mantenimiento
           </span>
         )}
@@ -232,7 +232,7 @@ export default function OrdersPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-9 bg-cyber-dark border-neon-pink/20"
-              style={{ fontFamily: "Rajdhani" }}
+              style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             />
           </div>
           <CyberSelect
@@ -267,12 +267,12 @@ export default function OrdersPage() {
             <Loader2 className="h-6 w-6 animate-spin text-neon-pink" />
           </div>
         ) : (data || []).length === 0 ? (
-          <div className="text-center py-16 text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+          <div className="text-center py-16 text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             No se encontraron órdenes con los filtros aplicados.
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <table className="w-full text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <thead>
                 <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
                   <th className="text-left py-3 px-2 font-semibold text-xs">TIPO</th>
@@ -341,7 +341,7 @@ export default function OrdersPage() {
       </Card>
 
       {/* Footer informativo */}
-      <div className="text-xs text-right" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>
+      <div className="text-xs text-right" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>
         <span className="inline-flex items-center gap-1 mr-4">
           <Package className="h-3 w-3" style={{ color: '#8CB32A' }} /> NUEVO = repuesto nuevo en espera de entrega
         </span>

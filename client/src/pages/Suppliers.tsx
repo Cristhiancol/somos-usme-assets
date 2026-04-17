@@ -18,10 +18,10 @@ export default function SuppliersPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <Users className="h-6 w-6 text-neon-purple" />
-        <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+        <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           PROVEEDORES
         </h1>
-        <span className="text-xs text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+        <span className="text-xs text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           {data?.length ?? "..."} registrados
         </span>
       </div>
@@ -34,7 +34,7 @@ export default function SuppliersPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9 bg-cyber-dark border-neon-pink/20"
-            style={{ fontFamily: "Rajdhani" }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
           />
         </div>
       </Card>
@@ -44,7 +44,7 @@ export default function SuppliersPage() {
           <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-neon-pink" /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <table className="w-full text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <thead>
                 <tr className="border-b border-neon-pink/20 bg-neon-pink/5">
                   <th className="text-center py-3 px-3 text-neon-pink font-semibold text-xs">#</th>

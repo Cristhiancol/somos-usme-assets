@@ -48,9 +48,12 @@ describe("PRUEBA 1 — Dropdown muestra los 6 valores exactos", () => {
   });
 
   it("El mapa de estilos del badge usa 'REORDEN INMEDIATO' como clave (no 'REORDEN')", () => {
-    expect(inventoryFile).toContain('"REORDEN INMEDIATO": "bg-orange-500');
-    // No debe existir la clave REORDEN sin espacio INMEDIATO en el mapa de estilos
-    expect(inventoryFile).not.toMatch(/REORDEN":\s*"bg-orange/);
+    // El nuevo diseño usa bg-amber-500 en lugar de bg-orange-500
+    expect(inventoryFile).toContain('"REORDEN INMEDIATO"');
+    // Verificar que tiene un estilo asignado (bg-amber o bg-orange)
+    expect(inventoryFile).toMatch(/"REORDEN INMEDIATO":\s*\{/);
+    // No debe existir la clave REORDEN sola sin INMEDIATO
+    expect(inventoryFile).not.toMatch(/"REORDEN":\s*\{/);
   });
 });
 

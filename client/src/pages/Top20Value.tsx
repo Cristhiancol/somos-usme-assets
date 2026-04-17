@@ -13,11 +13,11 @@ export default function Top20ValuePage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <TrendingUp className="h-6 w-6 text-neon-pink" />
-        <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "Orbitron" }}>
+        <h1 className="text-xl font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           TOP 20 — MAYOR VALOR EN INVENTARIO
         </h1>
       </div>
-      <p className="text-sm text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+      <p className="text-sm text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
         Clasificación automática por valor (Stock x Costo) — Productos de alto impacto financiero
       </p>
 
@@ -26,7 +26,7 @@ export default function Top20ValuePage() {
           <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-neon-pink" /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <table className="w-full text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <thead>
                 <tr className="border-b border-neon-pink/20 bg-neon-pink/5">
                   <th className="text-center py-3 px-3 text-neon-pink font-semibold text-xs">#</th>
@@ -47,7 +47,7 @@ export default function Top20ValuePage() {
                   return (
                     <tr key={i} className="border-b border-border/20 hover:bg-neon-cyan/5 transition-colors relative">
                       <td className="py-3 px-3 text-center">
-                        <span className={`font-black text-lg ${i < 3 ? "text-neon-pink cyber-text-glow" : "text-muted-foreground"}`} style={{ fontFamily: "Orbitron" }}>
+                        <span className={`font-black text-lg ${i < 3 ? "text-neon-pink cyber-text-glow" : "text-muted-foreground"}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                           {i + 1}
                         </span>
                       </td>

@@ -57,7 +57,7 @@ export default function DashboardLayout({
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
           <div className="flex flex-col items-center gap-4">
             <Bus className="h-10 w-10 animate-pulse" style={{ color: '#8CB32A' }} />
-            <div className="text-sm" style={{ fontFamily: "Rajdhani", color: '#009890' }}>
+            <div className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#009890' }}>
               Cargando sistema...
             </div>
           </div>
@@ -82,14 +82,14 @@ export default function DashboardLayout({
               </div>
               <h1
                 className="text-2xl font-bold tracking-wider"
-                style={{ fontFamily: 'Orbitron', color: '#281C19' }}
+                style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}
               >
                 SOMOS USME
               </h1>
               <p className="text-sm text-center" style={{ color: '#6b7280' }}>
                 Sistema Inteligente JIT — Control de Inventario y Abastecimiento
               </p>
-              <p className="text-xs font-semibold" style={{ color: '#009890', fontFamily: 'Rajdhani' }}>
+              <p className="text-xs font-semibold" style={{ color: '#009890', fontFamily: "'Space Grotesk', sans-serif" }}>
                 Gestión de Flota 260 Buses
               </p>
             </div>
@@ -97,7 +97,7 @@ export default function DashboardLayout({
               onClick={() => { window.location.href = getLoginUrl(); }}
               className="w-full h-11 rounded-lg font-bold tracking-wider transition-all"
               style={{
-                fontFamily: 'Orbitron',
+                fontFamily: "'Space Grotesk', sans-serif",
                 background: '#281C19',
                 color: '#ffffff',
                 border: '1px solid #8CB32A',
@@ -142,7 +142,7 @@ export default function DashboardLayout({
             <Bus className="h-5 w-5 shrink-0" style={{ color: '#8CB32A' }} />
             <span
               className="font-bold tracking-wider truncate text-xs"
-              style={{ fontFamily: "Orbitron", color: '#8CB32A' }}
+              style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#8CB32A' }}
             >
               {title}
             </span>
@@ -179,7 +179,7 @@ export default function DashboardLayout({
                     className="h-4 w-4 shrink-0"
                     style={{ color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.5)' }}
                   />
-                  <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 600 }}>
+                  <span className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
                     {item.label}
                   </span>
                 </button>
@@ -231,7 +231,7 @@ export default function DashboardLayout({
                 <p className="text-sm font-semibold truncate leading-none" style={{ color: '#f5f5f5' }}>
                   {user?.name || "-"}
                 </p>
-                <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: 'Rajdhani' }}>
+                <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: "'Space Grotesk', sans-serif" }}>
                   {user?.email || "Gestor"}
                 </p>
               </div>
@@ -258,7 +258,7 @@ export default function DashboardLayout({
           <Bus className="h-5 w-5 shrink-0" style={{ color: '#8CB32A' }} />
           <span
             className="font-bold tracking-wider truncate text-xs flex-1"
-            style={{ fontFamily: "Orbitron", color: '#8CB32A' }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#8CB32A' }}
           >
             {title}
           </span>
@@ -288,7 +288,7 @@ export default function DashboardLayout({
                   className="h-4 w-4 shrink-0"
                   style={{ color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.5)' }}
                 />
-                <span className="text-sm" style={{ fontFamily: "Rajdhani", fontWeight: 600 }}>
+                <span className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
                   {item.label}
                 </span>
               </button>
@@ -318,7 +318,7 @@ export default function DashboardLayout({
               <p className="text-sm font-semibold truncate leading-none" style={{ color: '#f5f5f5' }}>
                 {user?.name || "-"}
               </p>
-              <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: 'Rajdhani' }}>
+              <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: "'Space Grotesk', sans-serif" }}>
                 {user?.email || "Gestor"}
               </p>
             </div>
@@ -348,7 +348,7 @@ export default function DashboardLayout({
           </button>
           <span
             className="text-sm font-bold"
-            style={{ fontFamily: "Orbitron", color: '#281C19' }}
+            style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}
           >
             {activeMenuItem?.label ?? "SOMOS USME"}
           </span>

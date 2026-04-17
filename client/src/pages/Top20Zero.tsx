@@ -9,11 +9,11 @@ export default function Top20ZeroPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <AlertTriangle className="h-6 w-6 text-red-400 animate-pulse-neon" />
-        <h1 className="text-xl font-bold text-red-400 tracking-wider" style={{ fontFamily: "Orbitron" }}>
+        <h1 className="text-xl font-bold text-red-400 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           PRODUCTOS CRÍTICOS — STOCK CERO
         </h1>
       </div>
-      <p className="text-sm text-muted-foreground" style={{ fontFamily: "Rajdhani" }}>
+      <p className="text-sm text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
         Productos sin inventario con consumo activo — Riesgo de parada de flota — Ordenados por consumo anual
       </p>
 
@@ -22,7 +22,7 @@ export default function Top20ZeroPage() {
           <div className="flex items-center justify-center py-20"><Loader2 className="h-6 w-6 animate-spin text-red-400" /></div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
+            <table className="w-full text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
               <thead>
                 <tr className="border-b border-red-500/20 bg-red-500/5">
                   <th className="text-center py-3 px-3 text-red-400 font-semibold text-xs">#</th>
@@ -42,7 +42,7 @@ export default function Top20ZeroPage() {
                   return (
                     <tr key={i} className="border-b border-border/20 hover:bg-red-500/5 transition-colors">
                       <td className="py-3 px-3 text-center">
-                        <span className={`font-black text-lg ${i < 3 ? "text-red-400 cyber-text-glow" : "text-muted-foreground"}`} style={{ fontFamily: "Orbitron" }}>
+                        <span className={`font-black text-lg ${i < 3 ? "text-red-400 cyber-text-glow" : "text-muted-foreground"}`} style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                           {i + 1}
                         </span>
                       </td>

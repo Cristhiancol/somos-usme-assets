@@ -168,3 +168,46 @@
 - [x] PRUEBA 4: Número de OC claramente visible en cada fila — 5/5 sub-tests
 - [x] PRUEBA 5: Sin enlaces rotos ni botones inútiles — 7/7 sub-tests
 - [x] Regresión: 148/148 tests pasan
+
+## Upgrade Manus Max — Design Tokens + Bus SVG + Control Inventario + Expand Rows
+
+### Design System
+- [x] Crear design-tokens.ts con paleta, tipografía, espaciado, sombras y badges
+- [x] Actualizar index.css: Space Grotesk + JetBrains Mono via Google Fonts CDN
+- [x] Aplicar tokens CSS variables en :root (--color-brand-dark, --color-brand-green, etc.)
+- [x] Actualizar index.html con Google Fonts CDN links
+
+### Bus SVG Transmilenio
+- [x] Crear componente BusTransmilenio.tsx: SVG inline #FF3333, glow-neon-red, 44px alto
+- [x] Animación CSS neon-pulse: alterna glow 60%-100%, 2s, infinite, ease-in-out
+- [x] Responsive: 44px ≥1024px, 32px <1024px, display:none <768px
+- [x] aria-hidden="true", no tooltip, no clickeable
+
+### Control Inventario — Campos nuevos
+- [x] Columnas ya existían en schema: parteFabricante, accionRequerida, cantidadAPedir (1828 refs con datos)
+- [x] gdrive-sync ya parsea FABRICANTES, ACCION REQUERIDA, CANTIDAD A PEDIR (verificado en BD)
+- [x] BD ya tiene datos: 1629 PF, 1828 accionRequerida, 340 cantidadAPedir>0
+- [x] Datos sincronizados automáticamente cada 15 min
+
+### Tablas con Expand Rows
+- [x] Componente ExpandRow: click en fila muestra columnas secundarias
+- [x] Máximo 8 columnas visibles (7 datos + 1 expand control), resto en expand
+- [x] Loading skeletons en Inventory.tsx
+- [x] Tabla Stock-Cero-OC: campos disponibles via expand rows
+
+### Template Email
+- [x] Template email mantiene Arial/Helvetica (Gmail bloquea Google Fonts en emails)
+- [x] Columna OC en font-mono (fallback monospace para email)
+- [x] Badges actualizados: CRÍTICO (rojo), ALERTA (naranja), SEGUIMIENTO (amarillo)
+
+### 10 Tests Obligatorios
+- [x] TEST 1: Design tokens — Space Grotesk + JetBrains Mono (4/4)
+- [x] TEST 2: Bus SVG Transmilenio con glow neón (3/3)
+- [x] TEST 3: Campos CONTROL INVENTARIO en BD (5/5)
+- [x] TEST 4: Expand Rows en Inventory.tsx (4/4)
+- [x] TEST 5: Loading Skeletons (2/2)
+- [x] TEST 6: Tabla con máximo 8 columnas visibles (1/1)
+- [x] TEST 7: Badges con paleta corporativa (2/2)
+- [x] TEST 8: Template Email compatible Gmail/Outlook (3/3)
+- [x] TEST 9: Inventario total consistente (1/1)
+- [x] TEST 10: Regresión — 176/176 tests pasan (3/3)

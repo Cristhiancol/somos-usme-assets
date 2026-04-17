@@ -1,6 +1,7 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Bus, Zap, Banknote, Siren } from "lucide-react";
+import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Zap, Banknote, Siren } from "lucide-react";
+import { BusTransmilenio } from "@/components/BusTransmilenio";
 
 function formatCurrency(val: number) {
   if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
@@ -40,7 +41,7 @@ export default function Home() {
       <div className="flex items-center justify-center h-[60vh]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#8CB32A' }} />
-          <span className="text-sm" style={{ fontFamily: "Orbitron", color: '#009890' }}>CARGANDO SISTEMA...</span>
+          <span className="text-sm font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#009890' }}>CARGANDO SISTEMA...</span>
         </div>
       </div>
     );
@@ -68,13 +69,13 @@ export default function Home() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <Bus className="h-7 w-7" style={{ color: '#8CB32A' }} />
-            <h1 className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+            <BusTransmilenio />
+            <h1 className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
               SISTEMA JIT
             </h1>
             <Zap className="h-5 w-5 animate-pulse-neon" style={{ color: '#009890' }} />
           </div>
-          <p className="text-muted-foreground text-sm" style={{ fontFamily: "Rajdhani" }}>
+          <p className="text-muted-foreground text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Control de Inventario y Abastecimiento — Gestión de Flota 260 Buses — Somos Bogotá Usme
           </p>
         </div>
@@ -161,10 +162,10 @@ export default function Home() {
 
       {/* JIT Semaphore */}
       <Card className="cyber-card p-6 rounded-xl">
-        <h2 className="text-lg font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+        <h2 className="text-lg font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
           SEMÁFORO DE ALERTAS — SISTEMA JIT
         </h2>
-        <p className="text-xs text-muted-foreground mb-4" style={{ fontFamily: "Rajdhani" }}>
+        <p className="text-xs text-muted-foreground mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
           Punto de Reorden Dinámico — Principios Logísticos Ballou Cap. 9
         </p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -204,7 +205,7 @@ export default function Home() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Value by Category — Horizontal CSS Bars */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
             VALOR POR CATEGORÍA
           </h2>
           <div className="space-y-3">
@@ -213,12 +214,12 @@ export default function Home() {
               const barColor = CATEGORY_COLORS[cat.name] || "#a78bfa";
               return (
                 <div key={cat.name} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs" style={{ fontFamily: "Rajdhani" }}>
+                  <div className="flex items-center justify-between text-xs" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: barColor }} />
                       <span className="text-foreground font-medium">{cat.name}</span>
                     </div>
-                    <span className="text-muted-foreground font-mono">{formatCurrency(cat.value)}</span>
+                    <span className="text-muted-foreground font-mono text-[11px]">{formatCurrency(cat.value)}</span>
                   </div>
                   <div className="w-full h-3 bg-muted/30 rounded-full overflow-hidden">
                     <div
@@ -234,7 +235,7 @@ export default function Home() {
 
         {/* ABC Classification — CSS Donut */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
             CLASIFICACIÓN ABC — PARETO 80/20
           </h2>
           <div className="flex flex-col items-center gap-4">
@@ -259,10 +260,10 @@ export default function Home() {
                 });
               })()}
               <circle cx="100" cy="100" r="40" fill="#ffffff" stroke="#e5e7eb" strokeWidth="1" />
-              <text x="100" y="95" textAnchor="middle" fill="#281C19" fontSize="14" fontFamily="Orbitron" fontWeight="bold">
+              <text x="100" y="95" textAnchor="middle" fill="#281C19" fontSize="14" fontFamily="'Space Grotesk', sans-serif" fontWeight="bold">
                 {formatNumber(abcTotal)}
               </text>
-              <text x="100" y="115" textAnchor="middle" fill="#6b7280" fontSize="10" fontFamily="Rajdhani">
+              <text x="100" y="115" textAnchor="middle" fill="#6b7280" fontSize="10" fontFamily="'Space Grotesk', sans-serif">
                 Total Refs
               </text>
             </svg>
@@ -285,11 +286,11 @@ export default function Home() {
 
       {/* Category Detail Table */}
       <Card className="cyber-card p-6 rounded-xl overflow-hidden">
-          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "Orbitron", color: '#281C19' }}>
+          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
             DISTRIBUCIÓN POR CUENTA
           </h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: "Rajdhani" }}>
+          <table className="w-full text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             <thead>
               <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
                 <th className="text-left py-3 px-3 font-semibold">Categoría</th>
@@ -333,7 +334,7 @@ export default function Home() {
       </Card>
 
       {/* Footer */}
-      <div className="text-center text-xs text-muted-foreground py-4" style={{ fontFamily: "Rajdhani" }}>
+      <div className="text-center text-xs text-muted-foreground py-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
         Principios Logísticos Aplicados — Ballou, Logística: Cadena de Suministro 5ta Ed. — Clasificación ABC, JIT, EOQ, Stock de Seguridad
       </div>
     </div>
@@ -353,11 +354,11 @@ function KPICard({
       <div className="flex items-start justify-between mb-2">
         <Icon className={`h-5 w-5 ${pulse ? 'animate-pulse-neon' : ''}`} style={{ color: accentColor }} />
       </div>
-      <div className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "Orbitron", color: accentColor }}>
+      <div className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}>
         {value}
       </div>
-      <div className="text-xs font-semibold mt-1" style={{ fontFamily: "Rajdhani", color: '#281C19' }}>{title}</div>
-      <div className="text-[10px] mt-0.5" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>{subtitle}</div>
+      <div className="text-xs font-semibold mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>{title}</div>
+      <div className="text-[10px] mt-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>{subtitle}</div>
     </Card>
   );
 }
@@ -378,14 +379,14 @@ function SemaphoreCard({
     >
       <div
         className={`text-3xl md:text-4xl font-black ${pulse ? 'animate-pulse-neon' : ''}`}
-        style={{ fontFamily: "Orbitron", color: accentColor }}
+        style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}
       >
         {formatNumber(count)}
       </div>
-      <div className="text-xs font-bold mt-2 tracking-wider" style={{ fontFamily: "Orbitron", color: accentColor }}>
+      <div className="text-xs font-bold mt-2 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}>
         {label}
       </div>
-      <div className="text-[10px] mt-1" style={{ fontFamily: "Rajdhani", color: '#6b7280' }}>
+      <div className="text-[10px] mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>
         {sublabel}
       </div>
     </div>
