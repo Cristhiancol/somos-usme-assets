@@ -39,11 +39,11 @@ const twentyItems: StockCeroEmailItem[] = Array.from({ length: 20 }, (_, i) =>
   })
 );
 
-// Ítem SVR para sección separada
+// Ítem SRV para sección separada (valor real en BD es 'SRV', no 'SVR')
 const svrItem: StockCeroEmailItem = makeItem({
-  referencia: 'SVR001',
+  referencia: 'SRV001',
   ordenCompra: 'SU888001',
-  um: 'SVR',
+  um: 'SRV',
   diasRetraso: 20,
   tipoReferencia: 'SERVICIO',
 });
@@ -230,14 +230,14 @@ describe('PRUEBA 5 — Información autónoma: sin enlaces ni botones inútiles'
     expect(htmlWithSVR).toContain('SU888001');
   });
 
-  it('5.5 — El ítem SVR NO aparece en la tabla principal', () => {
+  it('5.5 — El ítem SRV NO aparece en la tabla principal', () => {
     const htmlWithSVR = buildStockCeroEmailHTML([...twentyItems.slice(0, 5), svrItem]);
-    // SVR001 solo debe aparecer en la sección SVR, no en la tabla principal
+    // SRV001 solo debe aparecer en la sección SRV, no en la tabla principal
     // La tabla principal tiene cabecera PRIORIDAD | REF | OC | PROVEEDOR | DÍAS | VALOR
     // La sección SVR tiene cabecera diferente (sin PRIORIDAD badge)
     const mainTableMatch = htmlWithSVR.match(/TOP 15[\s\S]*?SERVICIOS PENDIENTES/i);
     if (mainTableMatch) {
-      // SVR001 no debe estar en la tabla principal (antes de la sección SVR)
+      // SRV001 no debe estar en la tabla principal (antes de la sección SRV)
       expect(mainTableMatch[0]).not.toContain('SU888001');
     }
   });

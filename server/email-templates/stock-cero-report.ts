@@ -98,9 +98,9 @@ export function buildStockCeroEmailHTML(
   items: StockCeroEmailItem[],
   generatedAt: Date = new Date()
 ): string {
-  // Separar SVR del resto
-  const svrItems = items.filter(i => i.um === 'SVR');
-  const mainItems = items.filter(i => i.um !== 'SVR');
+  // Separar SRV del resto (valor real en BD es 'SRV', no 'SVR')
+  const svrItems = items.filter(i => i.um === 'SRV');
+  const mainItems = items.filter(i => i.um !== 'SRV');
 
   // Top 15 por días de retraso (ya viene ordenado DESC desde la query)
   const top15 = mainItems.slice(0, 15);

@@ -222,3 +222,15 @@
 - [x] PRUEBA 1: parteFabricante aparece en purchase_orders (columna propia) — 10/10 tests
 - [x] PRUEBA 2: parteFabricante aparece en cruce stock-cero-oc (via inventory_items) — 10/10 tests
 - [x] PRUEBA 3: Regresión — 186/186 tests pasan (10 nuevos + 176 previos)
+
+## Bug: Servicios (UM=SRV) no aparecen en vista de Órdenes
+
+- [x] Diagnosticar: valor real en BD es 'SRV' (S-R-V), el código usaba 'SVR' (S-V-R) — typo sistemático
+- [x] Diagnosticar: filtro tipoReferencia=SERVICIO usaba eq(um, 'SVR') — nunca coincidía con 'SRV'
+- [x] Diagnosticar: badge SERVICIO también usaba r.um === 'SVR' — nunca se activaba
+- [x] Corregir SVR → SRV en db.ts: getPurchaseOrders (filtros + tipoReferencia) + getStockCeroConOC (CASE WHEN)
+- [x] Corregir SVR → SRV en email-templates/stock-cero-report.ts y email-service.ts
+- [x] Corregir SVR → SRV en Orders.tsx (texto footer), orders-tipo.test.ts, email-report.test.ts, email-template-acceptance.test.ts
+- [x] PRUEBA 1: Servicios visibles — 6 OC con um='SRV' ahora clasificadas como SERVICIO
+- [x] PRUEBA 2: Filtro "Servicios" muestra conteo = 6 (Z=6 confirmado en test)
+- [x] PRUEBA 3: Regresión — 187/187 tests pasan (1 nuevo test + 186 previos)

@@ -175,13 +175,14 @@ export async function getPurchaseOrders(filters?: { estado?: string; prioridad?:
       like(purchaseOrders.mainsaver, `%${filters.search}%`)
     )
   );
-  // Filtro por tipo: NUEVO (sin -R, sin SVR), REPARADO (-R), SERVICIO (SVR)
+  // Filtro por tipo: NUEVO (sin -R, sin SRV), REPARADO (-R), SERVICIO (SRV)
+  // NOTA: El valor real en la BD es 'SRV' (no 'SVR') — verificado en purchase_orders
   if (filters?.tipoReferencia === 'SERVICIO') {
-    conditions.push(eq(purchaseOrders.um, 'SVR'));
+    conditions.push(eq(purchaseOrders.um, 'SRV'));
   } else if (filters?.tipoReferencia === 'REPARADO') {
-    conditions.push(sql`${purchaseOrders.um} != 'SVR' AND ${purchaseOrders.mainsaver} REGEXP '-R$'`);
+    conditions.push(sql`${purchaseOrders.um} != 'SRV' AND ${purchaseOrders.mainsaver} REGEXP '-R$'`);
   } else if (filters?.tipoReferencia === 'NUEVO') {
-    conditions.push(sql`${purchaseOrders.um} != 'SVR' AND (${purchaseOrders.mainsaver} IS NULL OR ${purchaseOrders.mainsaver} NOT REGEXP '-R$')`);
+    conditions.push(sql`${purchaseOrders.um} != 'SRV' AND (${purchaseOrders.mainsaver} IS NULL OR ${purchaseOrders.mainsaver} NOT REGEXP '-R$')`);
   }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
@@ -193,7 +194,7 @@ export async function getPurchaseOrders(filters?: { estado?: string; prioridad?:
 
   return rows.map(r => ({
     ...r,
-    tipoReferencia: r.um === 'SVR' ? 'SERVICIO'
+    tipoReferencia: r.um === 'SRV' ? 'SERVICIO'
       : (r.mainsaver || '').match(/-R$/i) ? 'REPARADO'
       : 'NUEVO',
   })) as typeof rows[0] extends object ? Array<typeof rows[0] & { tipoReferencia: string }> : never;
@@ -352,7 +353,7 @@ export async function getStockCeroConOC() {
       p.comprador,
       p.um,
       CASE
-        WHEN p.um = 'SVR' THEN 'SERVICIO'
+        WHEN p.um = 'SRV' THEN 'SERVICIO'
         WHEN i.referencia REGEXP '-R$' THEN 'REPARADO'
         ELSE 'NUEVO'
       END AS tipoReferencia

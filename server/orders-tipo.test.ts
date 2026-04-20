@@ -1,6 +1,7 @@
 /**
  * Tests obligatorios: Duplicación OC, Badges NUEVO/REPARADO/SERVICIO, Filtros
  * Pruebas 1-5 requeridas por el usuario antes de reportar resultado.
+ * NOTA: El valor real de UM para servicios en la BD es 'SRV' (no 'SVR')
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import mysql2 from "mysql2/promise";
@@ -39,14 +40,14 @@ describe("PRUEBA 1 — Sin duplicación de OC (JOIN por mainsaver)", () => {
   it("OC con -R en mainsaver se clasifican como REPARADO (lógica SQL correcta)", async () => {
     const [rows] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE mainsaver REGEXP '-R$' AND um != 'SVR'
+      WHERE mainsaver REGEXP '-R$' AND um != 'SRV'
     `) as any[];
     // Si hay referencias -R en el Drive, deben clasificarse como REPARADO
     const reparados = Number(rows[0].cnt);
     if (reparados > 0) {
       const [check] = await conn.execute(`
         SELECT COUNT(*) as cnt FROM purchase_orders
-        WHERE mainsaver REGEXP '-R$' AND um != 'SVR'
+        WHERE mainsaver REGEXP '-R$' AND um != 'SRV'
           AND CASE WHEN mainsaver REGEXP '-R$' THEN 'REPARADO' ELSE 'NUEVO' END = 'REPARADO'
       `) as any[];
       expect(Number(check[0].cnt)).toBe(reparados);
@@ -74,7 +75,7 @@ describe("PRUEBA 2 — Clasificación NUEVO / REPARADO / SERVICIO", () => {
     const [rows] = await conn.execute(`
       SELECT mainsaver,
         CASE
-          WHEN um = 'SVR' THEN 'SERVICIO'
+          WHEN um = 'SRV' THEN 'SERVICIO'
           WHEN mainsaver REGEXP '-R$' THEN 'REPARADO'
           ELSE 'NUEVO'
         END AS tipoReferencia
@@ -92,7 +93,7 @@ describe("PRUEBA 2 — Clasificación NUEVO / REPARADO / SERVICIO", () => {
     const [rows] = await conn.execute(`
       SELECT mainsaver,
         CASE
-          WHEN um = 'SVR' THEN 'SERVICIO'
+          WHEN um = 'SRV' THEN 'SERVICIO'
           WHEN mainsaver REGEXP '-R$' THEN 'REPARADO'
           ELSE 'NUEVO'
         END AS tipoReferencia
@@ -110,37 +111,45 @@ describe("PRUEBA 2 — Clasificación NUEVO / REPARADO / SERVICIO", () => {
     }
   });
 
-  it("Cualquier OC con um=SVR debe clasificarse como SERVICIO", async () => {
-    // Verificar la lógica SQL directamente
+  it("Cualquier OC con um=SRV debe clasificarse como SERVICIO", async () => {
+    // Verificar la lógica SQL directamente con el valor real 'SRV'
     const [rows] = await conn.execute(`
       SELECT
-        CASE WHEN um = 'SVR' THEN 'SERVICIO' ELSE 'OTRO' END AS tipo
-      FROM purchase_orders WHERE um = 'SVR' LIMIT 1
+        CASE WHEN um = 'SRV' THEN 'SERVICIO' ELSE 'OTRO' END AS tipo
+      FROM purchase_orders WHERE um = 'SRV' LIMIT 1
     `) as any[];
     if (rows.length > 0) {
       expect(rows[0].tipo).toBe("SERVICIO");
     }
   });
 
+  it("Hay al menos 1 OC con um=SRV (servicios reales en el Drive)", async () => {
+    const [rows] = await conn.execute(
+      "SELECT COUNT(*) as cnt FROM purchase_orders WHERE um = 'SRV'"
+    ) as any[];
+    // El Drive tiene 6 servicios con um='SRV' (verificado en BD)
+    expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(1);
+  });
+
   it("Todas las OC con mainsaver que termina en -R deben ser REPARADO", async () => {
     const [rows] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE mainsaver REGEXP '-R$' AND um != 'SVR'
+      WHERE mainsaver REGEXP '-R$' AND um != 'SRV'
     `) as any[];
     const reparados = Number(rows[0].cnt);
     // Verificar que la clasificación es consistente
     const [rows2] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE mainsaver REGEXP '-R$' AND um != 'SVR'
+      WHERE mainsaver REGEXP '-R$' AND um != 'SRV'
         AND CASE WHEN mainsaver REGEXP '-R$' THEN 'REPARADO' ELSE 'NUEVO' END = 'REPARADO'
     `) as any[];
     expect(Number(rows2[0].cnt)).toBe(reparados);
   });
 
-  it("Todas las OC sin -R y sin SVR deben ser NUEVO", async () => {
+  it("Todas las OC sin -R y sin SRV deben ser NUEVO", async () => {
     const [rows] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE um != 'SVR' AND (mainsaver IS NULL OR mainsaver NOT REGEXP '-R$')
+      WHERE um != 'SRV' AND (mainsaver IS NULL OR mainsaver NOT REGEXP '-R$')
     `) as any[];
     expect(Number(rows[0].cnt)).toBeGreaterThan(0);
   });
@@ -151,9 +160,9 @@ describe("PRUEBA 3 — Conteo X (REPARADOS) + Y (NUEVOS) + Z (SERVICIOS) = total
   it("X + Y + Z debe igualar el total de órdenes pendientes", async () => {
     const [totales] = await conn.execute(`
       SELECT
-        SUM(CASE WHEN um = 'SVR' THEN 1 ELSE 0 END) as servicios,
-        SUM(CASE WHEN um != 'SVR' AND mainsaver REGEXP '-R$' THEN 1 ELSE 0 END) as reparados,
-        SUM(CASE WHEN um != 'SVR' AND (mainsaver IS NULL OR mainsaver NOT REGEXP '-R$') THEN 1 ELSE 0 END) as nuevos,
+        SUM(CASE WHEN um = 'SRV' THEN 1 ELSE 0 END) as servicios,
+        SUM(CASE WHEN um != 'SRV' AND mainsaver REGEXP '-R$' THEN 1 ELSE 0 END) as reparados,
+        SUM(CASE WHEN um != 'SRV' AND (mainsaver IS NULL OR mainsaver NOT REGEXP '-R$') THEN 1 ELSE 0 END) as nuevos,
         COUNT(*) as total
       FROM purchase_orders
       WHERE estado IN ('PENDIENTE', 'CASI COMPLETO')
@@ -168,7 +177,7 @@ describe("PRUEBA 3 — Conteo X (REPARADOS) + Y (NUEVOS) + Z (SERVICIOS) = total
     const [rows] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
       WHERE estado IN ('PENDIENTE', 'CASI COMPLETO')
-        AND um != 'SVR'
+        AND um != 'SRV'
         AND mainsaver IS NOT NULL
         AND mainsaver != ''
         AND mainsaver NOT REGEXP '-R$'
@@ -191,24 +200,24 @@ describe("PRUEBA 4 — Filtros funcionales", () => {
   it("Filtro REPARADO: solo debe devolver OC con mainsaver terminado en -R", async () => {
     const [rows] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE um != 'SVR' AND mainsaver REGEXP '-R$'
+      WHERE um != 'SRV' AND mainsaver REGEXP '-R$'
         AND estado IN ('PENDIENTE', 'CASI COMPLETO')
     `) as any[];
     const reparados = Number(rows[0].cnt);
     expect(reparados).toBeGreaterThan(0);
 
-    // Verificar que ninguno de los reparados es SVR
+    // Verificar que ninguno de los reparados es SRV
     const [check] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE um = 'SVR' AND mainsaver REGEXP '-R$'
+      WHERE um = 'SRV' AND mainsaver REGEXP '-R$'
     `) as any[];
     expect(Number(check[0].cnt)).toBe(0);
   });
 
-  it("Filtro NUEVO: ninguna referencia -R ni SVR debe aparecer", async () => {
+  it("Filtro NUEVO: ninguna referencia -R ni SRV debe aparecer", async () => {
     const [rows] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE um != 'SVR'
+      WHERE um != 'SRV'
         AND (mainsaver IS NULL OR mainsaver NOT REGEXP '-R$')
         AND estado IN ('PENDIENTE', 'CASI COMPLETO')
     `) as any[];
@@ -217,20 +226,19 @@ describe("PRUEBA 4 — Filtros funcionales", () => {
     // Verificar que no hay -R en los nuevos
     const [check] = await conn.execute(`
       SELECT COUNT(*) as cnt FROM purchase_orders
-      WHERE um != 'SVR'
+      WHERE um != 'SRV'
         AND (mainsaver IS NULL OR mainsaver NOT REGEXP '-R$')
         AND mainsaver REGEXP '-R$'
     `) as any[];
     expect(Number(check[0].cnt)).toBe(0);
   });
 
-  it("Filtro SERVICIO: solo debe devolver OC con um=SVR", async () => {
-    // En el Drive actual no hay SVR, pero la lógica debe funcionar
+  it("Filtro SERVICIO: debe devolver OC con um=SRV (valor real en BD)", async () => {
     const [rows] = await conn.execute(
-      "SELECT COUNT(*) as cnt FROM purchase_orders WHERE um = 'SVR'"
+      "SELECT COUNT(*) as cnt FROM purchase_orders WHERE um = 'SRV'"
     ) as any[];
-    // Puede ser 0 si el Drive no tiene SVR actualmente — la lógica es correcta
-    expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(0);
+    // El Drive tiene 6 servicios con um='SRV' (verificado en BD)
+    expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(1);
   });
 
   it("Filtro TODOS: debe devolver todos los registros pendientes (>= 100)", async () => {

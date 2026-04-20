@@ -98,7 +98,7 @@ describe('PRUEBA 2 — Template HTML: buildStockCeroEmailHTML', () => {
       tipoReferencia: 'NUEVO',
     },
     {
-      referencia: '80200005-SVR',
+      referencia: '80200005-SRV',
       descripcion: 'SERVICIO MANTENIMIENTO NVR',
       ordenCompra: 'SU115800',
       proveedorOC: 'COLOMBIA TELECOMUNICACIONES',
@@ -107,7 +107,7 @@ describe('PRUEBA 2 — Template HTML: buildStockCeroEmailHTML', () => {
       valorPendiente: 1200000,
       prioridadOC: 'OPTIMO',
       claseAbc: 'B',
-      um: 'SVR',
+      um: 'SRV',
       tipoReferencia: 'SERVICIO',
     },
   ];

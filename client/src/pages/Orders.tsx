@@ -353,7 +353,7 @@ export default function OrdersPage() {
           <Wrench className="h-3 w-3" style={{ color: '#281C19' }} /> REPARADO (-R) = repuesto en taller/reparación
         </span>
         <span className="inline-flex items-center gap-1">
-          <Settings className="h-3 w-3" style={{ color: '#009890' }} /> SERVICIO (SVR) = requiere cierre por Mantenimiento
+          <Settings className="h-3 w-3" style={{ color: '#009890' }} /> SERVICIO (SRV) = requiere cierre por Mantenimiento
         </span>
       </div>
     </div>

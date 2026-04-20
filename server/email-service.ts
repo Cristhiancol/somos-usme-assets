@@ -44,7 +44,7 @@ export async function sendStockCeroReport(options?: {
   const html = buildStockCeroEmailHTML(items, generatedAt);
 
   // 3. Construir asunto con resumen ejecutivo
-  const mainItems = items.filter(i => i.um !== 'SVR');
+  const mainItems = items.filter(i => i.um !== 'SRV');
   const criticos = mainItems.filter(i => (i.diasRetraso ?? 0) > 30).length;
   const subject = `ALERTA STOCK CERO — ${mainItems.length} Refs${criticos > 0 ? ` (${criticos} CRÍTICAS)` : ''} — Somos Usme`;
 
