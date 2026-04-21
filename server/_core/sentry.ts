@@ -1,10 +1,11 @@
 import * as Sentry from "@sentry/node";
+import { serverLogger } from "../logger";
 
 export function initSentryServer() {
   const dsn = process.env.SENTRY_DSN;
 
   if (!dsn) {
-    console.warn("[Sentry Server] DSN not configured, error tracking disabled");
+    serverLogger.warn("[Sentry Server] DSN not configured, error tracking disabled");
     return;
   }
 
@@ -14,7 +15,7 @@ export function initSentryServer() {
     tracesSampleRate: 1.0,
   });
 
-  console.log("[Sentry Server] Initialized successfully");
+  serverLogger.log("[Sentry Server] Initialized successfully");
 }
 
 export function captureException(error: unknown, context?: Record<string, any>) {

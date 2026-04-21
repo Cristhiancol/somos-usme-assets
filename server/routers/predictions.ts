@@ -3,6 +3,7 @@ import { getDb } from "../db";
 import { inventoryItems, purchaseOrders } from "../../drizzle/schema";
 import { invokeLLM } from "../_core/llm";
 import { eq, and, desc, sql } from "drizzle-orm";
+import { serverLogger } from "../logger";
 
 /**
  * Predictions Router
@@ -175,7 +176,7 @@ Responde en JSON con estructura:
         const parsed = JSON.parse(responseText);
         predictions = parsed.predictions || [];
       } catch (e) {
-        console.error("[Predictions] Error parsing Gemini response:", e);
+        serverLogger.error("[Predictions] Error parsing Gemini response:", e);
         // Fallback: usar solo las métricas calculadas
         predictions = top40.map((item: any) => ({
           codigo: item.referencia,
@@ -225,7 +226,7 @@ Responde en JSON con estructura:
         },
       };
     } catch (error) {
-      console.error("[Predictions] Error:", error);
+      serverLogger.error("[Predictions] Error:", error);
       return {
         success: false,
         error: "Error desconocido",

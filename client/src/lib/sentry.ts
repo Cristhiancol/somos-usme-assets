@@ -1,10 +1,11 @@
 import * as Sentry from "@sentry/react";
+import { logger } from "@/lib/logger";
 
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
   
   if (!dsn) {
-    console.warn("[Sentry] DSN not configured, error tracking disabled");
+    logger.warn("[Sentry] DSN not configured, error tracking disabled");
     return;
   }
 
@@ -14,5 +15,5 @@ export function initSentry() {
     tracesSampleRate: 1.0,
   });
 
-  console.log("[Sentry] Initialized successfully");
+  logger.log("[Sentry] Initialized successfully");
 }

@@ -168,6 +168,12 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
+  // Eliminar console.* y debugger del bundle de producción
+  // El logger centralizado (client/src/lib/logger.ts) ya guarda con isDev,
+  // pero este drop es la segunda línea de defensa para cualquier console.* residual.
+  esbuild: process.env.NODE_ENV === "production"
+    ? { drop: ["console", "debugger"] }
+    : {},
   server: {
     host: true,
     allowedHosts: [

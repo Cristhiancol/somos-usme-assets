@@ -13,6 +13,7 @@ import { initSentryServer, captureException } from "./sentry";
 import { registerStorageProxy } from "./storageProxy";
 import cron from "node-cron";
 import { sendStockCeroReport } from "../email-service";
+import { serverLogger } from "../logger";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -51,7 +52,7 @@ async function startServer() {
   app.get('/api/gdrive/callback', async (req, res) => {
     const { code, state, error } = req.query as Record<string, string>;
     if (error) {
-      console.error('[GDriveOAuth] Callback error:', error);
+      serverLogger.error('[GDriveOAuth] Callback error:', error);
       return res.redirect('/sync?gdrive_error=' + encodeURIComponent(error));
     }
     if (!code || !state) {
@@ -63,17 +64,17 @@ async function startServer() {
     let redirectUri: string;
     if (parsed && parsed.redirectUri) {
       redirectUri = parsed.redirectUri;
-      console.log('[GDriveOAuth] Recovered redirectUri from state:', redirectUri);
+      serverLogger.log('[GDriveOAuth] Recovered redirectUri from state:', redirectUri);
     } else {
       // Fallback: construct from host header
       const host = req.headers.host || 'usme.blog';
       const proto = host.includes('localhost') ? 'http' : 'https';
       redirectUri = `${proto}://${host}/api/gdrive/callback`;
-      console.warn('[GDriveOAuth] Could not parse state, using fallback redirectUri:', redirectUri);
+      serverLogger.warn('[GDriveOAuth] Could not parse state, using fallback redirectUri:', redirectUri);
     }
     const success = await exchangeCodeForTokens(code, redirectUri);
     if (success) {
-      console.log('[GDriveOAuth] Authorization successful!');
+      serverLogger.log('[GDriveOAuth] Authorization successful!');
       return res.redirect('/sync?gdrive_success=1');
     } else {
       return res.redirect('/sync?gdrive_error=token_exchange_failed');
@@ -86,7 +87,7 @@ async function startServer() {
     // Accept origin from query param (passed by frontend) or fallback to request headers
     const frontendOrigin = (req.query.origin as string) || req.headers.origin || `${req.protocol}://${req.headers.host}`;
     const redirectUri = `${frontendOrigin}/api/gdrive/callback`;
-    console.log('[GDriveOAuth] Building auth URL with redirectUri:', redirectUri);
+    serverLogger.log('[GDriveOAuth] Building auth URL with redirectUri:', redirectUri);
     const url = getGDriveAuthUrl(redirectUri);
     res.json({ url, redirectUri });
   });
@@ -109,11 +110,11 @@ async function startServer() {
 
   // Auto-sync every 15 minutes
   setInterval(async () => {
-    console.log('[AutoSync] Running scheduled Google Drive sync...');
+    serverLogger.log('[AutoSync] Running scheduled Google Drive sync...');
     try {
       await syncFromGoogleDrive();
     } catch (e) {
-      console.error('[AutoSync] Failed:', e);
+      serverLogger.error('[AutoSync] Failed:', e);
       captureException(e, { context: 'AutoSync' });
     }
   }, 15 * 60 * 1000);
@@ -121,18 +122,18 @@ async function startServer() {
   // ── Cron Job: Reporte diario Stock Cero OC — 7:00 AM Colombia (UTC-5 = 12:00 UTC) ──
   // Expresión cron: 0 12 * * * (seg min hora día mes díaSemana)
   cron.schedule('0 12 * * *', async () => {
-    console.log('[CronJob] Enviando reporte diario Stock Cero OC...');
+    serverLogger.log('[CronJob] Enviando reporte diario Stock Cero OC...');
     try {
       const result = await sendStockCeroReport();
-      console.log('[CronJob] Reporte enviado:', result.message);
+      serverLogger.log('[CronJob] Reporte enviado:', result.message);
     } catch (e: any) {
-      console.error('[CronJob] Error enviando reporte:', e.message);
+      serverLogger.error('[CronJob] Error enviando reporte:', e.message);
       captureException(e, { context: 'CronJob-StockCeroReport' });
     }
   }, {
     timezone: 'America/Bogota',
   });
-  console.log('[CronJob] Reporte diario Stock Cero OC programado: 7:00 AM hora Colombia');
+  serverLogger.log('[CronJob] Reporte diario Stock Cero OC programado: 7:00 AM hora Colombia');
 
   // Endpoint REST para disparar el reporte manualmente (usado por cron externo o admin)
   app.post('/api/cron/stock-cero-report', async (req, res) => {
@@ -146,7 +147,7 @@ async function startServer() {
       const result = await sendStockCeroReport({ to: req.body?.to });
       return res.json(result);
     } catch (e: any) {
-      console.error('[CronEndpoint] Error:', e.message);
+      serverLogger.error('[CronEndpoint] Error:', e.message);
       return res.status(500).json({ success: false, message: e.message });
     }
   });
@@ -169,12 +170,12 @@ async function startServer() {
   const port = await findAvailablePort(preferredPort);
 
   if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+    serverLogger.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
   server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+    serverLogger.log(`Server running on http://localhost:${port}/`);
   });
 }
 
-startServer().catch(console.error);
+startServer().catch((e) => serverLogger.error('[Server] Fatal startup error:', e));

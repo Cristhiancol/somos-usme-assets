@@ -155,8 +155,9 @@ describe("Cruce referencias stock=0 con OC activa", () => {
     `) as any[];
     const prioridades = rows.map((r: any) => r.prioridad);
     // El Drive actual usa NORMAL, URGENTE, CRITICO — todos son valores válidos
-    const validos = ['NORMAL', 'URGENTE', 'CRITICO', 'REORDEN INMEDIATO', 'PRECAUCION', 'OPTIMO', 'EXCESO'];
-    prioridades.forEach((p: string) => {
+    // null es válido: OC sin prioridad asignada en Drive
+    const validos = ['NORMAL', 'URGENTE', 'CRITICO', 'REORDEN INMEDIATO', 'PRECAUCION', 'OPTIMO', 'EXCESO', null];
+    prioridades.forEach((p: string | null) => {
       expect(validos).toContain(p);
     });
   });

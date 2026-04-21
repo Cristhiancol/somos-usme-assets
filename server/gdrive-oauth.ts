@@ -6,6 +6,7 @@
 import { getDb } from "./db";
 import { oauthTokens } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
+import { serverLogger } from "./logger";
 
 const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID || "220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro.apps.googleusercontent.com";
 const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET || "";
@@ -66,12 +67,12 @@ export async function exchangeCodeForTokens(code: string, redirectUri: string): 
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("[GDriveOAuth] Token exchange failed:", err);
+      serverLogger.error("[GDriveOAuth] Token exchange failed:", err);
       return false;
     }
 
     const data = await res.json();
-    console.log("[GDriveOAuth] Token exchange success. Has refresh_token:", !!data.refresh_token);
+    serverLogger.log("[GDriveOAuth] Token exchange success. Has refresh_token:", !!data.refresh_token);
 
     const expiresAt = data.expires_in ? Date.now() + data.expires_in * 1000 : null;
     const database = await getDb();
@@ -98,7 +99,7 @@ export async function exchangeCodeForTokens(code: string, redirectUri: string): 
 
     return true;
   } catch (e) {
-    console.error("[GDriveOAuth] Error exchanging code:", e);
+    serverLogger.error("[GDriveOAuth] Error exchanging code:", e);
     return false;
   }
 }
@@ -125,7 +126,7 @@ export async function getValidAccessToken(): Promise<string | null> {
   }
 
   // Refresh the access token
-  console.log("[GDriveOAuth] Access token expired, refreshing...");
+  serverLogger.log("[GDriveOAuth] Access token expired, refreshing...");
   try {
     const res = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
@@ -140,7 +141,7 @@ export async function getValidAccessToken(): Promise<string | null> {
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("[GDriveOAuth] Token refresh failed:", err);
+      serverLogger.error("[GDriveOAuth] Token refresh failed:", err);
       return null;
     }
 
@@ -154,10 +155,10 @@ export async function getValidAccessToken(): Promise<string | null> {
       })
       .where(eq(oauthTokens.provider, PROVIDER));
 
-    console.log("[GDriveOAuth] Token refreshed successfully.");
+    serverLogger.log("[GDriveOAuth] Token refreshed successfully.");
     return data.access_token;
   } catch (e) {
-    console.error("[GDriveOAuth] Error refreshing token:", e);
+    serverLogger.error("[GDriveOAuth] Error refreshing token:", e);
     return null;
   }
 }

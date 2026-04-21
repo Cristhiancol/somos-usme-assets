@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
+import { serverLogger } from "./logger";
 
 const LOCAL_DIR = "/tmp/gdrive-sync-temp";
 const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
@@ -18,7 +19,7 @@ async function getFileData(): Promise<Buffer> {
   try {
     const accessToken = await getValidAccessToken();
     if (accessToken) {
-      console.log("[Sync] Downloading from Google Drive (OAuth)...");
+      serverLogger.log("[Sync] Downloading from Google Drive (OAuth)...");
       // Export as xlsx from Google Sheets
       const exportUrl = `https://www.googleapis.com/drive/v3/files/${DRIVE_FILE_ID}/export?mimeType=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet`;
       const exportRes = await fetch(exportUrl, {
@@ -27,7 +28,7 @@ async function getFileData(): Promise<Buffer> {
       if (exportRes.ok) {
         const arrayBuffer = await exportRes.arrayBuffer();
         const buf = Buffer.from(arrayBuffer);
-        console.log(`[Sync] Google Drive export OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+        serverLogger.log(`[Sync] Google Drive export OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
         return buf;
       }
       // If export fails (e.g. it's already xlsx, not a Sheet), try direct download
@@ -38,36 +39,36 @@ async function getFileData(): Promise<Buffer> {
       if (downloadRes.ok) {
         const arrayBuffer = await downloadRes.arrayBuffer();
         const buf = Buffer.from(arrayBuffer);
-        console.log(`[Sync] Google Drive direct download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+        serverLogger.log(`[Sync] Google Drive direct download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
         return buf;
       }
-      console.warn(`[Sync] Google Drive returned ${exportRes.status}, trying local file...`);
+      serverLogger.warn(`[Sync] Google Drive returned ${exportRes.status}, trying local file...`);
     } else {
-      console.warn("[Sync] No Google Drive OAuth token available, trying local file...");
+      serverLogger.warn("[Sync] No Google Drive OAuth token available, trying local file...");
     }
   } catch (e) {
-    console.warn("[Sync] Google Drive fetch failed, trying local file...", e);
+    serverLogger.warn("[Sync] Google Drive fetch failed, trying local file...", e);
   }
 
   // 2. Try local file (development sandbox)
   if (existsSync(DATA_FILE)) {
-    console.log("[Sync] Using local data file...");
+    serverLogger.log("[Sync] Using local data file...");
     return readFileSync(DATA_FILE);
   }
 
   // 3. Fallback to CDN (static snapshot — may be outdated)
   try {
-    console.log("[Sync] Downloading from CDN (static snapshot)...");
+    serverLogger.log("[Sync] Downloading from CDN (static snapshot)...");
     const res = await fetch(CDN_FILE_URL);
     if (res.ok) {
       const arrayBuffer = await res.arrayBuffer();
       const buf = Buffer.from(arrayBuffer);
-      console.log(`[Sync] CDN download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+      serverLogger.log(`[Sync] CDN download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
       return buf;
     }
-    console.warn(`[Sync] CDN returned ${res.status}`);
+    serverLogger.warn(`[Sync] CDN returned ${res.status}`);
   } catch (e) {
-    console.warn("[Sync] CDN fetch failed", e);
+    serverLogger.warn("[Sync] CDN fetch failed", e);
   }
 
   throw new Error("No se encontró token de Google Drive. Autoriza el acceso en la página de Sincronización.");
@@ -84,7 +85,7 @@ function getRcloneToken(): { access_token: string; token_type: string } | null {
     try {
       return JSON.parse(envToken);
     } catch {
-      console.error("[Sync] Invalid GDRIVE_TOKEN in environment");
+      serverLogger.error("[Sync] Invalid GDRIVE_TOKEN in environment");
       return null;
     }
   }
@@ -285,13 +286,13 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     // Get file data (local or Google Drive)
     const fileBuffer = await getFileData();
     writeFileSync(LOCAL_FILE, fileBuffer);
-    console.log(`[Sync] Downloaded ${(fileBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    serverLogger.log(`[Sync] Downloaded ${(fileBuffer.length / 1024 / 1024).toFixed(2)} MB`);
 
     // Parse Excel using xlsx (pure Node.js)
-    console.log("[Sync] Parsing Excel data with xlsx...");
+    serverLogger.log("[Sync] Parsing Excel data with xlsx...");
     const parsed = await parseExcelData(LOCAL_FILE);
 
-    console.log(`[Sync] Parsed: ${parsed.inventory.length} inventory, ${parsed.orders.length} orders, ${parsed.suppliers.length} suppliers`);
+    serverLogger.log(`[Sync] Parsed: ${parsed.inventory.length} inventory, ${parsed.orders.length} orders, ${parsed.suppliers.length} suppliers`);
 
     // Upsert to database
     const itemsCount = await bulkUpsertInventory(parsed.inventory);
@@ -306,14 +307,14 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
       suppliersProcessed: suppliersCount,
     });
 
-    console.log("[Sync] Complete!");
+    serverLogger.log("[Sync] Complete!");
     return {
       success: true,
       message: `Sincronización exitosa: ${itemsCount} referencias, ${ordersCount} órdenes, ${suppliersCount} proveedores`,
       stats: { itemsCount, ordersCount, suppliersCount },
     };
   } catch (error: any) {
-    console.error("[Sync] Error:", error);
+    serverLogger.error("[Sync] Error:", error);
     await logSync({
       syncType: "gdrive_import",
       status: "error",

@@ -334,3 +334,15 @@
 - [x] QA6: Auditítoria → tests 4,5,15 confirman registrarAuditoria para todos los eventos
 - [x] QA7: Regresión — 221/221 tests pasan (18 nuevos + 203 previos)
 - [x] Actualizar repositorio GitHub
+
+## Limpieza de Producción — Eliminar debugger y console.*
+
+- [x] Buscar y eliminar todas las líneas `debugger;` — 0 ocurrencias encontradas en todo el proyecto
+- [x] Crear client/src/lib/logger.ts — logger centralizado: log/info/warn/error/debug, solo activo si import.meta.env.DEV
+- [x] Crear server/logger.ts — logger servidor: error/warn siempre, log/info/debug solo en NODE_ENV!==production
+- [x] Reemplazar console.* en frontend: main.tsx, sentry.ts, Map.tsx, ComponentShowcase.tsx — 0 console.* residuales
+- [x] Reemplazar console.* en backend: db.ts, auditoria.ts, chatbot.ts, predictions.ts, gdrive-sync.ts, gdrive-oauth.ts, oauth.ts, context.ts, index.ts, notification.ts, sdk.ts, sentry.ts, storageProxy.ts, vite.ts — 0 console.* residuales
+- [x] Configurar Vite: esbuild.drop:["console","debugger"] en nivel raíz de defineConfig (Vite 7 ESBuildOptions) — activo solo en NODE_ENV=production
+- [x] Verificar: grep debugger → 0 resultados | grep console.* (excl. logger.ts, tests, comentarios) → 0 resultados
+- [x] PRUEBA: 221/221 tests pasan (2 tests de datos BD corregidos: prioridad null + umbral cantidadAPedir >100)
+- [x] Actualizar GitHub

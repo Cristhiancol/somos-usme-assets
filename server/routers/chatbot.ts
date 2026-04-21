@@ -8,6 +8,7 @@
 import { publicProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { invokeLLM } from "../_core/llm";
+import { serverLogger } from "../logger";
 import {
   getDashboardKPIs,
   getJITAlerts,
@@ -73,7 +74,7 @@ async function getCatalog(): Promise<CatalogItem[]> {
     }));
     catalogCacheTime = Date.now();
   } catch (e) {
-    console.error("[Chatbot] Error cargando catálogo:", e);
+    serverLogger.error("[Chatbot] Error cargando catálogo:", e);
   }
   return catalogCache;
 }
@@ -195,7 +196,7 @@ ${topSuppliers || "  (Sin proveedores registrados)"}
 ${fuzzyResults}
 ===`;
   } catch (e) {
-    console.error("[Chatbot] Error obteniendo contexto:", e);
+    serverLogger.error("[Chatbot] Error obteniendo contexto:", e);
     return "\n=== CONTEXTO: No disponible temporalmente ===\n";
   }
 }

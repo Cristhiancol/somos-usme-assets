@@ -5,6 +5,7 @@ import { registrarAuditoria } from "../auditoria";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 import { ENV } from "./env";
+import { serverLogger } from "../logger";
 
 function getQueryParam(req: Request, key: string): string | undefined {
   const value = req.query[key];
@@ -86,7 +87,7 @@ export function registerOAuthRoutes(app: Express) {
             userAgent,
           });
 
-          console.warn(`[OAuth] BLOQUEADO: ${email} (${openId}) — no registrado en BD`);
+          serverLogger.warn(`[OAuth] BLOQUEADO: ${email} (${openId}) — no registrado en BD`);
 
           // Redirigir al frontend con error
           const redirectUrl = frontendOrigin
@@ -108,7 +109,7 @@ export function registerOAuthRoutes(app: Express) {
           userAgent,
         });
 
-        console.warn(`[OAuth] BLOQUEADO: ${email} — usuario inactivo`);
+        serverLogger.warn(`[OAuth] BLOQUEADO: ${email} — usuario inactivo`);
 
         const redirectUrl = frontendOrigin
           ? `${frontendOrigin}/?error=UsuarioInactivo`
@@ -143,7 +144,7 @@ export function registerOAuthRoutes(app: Express) {
 
       res.redirect(302, "/");
     } catch (error) {
-      console.error("[OAuth] Callback failed", error);
+      serverLogger.error("[OAuth] Callback failed", error);
 
       // Registrar error de servidor
       await registrarAuditoria("LOGIN_RECHAZADO", "unknown", `Error de servidor: ${String(error)}`, {

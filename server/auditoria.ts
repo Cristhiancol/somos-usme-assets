@@ -4,6 +4,7 @@
  */
 import { getDb } from "./db";
 import { auditoriaAccesos, InsertAuditoriaAcceso } from "../drizzle/schema";
+import { serverLogger } from "./logger";
 
 export type EventoAuditoria =
   | "LOGIN_EXITOSO"
@@ -20,7 +21,7 @@ export async function registrarAuditoria(
   try {
     const db = await getDb();
     if (!db) {
-      console.warn("[Auditoria] BD no disponible, evento no registrado:", evento, email);
+      serverLogger.warn("[Auditoria] BD no disponible, evento no registrado:", evento, email);
       return;
     }
 
@@ -34,9 +35,9 @@ export async function registrarAuditoria(
     };
 
     await db.insert(auditoriaAccesos).values(record);
-    console.log(`[Auditoria] ${evento} — ${email} — ${detalle ?? "OK"}`);
+    serverLogger.log(`[Auditoria] ${evento} — ${email} — ${detalle ?? "OK"}`);
   } catch (error) {
     // No frenar el flujo de autenticación por un error de auditoría
-    console.error("[Auditoria] Error registrando evento:", error);
+    serverLogger.error("[Auditoria] Error registrando evento:", error);
   }
 }

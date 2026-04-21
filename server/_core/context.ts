@@ -2,6 +2,7 @@ import type { CreateExpressContextOptions } from "@trpc/server/adapters/express"
 import type { User } from "../../drizzle/schema";
 import { sdk } from "./sdk";
 import { getUserByOpenId } from "../db";
+import { serverLogger } from "../logger";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
@@ -29,7 +30,7 @@ export async function createContext(
       } else {
         // ❌ Usuario eliminado o inactivo — invalidar sesión
         // No asignar user → ctx.user será null → protectedProcedure lanzará UNAUTHORIZED
-        console.warn(
+        serverLogger.warn(
           `[Context] Usuario ${tokenUser.openId} tiene sesión pero ${
             !dbUser ? "no existe en BD" : "está inactivo (activo=0)"
           }`
