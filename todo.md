@@ -254,3 +254,47 @@
 - [x] PRUEBA 3: Estados de carga y error manejados — tests 7, 8, 12 validan errores
 - [x] PRUEBA 4: Regresión — 199/199 tests pasan (12 nuevos + 187 previos)
 - [x] Actualizar repositorio GitHub con todos los cambios
+
+## Chatbot Stock v2.0 — Bugs + Fuzzy Search + Datos Completos
+
+### Bugs Críticos
+- [x] Bug #1: React Portal — createPortal(document.body) fuera de overflow/transform del DashboardLayout
+- [x] Bug #2: position fixed + z-index 9999 + isolation isolate — wrapper div con inset:0 pointerEvents:none
+- [x] Bug #3: System prompt enriquecido con 5 secciones de datos reales
+
+### Rediseño UI
+- [x] Colores: acento #22C55E (verde corbata), header #1C1C1E, chatBg #F9FAFB
+- [x] Ventana 380×600px desktop, drawer 100vw×100dvh en móvil (<640px) via @media
+- [x] Burbuja 60px con avatar, punto verde pulsante (stockPulse), hover scale(1.1)
+- [x] Burbujas usuario: #22C55E texto blanco, Stock: blanco borde #E5E7EB
+- [x] Input: Enter envía, Shift+Enter nueva línea, disabled durante carga, focus verde
+- [x] Animación apertura: stockSlideUp 150ms ease-out (fade-in + slide-up)
+- [x] Botón limpiar conversación (Trash2) en header + sessionStorage persistente
+
+### Fuzzy Search
+- [x] Instalar fuse.js v7.3.0
+- [x] Fuzzy search integrado en buildInventoryContext() con cache 5min (getCatalog)
+- [x] Fuse.js busca en referencia(0.4), descripcion(0.4), parteFabricante(0.2), threshold 0.45
+- [x] System prompt incluye [SUGERENCIAS_FUZZY] con top 5 matches + score %
+
+### Datos Completos en System Prompt
+- [x] [DASHBOARD_STATS]: totalRefs, valor, zeroStock, pendientes, clases A/B/C
+- [x] [ALERTAS_JIT]: critico, reorden, precaucion, optimo
+- [x] [REFERENCIAS_RELEVANTES]: top 10 críticas con OC, proveedor, PF, retraso
+- [x] [ORDENES_RELEVANTES]: top 10 OC con proveedor, qty, estado, valor, retraso
+- [x] [PROVEEDORES]: top 10 con NIT
+
+### QA (11 checks del prompt v2.0)
+- [x] QA1: Burbuja visible — React Portal en document.body, z-index 9999
+- [x] QA2: No cruza elementos — isolation isolate, pointerEvents none/auto
+- [x] QA3: Animación fluida — stockSlideUp 150ms ease-out
+- [x] QA4: Móvil drawer — @media max-width:639px, 100vw×100dvh
+- [x] QA5: Fuzzy search — test 13 confirma "motro" → MOTOR LIMPIAPARABRISAS
+- [x] QA6: Bienvenida — test 2 confirma datos reales (632 refs stock cero)
+- [x] QA7: OC completas — test 11 confirma SU115940 en contexto
+- [x] QA8: Stock cero + EOQ — system prompt regla 7 instruye incluir datos
+- [x] QA9: Typing indicator — TypingIndicator con stockBounce animation
+- [x] QA10: Enter/Shift+Enter — handleKeyDown e.key===Enter && !e.shiftKey
+- [x] QA11: Historial persiste — sessionStorage STORAGE_KEY, loadMessages()
+- [x] Regresión: 203/203 tests pasan (16 chatbot v2.0 + 187 previos)
+- [x] Actualizar repositorio GitHub
