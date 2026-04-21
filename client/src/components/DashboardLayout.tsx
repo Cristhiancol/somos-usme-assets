@@ -1,9 +1,17 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { StockChatbot } from "./StockChatbot";
-import { LogOut, Bus, Zap, Menu, X, type LucideIcon } from "lucide-react";
-import { useState, useRef, useEffect } from "react";
+import { LogOut, Bus, Zap, Menu, X, ShieldAlert, type LucideIcon } from "lucide-react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
+
+// ── Mensajes de error OAuth ──────────────────────────────────────────────────
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  NoAutorizado: "Tu correo no tiene acceso al sistema. Contacta al administrador para solicitar autorizaci\u00f3n.",
+  UsuarioInactivo: "Tu cuenta est\u00e1 desactivada. Contacta al administrador para reactivarla.",
+  ErrorServidor: "Error del servidor al verificar tu acceso. Intenta de nuevo en un momento.",
+  SinEmail: "No se pudo obtener tu correo electr\u00f3nico. Intenta con otra cuenta.",
+};
 
 // ── Paleta Corporativa ──────────────────────────────────────────────
 // Sidebar: #281C19 (fondo oscuro) con texto #f5f5f5
@@ -31,6 +39,18 @@ export default function DashboardLayout({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Detectar error OAuth en la URL (?error=NoAutorizado)
+  const authError = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    const errorKey = params.get("error");
+    if (errorKey && AUTH_ERROR_MESSAGES[errorKey]) {
+      // Limpiar la URL para no mostrar el error en recargas
+      window.history.replaceState({}, "", window.location.pathname);
+      return AUTH_ERROR_MESSAGES[errorKey];
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -94,6 +114,21 @@ export default function DashboardLayout({
                 Gestión de Flota 260 Buses
               </p>
             </div>
+            {/* ── Bloque de error OAuth ── */}
+            {authError && (
+              <div
+                className="w-full flex items-start gap-3 rounded-lg p-3 text-sm"
+                style={{
+                  background: 'rgba(239,68,68,0.08)',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  color: '#dc2626',
+                }}
+              >
+                <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
+                <span>{authError}</span>
+              </div>
+            )}
+
             <button
               onClick={() => { window.location.href = getLoginUrl(); }}
               className="w-full h-11 rounded-lg font-bold tracking-wider transition-all"

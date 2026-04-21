@@ -8,6 +8,7 @@ export const users = mysqlTable("users", {
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  activo: int("activo").default(1).notNull(), // 1=activo, 0=inactivo
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
@@ -135,3 +136,23 @@ export const oauthTokens = mysqlTable("oauth_tokens", {
 });
 export type OAuthToken = typeof oauthTokens.$inferSelect;
 export type InsertOAuthToken = typeof oauthTokens.$inferInsert;
+
+// ── Auditoría de Accesos ──
+export const auditoriaAccesos = mysqlTable("auditoria_accesos", {
+  id: int("id").autoincrement().primaryKey(),
+  evento: mysqlEnum("evento", [
+    "LOGIN_EXITOSO",
+    "LOGIN_RECHAZADO",
+    "LOGOUT",
+    "ACCESO_DENEGADO",
+  ]).notNull(),
+  email: varchar("email", { length: 320 }).notNull(),
+  openId: varchar("openId", { length: 64 }),
+  detalle: varchar("detalle", { length: 500 }),
+  ip: varchar("ip", { length: 64 }),
+  userAgent: varchar("userAgent", { length: 500 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditoriaAcceso = typeof auditoriaAccesos.$inferSelect;
+export type InsertAuditoriaAcceso = typeof auditoriaAccesos.$inferInsert;

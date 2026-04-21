@@ -298,3 +298,39 @@
 - [x] QA11: Historial persiste — sessionStorage STORAGE_KEY, loadMessages()
 - [x] Regresión: 203/203 tests pasan (16 chatbot v2.0 + 187 previos)
 - [x] Actualizar repositorio GitHub
+
+## Refuerzo de Seguridad OAuth — Validación de Acceso
+
+### Tabla auditoria_accesos
+- [x] Crear tabla auditoria_accesos en drizzle/schema.ts — 8 campos: id, evento(enum 4 vals), email, openId, detalle, ip, userAgent, createdAt
+- [x] Push migration a BD — 0008_moaning_rockslide.sql aplicada exitosamente
+- [x] Campo activo (int default 1) agregado a tabla users
+
+### Validación OAuth (callback)
+- [x] Interceptar callback OAuth ANTES de crear sesión/cookie — server/_core/oauth.ts reescrito completo
+- [x] Verificar openId en getUserByOpenId + fallback getUserByEmail (case-insensitive)
+- [x] Si no autorizado: redirect /?error=NoAutorizado, SIN crear sesión, SIN cookie
+- [x] Si usuario inactivo (activo=0): redirect /?error=UsuarioInactivo
+- [x] Registrar todos los intentos en auditoria_accesos via registrarAuditoria()
+- [x] Owner (ENV.ownerOpenId) siempre permitido como excepción
+
+### Middleware de protección
+- [x] context.ts reescrito: revalida usuario en BD en cada request tRPC
+- [x] Si usuario eliminado de BD con sesión activa → ctx.user = null → protectedProcedure lanza UNAUTHORIZED
+- [x] Si usuario activo=0 con sesión activa → ctx.user = null → expulsado al login
+- [x] Control por roles: adminProcedure ya verifica ctx.user.role === 'admin'
+
+### Frontend
+- [x] DashboardLayout.tsx: detecta ?error= en URL, muestra banner rojo con ShieldAlert icon
+- [x] 4 mensajes: NoAutorizado, UsuarioInactivo, ErrorServidor, SinEmail
+- [x] URL limpiada con history.replaceState después de leer el error
+
+### Pruebas QA
+- [x] QA1: Login autorizado → test 10 confirma activo=1 → ctxUser asignado
+- [x] QA2: Login NO en BD → test 11 confirma shouldBlock=true + audit LOGIN_RECHAZADO
+- [x] QA3: Login inactivo → test 12 confirma activo=0 → shouldBlock=true
+- [x] QA4: Sin sesión → ctx.user=null → protectedProcedure lanza UNAUTHORIZED
+- [x] QA5: Eliminado con sesión → test 13 confirma ctxUser=null
+- [x] QA6: Auditítoria → tests 4,5,15 confirman registrarAuditoria para todos los eventos
+- [x] QA7: Regresión — 221/221 tests pasan (18 nuevos + 203 previos)
+- [x] Actualizar repositorio GitHub

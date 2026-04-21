@@ -22,6 +22,7 @@ import { syncFromGoogleDrive } from "./gdrive-sync";
 import * as predictionsModule from "./routers/predictions";
 import { chatbotRouter } from "./routers/chatbot";
 import { sendStockCeroReport, previewStockCeroReport } from "./email-service";
+import { registrarAuditoria } from "./auditoria";
 
 export const appRouter = router({
   system: systemRouter,
@@ -29,7 +30,15 @@ export const appRouter = router({
   chatbot: chatbotRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
+    logout: publicProcedure.mutation(async ({ ctx }) => {
+      // Registrar logout en auditoría
+      if (ctx.user?.email) {
+        await registrarAuditoria("LOGOUT", ctx.user.email, "Sesión cerrada", {
+          openId: ctx.user.openId,
+          ip: (ctx.req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? ctx.req.socket?.remoteAddress ?? "unknown",
+          userAgent: (ctx.req.headers["user-agent"] ?? "unknown").substring(0, 500),
+        });
+      }
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
