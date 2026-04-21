@@ -1,5 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
+import { StockChatbot } from "./StockChatbot";
 import { LogOut, Bus, Zap, Menu, X, type LucideIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
@@ -360,6 +361,9 @@ export default function DashboardLayout({
           {children}
         </main>
       </div>
+
+      {/* Chatbot Stock — disponible en todas las páginas del dashboard */}
+      <StockChatbot />
     </div>
   );
 }

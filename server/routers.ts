@@ -20,11 +20,13 @@ import {
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
 import * as predictionsModule from "./routers/predictions";
+import { chatbotRouter } from "./routers/chatbot";
 import { sendStockCeroReport, previewStockCeroReport } from "./email-service";
 
 export const appRouter = router({
   system: systemRouter,
   predictions: predictionsModule.predictionsRouter,
+  chatbot: chatbotRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

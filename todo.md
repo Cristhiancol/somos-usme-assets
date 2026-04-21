@@ -234,3 +234,23 @@
 - [x] PRUEBA 1: Servicios visibles — 6 OC con um='SRV' ahora clasificadas como SERVICIO
 - [x] PRUEBA 2: Filtro "Servicios" muestra conteo = 6 (Z=6 confirmado en test)
 - [x] PRUEBA 3: Regresión — 187/187 tests pasan (1 nuevo test + 186 previos)
+
+## Chatbot "Stock" — Integración Gemini AI + GitHub
+
+- [x] Subir avatar del perrito pinscher a CDN — /manus-storage/stock-avatar_70dc4e00.webp
+- [x] Crear endpoint tRPC chatbot.sendMessage con Gemini AI y system prompt JIT — server/routers/chatbot.ts
+- [x] Contexto dinámico: inyectar KPIs, stock cero, órdenes pendientes en cada request — buildInventoryContext()
+- [x] Componente StockChatbot.tsx: burbuja flotante esquina inferior derecha — client/src/components/StockChatbot.tsx
+- [x] Ventana de chat expandible: header con avatar + "Asistente Virtual JIT" — fondo #281C19, acento #8CB32A
+- [x] Área de mensajes con burbujas diferenciadas (usuario vs Stock) — cian para usuario, gris para Stock
+- [x] Animación typing indicator (tres puntos) mientras Gemini procesa — CSS keyframes stockTyping
+- [x] Mensaje de bienvenida proactivo al abrir el chat — trpc.chatbot.welcome con datos reales
+- [x] Timestamps en cada mensaje (formato HH:mm) — toLocaleTimeString es-CO
+- [x] Historial de conversación persistente en sesión — useState messages[]
+- [x] Responsivo: pantalla completa en móvil, ventana flotante en desktop — max-w-[calc(100vw-24px)]
+- [x] Integrar StockChatbot en DashboardLayout — disponible en todas las páginas
+- [x] PRUEBA 1: Render sin errores — 0 errores TypeScript
+- [x] PRUEBA 2: Gemini responde con contexto real — 12/12 tests del chatbot
+- [x] PRUEBA 3: Estados de carga y error manejados — tests 7, 8, 12 validan errores
+- [x] PRUEBA 4: Regresión — 199/199 tests pasan (12 nuevos + 187 previos)
+- [x] Actualizar repositorio GitHub con todos los cambios
