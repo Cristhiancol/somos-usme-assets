@@ -346,3 +346,31 @@
 - [x] Verificar: grep debugger → 0 resultados | grep console.* (excl. logger.ts, tests, comentarios) → 0 resultados
 - [x] PRUEBA: 221/221 tests pasan (2 tests de datos BD corregidos: prioridad null + umbral cantidadAPedir >100)
 - [x] Actualizar GitHub
+
+## Chatbot Stock v3.0 — Datos Completos y Respuestas Inteligentes
+
+### Datos faltantes en contexto
+- [x] Datos ESPERADOS de OC: pedido, recibido, pendiente, % cumplimiento, valor pendiente, prioridad — test 11
+- [x] Servicios SRV: filtro UM='SRV' con OC, proveedor, valor, estado, retraso — test 6 (2 SRV en mock)
+- [x] Valor unitario: costoUnitario + valorTotal en fuzzy search y top20 — test 7
+- [x] Parte fabricante: PF en fuzzy search, OC, y referencias críticas — tests 8, 21
+- [x] Top 20 mayor valor: ordenado por totalStock descendente — test 9
+- [x] EOQ: cantidadAPedir, puntoReorden, stockSeguridad, consumoDiario, leadTime, valorAPedir — test 10
+
+### Mejoras al system prompt
+- [x] Instrucción REFERENCIA: incluir valorUnitario + PF + stock + UM + clase + proveedor — test 12
+- [x] Instrucción OC: incluir esperados (pedido, recibido, pendiente, %, valor, prioridad) — test 12
+- [x] Instrucción CUÁNTO COMPRAR: usar cantidadAPedir + puntoReorden + stockSeguridad — test 12
+- [x] Instrucción TOP 20 VALOR: listar 20 refs mayor costo total — test 12
+- [x] Instrucción SERVICIOS: filtrar UM='SRV' — test 12
+- [x] Instrucción PARTE FABRICANTE: buscar en fuzzy/contexto — test 12
+
+### Pruebas QA
+- [x] QA1: Valor unitario en fuzzy search con Costo Unitario y Valor Total — test 7
+- [x] QA2: Servicios SRV filtrados con 2 servicios pendientes — test 6
+- [x] QA3: NECESITAN_COMPRA con cantidadAPedir=10, puntoReorden=3, stockSeguridad=2 — test 10
+- [x] QA4: TOP_20_MAYOR_VALOR con ACEITE MOTOR primero ($22.5M) — test 9
+- [x] QA5: PF: ML-500 en fuzzy search de motor limpiaparabrisas — test 8
+- [x] QA6: OC SU115940 con Pedido:17, Recibido:1, Pendiente:16, Cumpl:6%, PF:VL-001 — test 11
+- [x] QA7: Regresión — 228/228 tests pasan (23 chatbot v3.0 + 205 previos)
+- [x] Actualizar repositorio GitHub
