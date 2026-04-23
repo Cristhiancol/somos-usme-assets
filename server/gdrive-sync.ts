@@ -2,6 +2,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
 import { serverLogger } from "./logger";
+import { notificarSincronizacion, notificarStockCero, isZapierConfigured } from "./zapier";
 
 const LOCAL_DIR = "/tmp/gdrive-sync-temp";
 const LOCAL_FILE = `${LOCAL_DIR}/drive_file.xlsx`;
@@ -306,6 +307,42 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
       ordersProcessed: ordersCount,
       suppliersProcessed: suppliersCount,
     });
+
+    // ── Zapier: Detectar stock cero y notificar sincronización ──
+    if (isZapierConfigured()) {
+      try {
+        // Detectar referencias con stock = 0 en los datos parseados
+        const stockCeroItems = parsed.inventory.filter(i => i.stockActual === 0);
+        const stockCeroCount = stockCeroItems.length;
+
+        // Notificar cada referencia con stock cero (máximo 10 para no saturar WhatsApp)
+        const topStockCero = stockCeroItems.slice(0, 10);
+        for (const item of topStockCero) {
+          notificarStockCero({
+            referencia: item.referencia,
+            descripcion: item.descripcion,
+            proveedor: item.proveedor,
+            parteFabricante: item.parteFabricante,
+            costoUnitario: item.costoUnitario,
+          });
+        }
+
+        // Notificar sincronización completada con resumen
+        notificarSincronizacion({
+          registrosActualizados: itemsCount,
+          registrosNuevos: 0, // bulkUpsert no distingue nuevos vs actualizados
+          ordenes: ordersCount,
+          proveedores: suppliersCount,
+          errores: 0,
+          stockCeroDetectados: stockCeroCount,
+        });
+
+        serverLogger.log(`[Zapier] Notificaciones enviadas: ${stockCeroCount} stock cero, sync completada`);
+      } catch (zapierError) {
+        // Silencioso — Zapier nunca tumba la sincronización
+        serverLogger.warn("[Zapier] Error en notificaciones post-sync (silenciado):", zapierError);
+      }
+    }
 
     serverLogger.log("[Sync] Complete!");
     return {

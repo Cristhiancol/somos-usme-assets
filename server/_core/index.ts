@@ -14,6 +14,7 @@ import { registerStorageProxy } from "./storageProxy";
 import cron from "node-cron";
 import { sendStockCeroReport } from "../email-service";
 import { serverLogger } from "../logger";
+import { notificarStockCero, notificarOrdenCreada, notificarOrdenAprobada, notificarSincronizacion, isZapierConfigured } from "../zapier";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -151,6 +152,58 @@ async function startServer() {
       return res.status(500).json({ success: false, message: e.message });
     }
   });
+  // ── Webhooks internos para Zapier → WhatsApp ──
+  // Autenticación por x-internal-token (solo llamadas internas del sistema)
+  const INTERNAL_TOKEN = process.env.INTERNAL_API_TOKEN ?? "";
+
+  function validateInternalToken(req: express.Request, res: express.Response): boolean {
+    if (!INTERNAL_TOKEN) {
+      res.status(503).json({ error: "INTERNAL_API_TOKEN no configurado" });
+      return false;
+    }
+    if (req.headers["x-internal-token"] !== INTERNAL_TOKEN) {
+      res.status(401).json({ error: "No autorizado" });
+      return false;
+    }
+    return true;
+  }
+
+  // Webhook #1 — Stock Cero
+  app.post("/api/webhooks/stock-cero", (req, res) => {
+    if (!validateInternalToken(req, res)) return;
+    const { referencia, descripcion, categoria, proveedor, costoUnitario, parteFabricante } = req.body;
+    notificarStockCero({ referencia, descripcion, categoria, proveedor, costoUnitario, parteFabricante });
+    res.json({ ok: true });
+  });
+
+  // Webhook #2 — Nueva Orden de Compra
+  app.post("/api/webhooks/orden-creada", (req, res) => {
+    if (!validateInternalToken(req, res)) return;
+    notificarOrdenCreada(req.body);
+    res.json({ ok: true });
+  });
+
+  // Webhook #3 — Orden de Compra Aprobada
+  app.post("/api/webhooks/orden-aprobada", (req, res) => {
+    if (!validateInternalToken(req, res)) return;
+    notificarOrdenAprobada(req.body);
+    res.json({ ok: true });
+  });
+
+  // Webhook #4 — Sincronización Completada
+  app.post("/api/webhooks/sincronizacion", (req, res) => {
+    if (!validateInternalToken(req, res)) return;
+    notificarSincronizacion(req.body);
+    res.json({ ok: true });
+  });
+
+  // Estado de Zapier (para verificar configuración desde el dashboard)
+  app.get("/api/zapier/status", (_req, res) => {
+    res.json({ configured: isZapierConfigured() });
+  });
+
+  serverLogger.log(`[Zapier] Webhooks internos registrados (configurado: ${isZapierConfigured()})`);
+
   // tRPC API
   app.use(
     "/api/trpc",

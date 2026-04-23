@@ -374,3 +374,36 @@
 - [x] QA6: OC SU115940 con Pedido:17, Recibido:1, Pendiente:16, Cumpl:6%, PF:VL-001 — test 11
 - [x] QA7: Regresión — 228/228 tests pasan (23 chatbot v3.0 + 205 previos)
 - [x] Actualizar repositorio GitHub
+
+## Integración Zapier → WhatsApp Equipo de Compras
+
+### Infraestructura
+- [x] Crear server/zapier.ts — cliente centralizado fire-and-forget con 4 funciones de alto nivel
+- [x] Variables de entorno: INTERNAL_API_TOKEN (valor fijo), ZAPIER_WEBHOOK_SECRET, WHATSAPP_COMPRAS, 4 URLs webhooks
+- [x] Secrets pendientes de configurar por usuario (sistema funciona sin ellos)
+
+### Endpoints Express (webhooks internos)
+- [x] POST /api/webhooks/stock-cero — alerta con referencia, proveedor, PF, costo
+- [x] POST /api/webhooks/orden-creada — detalle OC con items y valor
+- [x] POST /api/webhooks/orden-aprobada — confirmación con fecha entrega y aprobador
+- [x] POST /api/webhooks/sincronizacion — resumen con conteos y stock cero detectados
+- [x] GET /api/zapier/status — verifica si Zapier está configurado
+- [x] Autenticación x-internal-token con validateInternalToken()
+
+### Disparos desde el sistema
+- [x] Stock cero: gdrive-sync.ts dispara notificarStockCero() para top 10 refs con stockActual=0
+- [x] Sincronización: gdrive-sync.ts dispara notificarSincronizacion() con resumen completo
+- [x] Orden creada/aprobada: funciones listas (notificarOrdenCreada/Aprobada), disparo cuando se implemente creación de OC
+
+### Seguridad
+- [x] WHATSAPP_COMPRAS solo en process.env, nunca hardcodeado — test 4.1
+- [x] Manejo silencioso: fetch falla → retorna false sin excepción — test 1.5
+
+### Pruebas QA
+- [x] QA1: notificarZapier envía POST con headers y payload correcto — test 1.1
+- [x] QA2: Fire-and-forget — test 1.5 confirma no lanza excepción
+- [x] QA3: Si Zapier falla, retorna false sin bloquear — tests 1.5, 1.6
+- [x] QA4: Endpoints con x-internal-token validado — validateInternalToken() en index.ts
+- [x] QA5: Endpoints responden { ok: true } con token válido — código verificado
+- [x] QA6: Regresión — 246/246 tests pasan (20 Zapier + 23 chatbot + 203 previos)
+- [x] Actualizar repositorio GitHub
