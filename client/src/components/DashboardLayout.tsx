@@ -1,17 +1,12 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { StockChatbot } from "./StockChatbot";
+import LoginScreen from "./LoginScreen";
 import { LogOut, Bus, Zap, Menu, X, ShieldAlert, type LucideIcon } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 
-// ── Mensajes de error OAuth ──────────────────────────────────────────────────
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  NoAutorizado: "Tu correo no tiene acceso al sistema. Contacta al administrador para solicitar autorizaci\u00f3n.",
-  UsuarioInactivo: "Tu cuenta est\u00e1 desactivada. Contacta al administrador para reactivarla.",
-  ErrorServidor: "Error del servidor al verificar tu acceso. Intenta de nuevo en un momento.",
-  SinEmail: "No se pudo obtener tu correo electr\u00f3nico. Intenta con otra cuenta.",
-};
+// ── Mensajes de error OAuth movidos a LoginScreen.tsx ──
 
 // ── Paleta Corporativa ──────────────────────────────────────────────
 // Sidebar: #281C19 (fondo oscuro) con texto #f5f5f5
@@ -40,17 +35,7 @@ export default function DashboardLayout({
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  // Detectar error OAuth en la URL (?error=NoAutorizado)
-  const authError = useMemo(() => {
-    const params = new URLSearchParams(window.location.search);
-    const errorKey = params.get("error");
-    if (errorKey && AUTH_ERROR_MESSAGES[errorKey]) {
-      // Limpiar la URL para no mostrar el error en recargas
-      window.history.replaceState({}, "", window.location.pathname);
-      return AUTH_ERROR_MESSAGES[errorKey];
-    }
-    return null;
-  }, []);
+  // Error OAuth ahora se maneja en LoginScreen.tsx
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -85,72 +70,8 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* ── LOGIN ── */}
-      {showLogin && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center cyber-grid-bg" style={{ background: '#f8f9fa' }}>
-          <div
-            className="flex flex-col items-center gap-8 p-8 max-w-md w-full rounded-xl"
-            style={{
-              background: '#ffffff',
-              border: '1px solid rgba(140,179,42,0.3)',
-              boxShadow: '0 8px 40px rgba(40,28,25,0.12), 0 0 0 1px rgba(140,179,42,0.1)',
-            }}
-          >
-            <div className="flex flex-col items-center gap-4">
-              <div className="flex items-center gap-3">
-                <Bus className="h-10 w-10 animate-pulse-neon" style={{ color: '#8CB32A' }} />
-                <Zap className="h-6 w-6" style={{ color: '#009890' }} />
-              </div>
-              <h1
-                className="text-2xl font-bold tracking-wider"
-                style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}
-              >
-                SOMOS USME
-              </h1>
-              <p className="text-sm text-center" style={{ color: '#6b7280' }}>
-                Sistema Inteligente JIT — Control de Inventario y Abastecimiento
-              </p>
-              <p className="text-xs font-semibold" style={{ color: '#009890', fontFamily: "'Space Grotesk', sans-serif" }}>
-                Gestión de Flota 260 Buses
-              </p>
-            </div>
-            {/* ── Bloque de error OAuth ── */}
-            {authError && (
-              <div
-                className="w-full flex items-start gap-3 rounded-lg p-3 text-sm"
-                style={{
-                  background: 'rgba(239,68,68,0.08)',
-                  border: '1px solid rgba(239,68,68,0.3)',
-                  color: '#dc2626',
-                }}
-              >
-                <ShieldAlert className="h-5 w-5 shrink-0 mt-0.5" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            <button
-              onClick={() => { window.location.href = getLoginUrl(); }}
-              className="w-full h-11 rounded-lg font-bold tracking-wider transition-all"
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                background: '#281C19',
-                color: '#ffffff',
-                border: '1px solid #8CB32A',
-                boxShadow: '0 0 12px rgba(140,179,42,0.3)',
-              }}
-              onMouseEnter={(e) => {
-                (e.target as HTMLButtonElement).style.boxShadow = '0 0 20px rgba(140,179,42,0.5)';
-              }}
-              onMouseLeave={(e) => {
-                (e.target as HTMLButtonElement).style.boxShadow = '0 0 12px rgba(140,179,42,0.3)';
-              }}
-            >
-              INICIAR SESIÓN
-            </button>
-          </div>
-        </div>
-      )}
+      {/* ── LOGIN — Pantalla Holograma ── */}
+      {showLogin && <LoginScreen />}
 
       {/* ── MOBILE OVERLAY ── */}
       <div
