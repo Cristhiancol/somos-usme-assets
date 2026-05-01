@@ -21,6 +21,8 @@ import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
 import * as predictionsModule from "./routers/predictions";
 import { chatbotRouter } from "./routers/chatbot";
+import { adminRouter } from "./routers/admin";
+import { exportsRouter } from "./routers/exports";
 import { sendStockCeroReport, previewStockCeroReport } from "./email-service";
 import { registrarAuditoria } from "./auditoria";
 
@@ -28,6 +30,8 @@ export const appRouter = router({
   system: systemRouter,
   predictions: predictionsModule.predictionsRouter,
   chatbot: chatbotRouter,
+  admin: adminRouter,
+  exports: exportsRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(async ({ ctx }) => {

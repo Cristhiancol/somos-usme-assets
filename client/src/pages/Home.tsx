@@ -2,6 +2,7 @@ import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
 import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Zap, Banknote, Siren } from "lucide-react";
 import { BusTransmilenio } from "@/components/BusTransmilenio";
+import { useLocation } from "wouter";
 
 function formatCurrency(val: number) {
   if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
@@ -95,6 +96,7 @@ export default function Home() {
           subtitle="Sin límite de crecimiento"
           icon={Package}
           accentColor="#009890"
+          href="/inventario"
         />
         <KPICard
           title="Valor Inventario"
@@ -102,6 +104,7 @@ export default function Home() {
           subtitle={`${formatCurrencyFull(Number(kpis?.totalValue) || 0)}`}
           icon={Banknote}
           accentColor="#8CB32A"
+          href="/top-valor"
         />
         <KPICard
           title="Stock CERO"
@@ -110,6 +113,7 @@ export default function Home() {
           icon={AlertTriangle}
           accentColor="#dc2626"
           pulse
+          href="/stock-cero"
         />
         <KPICard
           title="Órdenes Pendientes"
@@ -117,6 +121,7 @@ export default function Home() {
           subtitle={`${Number(kpis?.urgentOrders) || 0} crítico + reorden`}
           icon={ShoppingCart}
           accentColor="#8CB32A"
+          href="/ordenes"
         />
         <KPICard
           title="Stock 0 + OC Activa"
@@ -125,6 +130,7 @@ export default function Home() {
           icon={Siren}
           accentColor="#dc2626"
           pulse
+          href="/stock-cero-oc"
         />
       </div>
 
@@ -342,17 +348,20 @@ export default function Home() {
 }
 
 function KPICard({
-  title, value, subtitle, icon: Icon, accentColor, pulse,
+  title, value, subtitle, icon: Icon, accentColor, pulse, href,
 }: {
-  title: string; value: string; subtitle: string; icon: any; accentColor: string; pulse?: boolean;
+  title: string; value: string; subtitle: string; icon: any; accentColor: string; pulse?: boolean; href?: string;
 }) {
+  const [, setLocation] = useLocation();
   return (
     <Card
-      className="kpi-card-corp p-4 rounded-xl transition-all hover:scale-[1.02]"
+      className={`kpi-card-corp p-4 rounded-xl transition-all hover:scale-[1.02] ${href ? "cursor-pointer" : ""}`}
       style={{ borderLeft: `3px solid ${accentColor}` }}
+      onClick={() => href && setLocation(href)}
     >
       <div className="flex items-start justify-between mb-2">
         <Icon className={`h-5 w-5 ${pulse ? 'animate-pulse-neon' : ''}`} style={{ color: accentColor }} />
+        {href && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: `${accentColor}15`, color: accentColor }}>→</span>}
       </div>
       <div className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}>
         {value}

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Search, Package, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useMemo } from "react";
 import { BusTransmilenio } from "@/components/BusTransmilenio";
+import { ExportButton } from "@/components/ExportButton";
 
 const CUENTAS = ["PLATAFORMA", "CAJA", "CARROCERIA", "COMBUSTIBLE", "COMUNICACIONES", "ELECTRICIDAD", "LLANTAS", "LUBRICANTES"];
 const CLASES = ["A", "B", "C"];
@@ -189,6 +190,7 @@ export default function InventoryPage() {
         <span className="text-xs text-gray-500 ml-auto font-mono">
           {data?.total ?? "..."} referencias
         </span>
+        <ExportButton type="inventory" label="Excel" />
       </div>
 
       {/* Filters */}

@@ -7,7 +7,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { trpc } from "@/lib/trpc";
-import { Send, X, Minus, Trash2 } from "lucide-react";
+import { Send, X, Minus, Trash2, Sparkles } from "lucide-react";
+import { MarkdownRenderer } from "./MarkdownRenderer";
 
 // ── Avatar URL (CDN) ──────────────────────────────────────────────────────────
 const STOCK_AVATAR = "/manus-storage/stock-avatar_70dc4e00.webp";
@@ -85,12 +86,10 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
             fontFamily: "'Space Grotesk', sans-serif",
           }}
         >
-          {msg.content.split(/(\*\*[^*]+\*\*)/).map((part, i) =>
-            part.startsWith("**") && part.endsWith("**") ? (
-              <strong key={i}>{part.slice(2, -2)}</strong>
-            ) : (
-              <span key={i}>{part}</span>
-            )
+          {isUser ? (
+            msg.content
+          ) : (
+            <MarkdownRenderer content={msg.content} className="chatbot-markdown" />
           )}
         </div>
         <span className="text-[10px] mt-0.5 px-1" style={{ color: COLORS.timestamp }}>
@@ -436,9 +435,12 @@ function ChatbotUI() {
             {messages.length <= 1 && !sendMutation.isPending && (
               <div className="px-3 pb-2 flex flex-wrap gap-1.5 flex-shrink-0" style={{ background: COLORS.chatBg }}>
                 {[
-                  "¿Cuántas refs en stock cero?",
-                  "Órdenes críticas pendientes",
-                  "Valor total del inventario",
+                  "📦 ¿Cuántas refs en stock cero?",
+                  "🚨 Órdenes críticas pendientes",
+                  "💰 Top 20 mayor valor",
+                  "🛒 ¿Qué necesito comprar?",
+                  "🔧 Servicios pendientes",
+                  "📊 Valor total inventario",
                 ].map((suggestion) => (
                   <button
                     key={suggestion}

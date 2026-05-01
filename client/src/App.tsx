@@ -1,16 +1,11 @@
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
+import { lazy, Suspense } from "react";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
-import InventoryPage from "./pages/Inventory";
-import OrdersPage from "./pages/Orders";
-import SuppliersPage from "./pages/Suppliers";
-import Top20ValuePage from "./pages/Top20Value";
-import Top20ZeroPage from "./pages/Top20Zero";
-import SyncPage from "./pages/Sync";
-import StockCeroConOCPage from "./pages/StockCeroConOC";
+import { Loader2 } from "lucide-react";
 import {
   LayoutDashboard,
   Package,
@@ -20,10 +15,24 @@ import {
   AlertTriangle,
   RefreshCw,
   Siren,
+  Activity,
+  Shield,
 } from "lucide-react";
+
+// Lazy-loaded pages for better performance
+const InventoryPage = lazy(() => import("./pages/Inventory"));
+const OrdersPage = lazy(() => import("./pages/Orders"));
+const SuppliersPage = lazy(() => import("./pages/Suppliers"));
+const Top20ValuePage = lazy(() => import("./pages/Top20Value"));
+const Top20ZeroPage = lazy(() => import("./pages/Top20Zero"));
+const SyncPage = lazy(() => import("./pages/Sync"));
+const StockCeroConOCPage = lazy(() => import("./pages/StockCeroConOC"));
+const AnalyticsPage = lazy(() => import("./pages/Analytics"));
+const AdminPage = lazy(() => import("./pages/Admin"));
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Analytics", href: "/analytics", icon: Activity },
   { label: "Inventario", href: "/inventario", icon: Package },
   { label: "Top 20 Valor", href: "/top-valor", icon: TrendingUp },
   { label: "Stock Cero", href: "/stock-cero", icon: AlertTriangle },
@@ -31,23 +40,42 @@ const navItems = [
   { label: "Stock 0 + OC", href: "/stock-cero-oc", icon: Siren },
   { label: "Proveedores", href: "/proveedores", icon: Users },
   { label: "Sincronizar", href: "/sync", icon: RefreshCw },
+  { label: "Admin", href: "/admin", icon: Shield },
 ];
+
+// Page loading fallback
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-[40vh]">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-6 w-6 animate-spin" style={{ color: '#8CB32A' }} />
+        <span className="text-xs font-medium" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#009890' }}>
+          Cargando...
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function Router() {
   return (
     <DashboardLayout navItems={navItems} title="SOMOS USME // JIT SYSTEM">
-      <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/inventario" component={InventoryPage} />
-        <Route path="/top-valor" component={Top20ValuePage} />
-        <Route path="/stock-cero" component={Top20ZeroPage} />
-        <Route path="/ordenes" component={OrdersPage} />
-        <Route path="/stock-cero-oc" component={StockCeroConOCPage} />
-        <Route path="/proveedores" component={SuppliersPage} />
-        <Route path="/sync" component={SyncPage} />
-        <Route path="/404" component={NotFound} />
-        <Route component={NotFound} />
-      </Switch>
+      <Suspense fallback={<PageLoader />}>
+        <Switch>
+          <Route path="/" component={Home} />
+          <Route path="/analytics" component={AnalyticsPage} />
+          <Route path="/inventario" component={InventoryPage} />
+          <Route path="/top-valor" component={Top20ValuePage} />
+          <Route path="/stock-cero" component={Top20ZeroPage} />
+          <Route path="/ordenes" component={OrdersPage} />
+          <Route path="/stock-cero-oc" component={StockCeroConOCPage} />
+          <Route path="/proveedores" component={SuppliersPage} />
+          <Route path="/sync" component={SyncPage} />
+          <Route path="/admin" component={AdminPage} />
+          <Route path="/404" component={NotFound} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     </DashboardLayout>
   );
 }

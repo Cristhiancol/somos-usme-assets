@@ -1,6 +1,8 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { StockChatbot } from "./StockChatbot";
+import { CommandPalette, CommandPaletteTrigger } from "./CommandPalette";
+import { NotificationCenter } from "./NotificationCenter";
 import { LogOut, Bus, Zap, Menu, X, ShieldAlert, type LucideIcon } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
@@ -223,6 +225,11 @@ export default function DashboardLayout({
             })}
           </nav>
 
+          {/* Search trigger */}
+          <div className="px-2 pb-2">
+            <CommandPaletteTrigger />
+          </div>
+
           {/* User menu */}
           <div
             className="p-3 shrink-0 relative"
@@ -388,7 +395,7 @@ export default function DashboardLayout({
           >
             {activeMenuItem?.label ?? "SOMOS USME"}
           </span>
-          <div className="w-9" />
+          <NotificationCenter />
         </header>
 
         {/* Main */}
@@ -399,6 +406,9 @@ export default function DashboardLayout({
 
       {/* Chatbot Stock — disponible en todas las páginas del dashboard */}
       <StockChatbot />
+
+      {/* Command Palette — búsqueda global Ctrl+K */}
+      <CommandPalette />
     </div>
   );
 }

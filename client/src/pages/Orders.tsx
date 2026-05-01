@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search, ShoppingCart, Bell, Wrench, Package, Settings } from "lucide-react";
 import { useState, useMemo } from "react";
+import { ExportButton } from "@/components/ExportButton";
 
 function formatCurrency(val: number) {
   return new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(val);
@@ -178,6 +179,7 @@ export default function OrdersPage() {
             {data?.length ?? "..."} órdenes — {formatCurrency(totalPendingValue)}
           </span>
         </div>
+        <ExportButton type="orders" label="Excel" />
         <Button
           onClick={() => notifyDelayed.mutate()}
           disabled={notifyDelayed.isPending}
