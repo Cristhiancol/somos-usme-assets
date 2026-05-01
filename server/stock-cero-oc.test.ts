@@ -123,13 +123,13 @@ describe("Cruce referencias stock=0 con OC activa", () => {
     expect(rows[0].ordenCompra).toBe("SU115560");
   });
 
-  it("CASO 2: OC SU116017 debe cruzar con referencia de stock=0", async () => {
-    // SU115628 fue recibida/completada en la última sincronización — reemplazada por SU116017
+  it("CASO 2: OC SU115947 debe cruzar con referencia de stock=0", async () => {
+    // SU116017 ya no cruza con stock=0 en la BD actual — reemplazada por SU115947 (6 cruces)
     const [rows] = await conn.execute(`
       SELECT i.referencia, i.stockActual, p.ordenCompra, p.prioridad
       FROM inventory_items i
       INNER JOIN purchase_orders p ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
-      WHERE p.ordenCompra = 'SU116017' AND i.stockActual = 0
+      WHERE p.ordenCompra = 'SU115947' AND i.stockActual = 0
     `) as any[];
     expect(rows.length).toBeGreaterThan(0);
     expect(Number(rows[0].stockActual)).toBe(0);

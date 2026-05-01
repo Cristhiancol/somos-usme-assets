@@ -407,3 +407,17 @@
 - [x] QA5: Endpoints responden { ok: true } con token válido — código verificado
 - [x] QA6: Regresión — 246/246 tests pasan (20 Zapier + 23 chatbot + 203 previos)
 - [x] Actualizar repositorio GitHub
+
+## Pantalla de Login — Efecto Holograma Animado
+- [x] Crear componente LoginScreen.tsx con efecto holograma tipo Manus
+- [x] Fondo oscuro #0A0A0A con dot grid animado (puntos que se mueven)
+- [x] Logo del bus central con efecto glow verde #8CB32A pulsante
+- [x] Título "Bienvenido a SOMOS USME" con tipografía grande
+- [x] Subtítulo "Sistema JIT — Control de Inventario y Abastecimiento"
+- [x] Botón "Iniciar Sesión" estilizado con borde verde y hover glow
+- [x] Banner de errores OAuth (NoAutorizado, UsuarioInactivo) integrado
+- [x] Responsivo: móvil pantalla completa, desktop centrado
+- [x] Animaciones CSS puras: dot grid wave, logo pulse, fade-in secuencial
+- [x] Integrar en DashboardLayout.tsx reemplazando login actual
+- [x] PRUEBA: verificar visual + 246/246 tests pasan
+- [x] Actualizar GitHub
