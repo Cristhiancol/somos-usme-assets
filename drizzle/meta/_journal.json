@@ -64,6 +64,13 @@
       "when": 1776774644935,
       "tag": "0008_moaning_rockslide",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1777666728533,
+      "tag": "0009_amazing_sumo",
+      "breakpoints": true
     }
   ]
 }
