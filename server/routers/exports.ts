@@ -3,7 +3,7 @@
  * Usa la librería xlsx que ya está instalada en el proyecto
  */
 import { protectedProcedure, router } from "../_core/trpc";
-import { getInventory, getPurchaseOrders, getStockCeroConOC, getDashboardKPIs } from "../db";
+import { getInventory, getPurchaseOrders, getStockCeroConOC, getDashboardKPIs, getConsumoMensual, getTopConsumers } from "../db";
 import * as XLSX from "xlsx";
 import { serverLogger } from "../logger";
 
@@ -172,6 +172,74 @@ export const exportsRouter = router({
       };
     } catch (e) {
       serverLogger.error("[Exports] Error generando Excel stock cero:", e);
+      throw e;
+    }
+  }),
+
+  /**
+   * Genera reporte Excel de consumo mensual
+   */
+  consumoExcel: protectedProcedure.mutation(async () => {
+    try {
+      const consumoData = await getConsumoMensual();
+      const topData = await getTopConsumers(50);
+
+      // Pivot: agrupar por referencia con meses como columnas
+      const refMap: Record<string, any> = {};
+      const allMeses = new Set<string>();
+
+      for (const c of consumoData) {
+        if (!refMap[c.referencia]) {
+          refMap[c.referencia] = {
+            Referencia: c.referencia,
+            Fabricante: c.fabricante || "",
+            Descripcion: c.descripcion || "",
+          };
+        }
+        allMeses.add(c.mes);
+        refMap[c.referencia][c.mes] = c.cantidad;
+      }
+
+      const mesesOrdenados = Array.from(allMeses).sort();
+      const wsData = Object.values(refMap).map((row: any) => {
+        const obj: any = {
+          "Referencia": row.Referencia,
+          "Fabricante": row.Fabricante,
+          "Descripción": row.Descripcion,
+        };
+        for (const m of mesesOrdenados) {
+          obj[m] = row[m] ?? 0;
+        }
+        return obj;
+      });
+
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Consumo detallado
+      const ws = XLSX.utils.json_to_sheet(wsData);
+      XLSX.utils.book_append_sheet(wb, ws, "Consumo Mensual");
+
+      // Sheet 2: Top consumidores
+      const topSheet = XLSX.utils.json_to_sheet(
+        (topData as any[]).map((t: any) => ({
+          "Referencia": t.referencia,
+          "Fabricante": t.fabricante || "",
+          "Descripción": t.descripcion || "",
+          "Total Consumido": Number(t.totalConsumo) || 0,
+          "Promedio/Mes": Number(t.promedioMes).toFixed(1),
+          "Meses Activos": Number(t.mesesConConsumo) || 0,
+        }))
+      );
+      XLSX.utils.book_append_sheet(wb, topSheet, "Top Consumidores");
+
+      const buffer = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+      return {
+        filename: `Consumo_Mensual_Somos_Usme_${new Date().toISOString().slice(0, 10)}.xlsx`,
+        data: buffer,
+        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      };
+    } catch (e) {
+      serverLogger.error("[Exports] Error generando Excel consumo:", e);
       throw e;
     }
   }),

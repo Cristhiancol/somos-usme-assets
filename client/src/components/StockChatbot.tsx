@@ -439,6 +439,7 @@ function ChatbotUI() {
                   "🚨 Órdenes críticas pendientes",
                   "💰 Top 20 mayor valor",
                   "🛒 ¿Qué necesito comprar?",
+                  "📈 Tendencias de consumo",
                   "🔧 Servicios pendientes",
                   "📊 Valor total inventario",
                 ].map((suggestion) => (

@@ -6,7 +6,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useLocation } from "wouter";
-import { Search, Package, ShoppingCart, Users, LayoutDashboard, FileText, ArrowRight, Command, Activity, Shield } from "lucide-react";
+import { Search, Package, ShoppingCart, Users, LayoutDashboard, FileText, ArrowRight, Command, Activity, Shield, BarChart3 } from "lucide-react";
 import Fuse from "fuse.js";
 
 // ── Pages para búsqueda rápida ──────────────────────────────────────────────
@@ -18,6 +18,7 @@ const PAGES = [
   { type: "page" as const, label: "Stock Cero", href: "/stock-cero", icon: FileText, keywords: "cero agotadas sin stock" },
   { type: "page" as const, label: "Órdenes", href: "/ordenes", icon: ShoppingCart, keywords: "compras OC pendientes" },
   { type: "page" as const, label: "Stock 0 + OC", href: "/stock-cero-oc", icon: FileText, keywords: "cero pendiente oc activa" },
+  { type: "page" as const, label: "Consumo", href: "/consumo", icon: BarChart3, keywords: "consumo mensual tendencias demanda abastecimiento" },
   { type: "page" as const, label: "Proveedores", href: "/proveedores", icon: Users, keywords: "supplier nit contacto" },
   { type: "page" as const, label: "Sincronizar", href: "/sync", icon: FileText, keywords: "sync google drive" },
   { type: "page" as const, label: "Administración", href: "/admin", icon: Shield, keywords: "usuarios roles admin auditoría" },

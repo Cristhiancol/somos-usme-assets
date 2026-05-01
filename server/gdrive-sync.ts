@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, logSync } from "./db";
+import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, logSync } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
 import { serverLogger } from "./logger";
 import { notificarSincronizacion, notificarStockCero, isZapierConfigured } from "./zapier";
@@ -279,6 +279,87 @@ async function parseExcelData(filePath: string) {
   return { inventory, orders, suppliers };
 }
 
+/**
+ * Parse "Consumo general mensual" sheet
+ * Pivots columns D+ (months like 2025-04, 2025-05...) into normalized rows
+ */
+async function parseConsumoSheet(filePath: string) {
+  const { read, utils } = await import("xlsx");
+  const fileData = readFileSync(filePath);
+  const workbook = read(fileData, { type: "buffer" });
+
+  const sheet = workbook.Sheets["Consumo general mensual"];
+  if (!sheet) {
+    serverLogger.warn("[Sync] Sheet 'Consumo general mensual' not found");
+    return [];
+  }
+
+  const raw = utils.sheet_to_json(sheet, { header: 1, defval: null }) as any[][];
+  if (!raw || raw.length < 2) return [];
+
+  // Row 0 = headers: [Referencia, Fabricante?, Descripcion, 2025-04, 2025-05, ...]
+  const headers = raw[0] as any[];
+
+  // Find month columns (match YYYY-MM pattern or serial date)
+  const monthCols: { idx: number; mes: string }[] = [];
+  for (let c = 0; c < headers.length; c++) {
+    const h = headers[c];
+    if (h === null || h === undefined) continue;
+    const s = String(h).trim();
+    // Match patterns like "2025-04", "2025-05"
+    if (/^\d{4}-\d{2}$/.test(s)) {
+      monthCols.push({ idx: c, mes: s });
+    }
+    // Also handle Excel serial dates that xlsx may convert
+    else if (typeof h === 'number' && h > 40000 && h < 50000) {
+      const epoch = new Date(1899, 11, 30);
+      const d = new Date(epoch.getTime() + h * 86400000);
+      const mes = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      monthCols.push({ idx: c, mes });
+    }
+  }
+
+  if (monthCols.length === 0) {
+    serverLogger.warn("[Sync] No month columns found in Consumo sheet");
+    return [];
+  }
+
+  serverLogger.log(`[Sync] Found ${monthCols.length} month columns: ${monthCols.map(m => m.mes).join(", ")}`);
+
+  // Find column indices for Referencia (A=0), Fabricante (B=1), Descripcion (C=2)
+  const result: { referencia: string; fabricante: string | null; descripcion: string | null; mes: string; cantidad: number }[] = [];
+
+  for (let r = 1; r < raw.length; r++) {
+    const row = raw[r];
+    if (!row) continue;
+
+    const ref = row[0];
+    if (!ref) continue;
+    const referencia = String(ref).trim();
+    if (!referencia) continue;
+
+    const fabricante = row[1] ? String(row[1]).trim() : null;
+    const descripcion = row[2] ? String(row[2]).trim() : null;
+
+    for (const mc of monthCols) {
+      const val = row[mc.idx];
+      const cantidad = (val !== null && val !== undefined && val !== "") ? Number(val) : 0;
+      if (isNaN(cantidad)) continue;
+
+      result.push({
+        referencia,
+        fabricante: fabricante || null,
+        descripcion: descripcion || null,
+        mes: mc.mes,
+        cantidad,
+      });
+    }
+  }
+
+  serverLogger.log(`[Sync] Parsed ${result.length} consumption records`);
+  return result;
+}
+
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   try {
     // Ensure temp dir exists
@@ -299,6 +380,18 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     const itemsCount = await bulkUpsertInventory(parsed.inventory);
     const ordersCount = await bulkUpsertOrders(parsed.orders);
     const suppliersCount = await bulkUpsertSuppliers(parsed.suppliers);
+
+    // Parse and upsert consumption data
+    let consumoCount = 0;
+    try {
+      const consumoData = await parseConsumoSheet(LOCAL_FILE);
+      if (consumoData.length > 0) {
+        consumoCount = await bulkUpsertConsumo(consumoData);
+        serverLogger.log(`[Sync] Consumo: ${consumoCount} registros`);
+      }
+    } catch (e) {
+      serverLogger.warn("[Sync] Error parsing consumption data (non-fatal):", e);
+    }
 
     await logSync({
       syncType: "gdrive_import",
@@ -347,8 +440,8 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     serverLogger.log("[Sync] Complete!");
     return {
       success: true,
-      message: `Sincronización exitosa: ${itemsCount} referencias, ${ordersCount} órdenes, ${suppliersCount} proveedores`,
-      stats: { itemsCount, ordersCount, suppliersCount },
+      message: `Sincronización exitosa: ${itemsCount} referencias, ${ordersCount} órdenes, ${suppliersCount} proveedores, ${consumoCount} consumos`,
+      stats: { itemsCount, ordersCount, suppliersCount, consumoCount },
     };
   } catch (error: any) {
     serverLogger.error("[Sync] Error:", error);

@@ -19,6 +19,8 @@ import {
   getStockCeroConOC,
   getInventory,
   getSuppliers,
+  getTopConsumers,
+  getConsumoByMonth,
 } from "../db";
 import Fuse from "fuse.js";
 
@@ -153,6 +155,9 @@ CAPACIDADES:
 - Top 20 referencias de mayor valor en inventario
 - Información de proveedores
 - Corrección de referencias mal escritas (fuzzy search)
+- **Análisis de consumo mensual y tendencias de demanda**
+- **Alertas de riesgo de desabastecimiento**
+- **Recomendaciones de compra basadas en tendencias**
 
 REGLAS ESTRICTAS:
 1. Solo proporciona datos que estén en el contexto del sistema. NO inventes stocks, precios ni referencias.
@@ -196,12 +201,22 @@ INSTRUCCIONES POR TIPO DE CONSULTA:
    - Stock actual, consumo promedio, lead time del proveedor
    - Cantidad estimada a pedir y punto de reorden
    - Urgencia: CRÍTICA / ALTA / NORMAL
-6. Cuando informes sobre una OC, incluye: número, proveedor, estado, ítems, valor, días de retraso.`;
+6. Cuando informes sobre una OC, incluye: número, proveedor, estado, ítems, valor, días de retraso.
+
+📈 CUANDO PREGUNTEN "TENDENCIAS" o "CONSUMO":
+- Usar la sección [CONSUMO_TENDENCIAS] del contexto.
+- Informar cuáles referencias tienen consumo creciente, decreciente o sin rotación.
+- Cruzar con stock actual para recomendar acciones de compra.
+
+⚠ CUANDO PREGUNTEN "QUÉ COMPRAR" o "PRIORIDAD DE COMPRA":
+- Combinar datos de [NECESITAN_COMPRA] con [CONSUMO_TENDENCIAS].
+- Priorizar: consumo creciente + stock bajo = COMPRAR PRIMERO.
+- Consumo decreciente + stock alto = NO COMPRAR / EVALUAR.`;
 
 // ── Construir contexto dinámico enriquecido v3.0 ───────────────────────────
 async function buildInventoryContext(userMessage: string): Promise<string> {
   try {
-    const [kpis, alerts, criticalOrders, ordersData, suppliersData, catalog, fuzzyResults] = await Promise.all([
+    const [kpis, alerts, criticalOrders, ordersData, suppliersData, catalog, fuzzyResults, topConsumo, consumoMeses] = await Promise.all([
       getDashboardKPIs(),
       getJITAlerts(),
       getStockCeroConOC(),
@@ -209,6 +224,8 @@ async function buildInventoryContext(userMessage: string): Promise<string> {
       getSuppliers(),
       getCatalog(),
       fuzzySearch(userMessage),
+      getTopConsumers(15),
+      getConsumoByMonth(),
     ]);
 
     const alertSummary = alerts
@@ -302,6 +319,17 @@ ${necesitanCompra || "  (Sin referencias que necesiten compra)"}
 
 [PROVEEDORES] Top 10:
 ${topSuppliers || "  (Sin proveedores registrados)"}
+
+[CONSUMO_TENDENCIAS] Top 15 referencias más consumidas (acumulado mensual):
+${(topConsumo || []).map((tc: any, i: number) => 
+  `  ${i + 1}. Ref: ${tc.referencia} | ${tc.descripcion ?? "N/A"} | PF: ${tc.fabricante ?? "N/A"}
+     Total consumido: ${Number(tc.totalConsumo).toLocaleString("es-CO")} | Promedio/mes: ${Number(tc.promedioMes).toFixed(1)} | Meses activos: ${tc.mesesConConsumo}`
+).join("\n") || "  (Sin datos de consumo)"}
+
+[CONSUMO_MENSUAL_TOTAL] Consumo total por mes:
+${(consumoMeses || []).map((m: any) => 
+  `  ${m.mes}: ${Number(m.totalConsumo).toLocaleString("es-CO")} unidades (${m.refsActivas} refs activas)`
+).join("\n") || "  (Sin datos de consumo mensual)"}
 ${fuzzyResults}
 ===`;
   } catch (e) {

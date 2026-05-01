@@ -23,6 +23,7 @@ import * as predictionsModule from "./routers/predictions";
 import { chatbotRouter } from "./routers/chatbot";
 import { adminRouter } from "./routers/admin";
 import { exportsRouter } from "./routers/exports";
+import { consumoRouter } from "./routers/consumo";
 import { sendStockCeroReport, previewStockCeroReport } from "./email-service";
 import { registrarAuditoria } from "./auditoria";
 
@@ -32,6 +33,7 @@ export const appRouter = router({
   chatbot: chatbotRouter,
   admin: adminRouter,
   exports: exportsRouter,
+  consumo: consumoRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(async ({ ctx }) => {

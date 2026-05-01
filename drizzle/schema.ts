@@ -156,3 +156,18 @@ export const auditoriaAccesos = mysqlTable("auditoria_accesos", {
 
 export type AuditoriaAcceso = typeof auditoriaAccesos.$inferSelect;
 export type InsertAuditoriaAcceso = typeof auditoriaAccesos.$inferInsert;
+
+// ── Consumo Mensual (por referencia × mes) ──
+export const consumoMensual = mysqlTable("consumo_mensual", {
+  id: int("id").autoincrement().primaryKey(),
+  referencia: varchar("referencia", { length: 64 }).notNull(),
+  fabricante: varchar("fabricante", { length: 128 }),
+  descripcion: text("descripcion"),
+  mes: varchar("mes", { length: 7 }).notNull(), // YYYY-MM
+  cantidad: double("cantidad").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ConsumoMensual = typeof consumoMensual.$inferSelect;
+export type InsertConsumoMensual = typeof consumoMensual.$inferInsert;
+

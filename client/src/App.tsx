@@ -17,6 +17,7 @@ import {
   Siren,
   Activity,
   Shield,
+  BarChart3,
 } from "lucide-react";
 
 // Lazy-loaded pages for better performance
@@ -29,6 +30,7 @@ const SyncPage = lazy(() => import("./pages/Sync"));
 const StockCeroConOCPage = lazy(() => import("./pages/StockCeroConOC"));
 const AnalyticsPage = lazy(() => import("./pages/Analytics"));
 const AdminPage = lazy(() => import("./pages/Admin"));
+const ConsumoPage = lazy(() => import("./pages/Consumo"));
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -38,6 +40,7 @@ const navItems = [
   { label: "Stock Cero", href: "/stock-cero", icon: AlertTriangle },
   { label: "Órdenes", href: "/ordenes", icon: ShoppingCart },
   { label: "Stock 0 + OC", href: "/stock-cero-oc", icon: Siren },
+  { label: "Consumo", href: "/consumo", icon: BarChart3 },
   { label: "Proveedores", href: "/proveedores", icon: Users },
   { label: "Sincronizar", href: "/sync", icon: RefreshCw },
   { label: "Admin", href: "/admin", icon: Shield },
@@ -72,6 +75,7 @@ function Router() {
           <Route path="/proveedores" component={SuppliersPage} />
           <Route path="/sync" component={SyncPage} />
           <Route path="/admin" component={AdminPage} />
+          <Route path="/consumo" component={ConsumoPage} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>

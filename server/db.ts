@@ -1,6 +1,6 @@
 import { eq, sql, desc, asc, like, and, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, inventoryItems, purchaseOrders, suppliers, syncLogs } from "../drizzle/schema";
+import { InsertUser, users, inventoryItems, purchaseOrders, suppliers, syncLogs, consumoMensual } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { serverLogger } from './logger';
 
@@ -400,4 +400,77 @@ export async function getStockCeroConOC() {
     um: string | null;
     tipoReferencia: 'NUEVO' | 'REPARADO' | 'SERVICIO';
   }>;
+}
+
+// ── Consumo Mensual ──
+export async function bulkUpsertConsumo(items: { referencia: string; fabricante: string | null; descripcion: string | null; mes: string; cantidad: number }[]) {
+  const db = await getDb();
+  if (!db) return 0;
+
+  await db.delete(consumoMensual);
+  let count = 0;
+  for (let i = 0; i < items.length; i += 100) {
+    const batch = items.slice(i, i + 100);
+    await db.insert(consumoMensual).values(batch);
+    count += batch.length;
+  }
+  return count;
+}
+
+export async function getConsumoMensual(referencia?: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (referencia) {
+    return db.select().from(consumoMensual)
+      .where(eq(consumoMensual.referencia, referencia))
+      .orderBy(asc(consumoMensual.mes));
+  }
+  return db.select().from(consumoMensual).orderBy(asc(consumoMensual.mes));
+}
+
+export async function getConsumoSummary() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [summary] = await db.select({
+    totalRegistros: sql<number>`COUNT(*)`,
+    totalRefs: sql<number>`COUNT(DISTINCT ${consumoMensual.referencia})`,
+    totalConsumo: sql<number>`COALESCE(SUM(${consumoMensual.cantidad}), 0)`,
+    meses: sql<number>`COUNT(DISTINCT ${consumoMensual.mes})`,
+    mesMin: sql<string>`MIN(${consumoMensual.mes})`,
+    mesMax: sql<string>`MAX(${consumoMensual.mes})`,
+  }).from(consumoMensual);
+
+  return summary;
+}
+
+export async function getTopConsumers(limit = 20) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select({
+    referencia: consumoMensual.referencia,
+    fabricante: consumoMensual.fabricante,
+    descripcion: consumoMensual.descripcion,
+    totalConsumo: sql<number>`SUM(${consumoMensual.cantidad})`,
+    promedioMes: sql<number>`AVG(${consumoMensual.cantidad})`,
+    mesesConConsumo: sql<number>`SUM(CASE WHEN ${consumoMensual.cantidad} > 0 THEN 1 ELSE 0 END)`,
+  }).from(consumoMensual)
+    .groupBy(consumoMensual.referencia, consumoMensual.fabricante, consumoMensual.descripcion)
+    .orderBy(desc(sql`SUM(${consumoMensual.cantidad})`))
+    .limit(limit);
+}
+
+export async function getConsumoByMonth() {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db.select({
+    mes: consumoMensual.mes,
+    totalConsumo: sql<number>`SUM(${consumoMensual.cantidad})`,
+    refsActivas: sql<number>`COUNT(DISTINCT CASE WHEN ${consumoMensual.cantidad} > 0 THEN ${consumoMensual.referencia} END)`,
+  }).from(consumoMensual)
+    .groupBy(consumoMensual.mes)
+    .orderBy(asc(consumoMensual.mes));
 }
