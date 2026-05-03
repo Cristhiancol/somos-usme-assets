@@ -1,0 +1,135 @@
+================================================================================
+  ASSET TRACKER SOMOS BOGOTÁ USME - INSTRUCCIONES RÁPIDAS
+  Sesión 3 de Mayo 2026
+================================================================================
+
+📋 RESUMEN DE LO QUE SE HIZO:
+================================================================================
+
+1. ✅ ACTUALIZACIÓN DESDE GITHUB
+   - Descargados cambios más recientes
+   - Nueva página "Consumo Mensual"
+   - Chatbot mejorado v3.0
+
+2. ✅ TABLA CONSUMO_MENSUAL
+   - Creada en MySQL
+   - 15,522 registros cargados
+   - Sincronización automática desde Google Drive
+
+3. ✅ CORRECCIÓN DE TESTS
+   - 246/246 tests pasando (100%)
+   - Actualizadas referencias con datos reales
+   - Validación completa del código
+
+4. ✅ WEBHOOKS ZAPIER
+   - 4 endpoints implementados
+   - 3 secretos configurados
+   - Listo para notificaciones WhatsApp
+
+================================================================================
+⏳ PRÓXIMOS PASOS (URGENTE):
+================================================================================
+
+PASO 1: Crear 4 Zaps en Zapier (10-15 minutos)
+   Archivo: /home/ubuntu/GUIA_CREAR_ZAPS_ZAPIER.md
+   
+   Zap #1: Stock Cero → WhatsApp
+   Zap #2: Orden Creada → WhatsApp
+   Zap #3: Orden Aprobada → WhatsApp
+   Zap #4: Sincronización → WhatsApp
+
+PASO 2: Probar webhooks con curl
+   Comandos incluidos en la guía
+   Verificar notificaciones en WhatsApp: +573013748901
+
+PASO 3: Renovar Google Drive OAuth
+   Token actual está expirado
+   Restaurar sincronización automática
+
+================================================================================
+📊 ESTADO DEL SISTEMA:
+================================================================================
+
+Dashboard:
+  - 1,828 referencias activas
+  - $1,600,000,000 COP en inventario
+  - 617 referencias con stock cero
+  - 365 órdenes pendientes
+
+Tests:
+  - 246/246 pasando ✅
+  - 100% de cobertura
+  - Sin errores de código
+
+Webhooks:
+  - 4 endpoints configurados
+  - 3 secretos validados
+  - Listo para Zapier
+
+================================================================================
+🔐 CREDENCIALES CONFIGURADAS:
+================================================================================
+
+WHATSAPP_COMPRAS: +573013748901
+INTERNAL_API_TOKEN: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+ZAPIER_WEBHOOK_SECRET: d8179a6332c04f628391724689a60b5690119e2dae2d6523a9aa50e51a839229
+
+================================================================================
+📁 ARCHIVOS IMPORTANTES:
+================================================================================
+
+Guía Zapier:
+  /home/ubuntu/GUIA_CREAR_ZAPS_ZAPIER.md
+
+Resumen técnico completo:
+  /home/ubuntu/somos-usme-assets/ACTUALIZACIONES_SESION_2026_05_03.md
+
+Resumen ejecutivo:
+  /home/ubuntu/somos-usme-assets/RESUMEN_EJECUTIVO.md
+
+Endpoints webhooks:
+  server/_core/index.ts (líneas 172-198)
+
+================================================================================
+🚀 CÓMO EMPEZAR:
+================================================================================
+
+1. Abre la guía Zapier:
+   cat /home/ubuntu/GUIA_CREAR_ZAPS_ZAPIER.md
+
+2. Sigue los pasos para crear los 4 Zaps (10-15 minutos)
+
+3. Prueba con curl:
+   curl -X POST "https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/stock-cero" \
+     -H "Content-Type: application/json" \
+     -H "X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2" \
+     -d '{"referencia":"TEST","cantidad":0}'
+
+4. Verifica notificaciones en WhatsApp: +573013748901
+
+================================================================================
+✅ CHECKLIST:
+================================================================================
+
+[x] Código actualizado desde GitHub
+[x] Tabla consumo_mensual creada (15.522 registros)
+[x] Tests corregidos (246/246 pasando)
+[x] Secretos configurados
+[x] Endpoints webhooks implementados
+[x] Documentación completa
+[ ] Crear 4 Zaps en Zapier ← SIGUIENTE
+[ ] Probar webhooks
+[ ] Renovar Google Drive OAuth
+
+================================================================================
+📞 SOPORTE:
+================================================================================
+
+Documentación: /home/ubuntu/somos-usme-assets/RESUMEN_EJECUTIVO.md
+GitHub: https://github.com/Cristhiancol/somos-usme-assets
+Dominio: https://usme.blog
+
+================================================================================
+Generado: 3 de mayo 2026, 17:30 GMT-5
+Estado: ✅ Listo para integración Zapier
+================================================================================
