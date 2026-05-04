@@ -135,11 +135,18 @@ async function fuzzySearch(query: string): Promise<string> {
   });
 
   // Buscar consumo mensual de la primera referencia encontrada
+  // Intentar referencia exacta y referencia base (sin sufijo -R) ya que la hoja
+  // "Consumo general mensual" puede almacenar referencias sin el sufijo -R
   let consumoSection = "";
   if (results.length > 0) {
     const topRef = results[0].item.referencia;
+    const baseRef = topRef.replace(/-R$/i, ""); // ej: "12330007-R" -> "12330007"
     try {
-      const consumoData = await getConsumoMensual(topRef);
+      let consumoData = await getConsumoMensual(topRef);
+      // Si no hay datos con la referencia exacta, intentar sin el sufijo -R
+      if (consumoData.length === 0 && baseRef !== topRef) {
+        consumoData = await getConsumoMensual(baseRef);
+      }
       if (consumoData.length > 0) {
         const totalConsumo = consumoData.reduce((s, c) => s + c.cantidad, 0);
         const mesesActivos = consumoData.filter(c => c.cantidad > 0).length;

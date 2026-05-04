@@ -116,6 +116,13 @@ async function parseExcelData(filePath: string) {
   // Helper functions
   function safeFloat(val: any, def = 0): number {
     if (val === null || val === undefined || val === "") return def;
+    // Handle Colombian/European number format: 1.234.567,89 → 1234567.89
+    if (typeof val === "string") {
+      // Remove thousand separators (dots) and replace decimal comma with dot
+      const cleaned = val.replace(/\./g, "").replace(",", ".");
+      const n = Number(cleaned);
+      return isNaN(n) ? def : n;
+    }
     const n = Number(val);
     return isNaN(n) ? def : n;
   }
