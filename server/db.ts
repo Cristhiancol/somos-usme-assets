@@ -64,7 +64,7 @@ export async function getDashboardKPIs() {
 
   const [totalResult] = await db.select({
     totalRefs: sql<number>`COUNT(*)`,
-    totalValue: sql<number>`COALESCE(SUM(${inventoryItems.totalStock}), 0)`,
+    totalValue: sql<number>`COALESCE(ROUND(SUM(${inventoryItems.totalStock}), 2), 0)`,
     zeroStock: sql<number>`SUM(CASE WHEN ${inventoryItems.stockActual} = 0 THEN 1 ELSE 0 END)`,
     withStock: sql<number>`SUM(CASE WHEN ${inventoryItems.stockActual} > 0 THEN 1 ELSE 0 END)`,
     avgStock: sql<number>`COALESCE(AVG(CASE WHEN ${inventoryItems.stockActual} > 0 THEN ${inventoryItems.stockActual} END), 0)`,

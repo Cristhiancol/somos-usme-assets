@@ -21,6 +21,7 @@ import {
   getSuppliers,
   getTopConsumers,
   getConsumoByMonth,
+  getConsumoMensual,
 } from "../db";
 import Fuse from "fuse.js";
 
@@ -133,7 +134,42 @@ async function fuzzySearch(query: string): Promise<string> {
      Acción: ${item.accionRequerida ?? "N/A"} | Score: ${score}%`;
   });
 
-  return `\n[SUGERENCIAS_FUZZY] (coincidencias para "${query}"):\n${lines.join("\n\n")}`;
+  // Buscar consumo mensual de la primera referencia encontrada
+  let consumoSection = "";
+  if (results.length > 0) {
+    const topRef = results[0].item.referencia;
+    try {
+      const consumoData = await getConsumoMensual(topRef);
+      if (consumoData.length > 0) {
+        const totalConsumo = consumoData.reduce((s, c) => s + c.cantidad, 0);
+        const mesesActivos = consumoData.filter(c => c.cantidad > 0).length;
+        const promedioMes = mesesActivos > 0 ? totalConsumo / mesesActivos : 0;
+        const consumoLineas = consumoData.map(c => `${c.mes}: ${c.cantidad}`).join(" | ");
+        
+        // Calcular tendencia
+        const sorted = consumoData.sort((a, b) => a.mes.localeCompare(b.mes));
+        const total = sorted.length;
+        const splitAt = Math.max(0, total - 3);
+        const recientes = sorted.slice(splitAt);
+        const anteriores = sorted.slice(0, splitAt);
+        const avgRec = recientes.length > 0 ? recientes.reduce((s, m) => s + m.cantidad, 0) / recientes.length : 0;
+        const avgAnt = anteriores.length > 0 ? anteriores.reduce((s, m) => s + m.cantidad, 0) / anteriores.length : 0;
+        const tendencia = avgAnt > 0 ? ((avgRec - avgAnt) / avgAnt) * 100 : 0;
+        const tendenciaStr = tendencia > 10 ? `↑ SUBIENDO ${tendencia.toFixed(0)}%` : tendencia < -10 ? `↓ BAJANDO ${Math.abs(tendencia).toFixed(0)}%` : "→ ESTABLE";
+
+        consumoSection = `\n\n[CONSUMO_REFERENCIA] Historial de consumo mensual de ${topRef}:
+  Fabricante: ${consumoData[0].fabricante ?? "N/A"}
+  Total consumido: ${totalConsumo.toLocaleString("es-CO")} unidades
+  Promedio/mes: ${promedioMes.toFixed(1)} | Meses activos: ${mesesActivos} de ${total}
+  Tendencia: ${tendenciaStr}
+  Detalle: ${consumoLineas}`;
+      }
+    } catch (e) {
+      // Silencioso
+    }
+  }
+
+  return `\n[SUGERENCIAS_FUZZY] (coincidencias para "${query}"):\n${lines.join("\n\n")}${consumoSection}`;
 }
 
 // ── System Prompt base de Stock v3.0 ────────────────────────────────────────
@@ -170,6 +206,8 @@ INSTRUCCIONES POR TIPO DE CONSULTA:
 📦 CUANDO PREGUNTEN POR UNA REFERENCIA:
 - Incluir SIEMPRE: referencia, descripción, parte fabricante (PF), stock actual, costo unitario, valor total (stock × costo), UM, clase ABC, estado, proveedor.
 - Si stock=0, indicar si hay OC activa y cuándo se espera recibir.
+- **Si hay datos de consumo mensual [CONSUMO_REFERENCIA], incluir: total consumido, promedio/mes, tendencia (subiendo/bajando/estable), y desglose mensual.**
+- Ejemplo: "Esta referencia ha consumido 420 unidades en 8 meses (promedio 52.5/mes, tendencia ↑ SUBIENDO 35%)"
 
 💰 CUANDO PREGUNTEN "CUÁNTO CUESTA" o "VALOR":
 - Mostrar costo unitario Y valor total en inventario (stock × costoUnitario).
