@@ -1,14 +1,17 @@
 /**
- * Analytics v1.0 — Dashboard de Análisis Avanzado
- * Tendencias históricas, distribución de riesgo, performance de proveedores
- * Gráficos CSS/SVG puros (sin Recharts)
+ * Analytics v2.0 — Dashboard de Análisis Avanzado con Vega-Lite
+ * Gráficos declarativos interactivos (equivalente a Altair en Python)
  */
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, TrendingUp, TrendingDown, BarChart3, PieChart, Activity, Target, Zap } from "lucide-react";
+import {
+  Loader2, TrendingUp, TrendingDown, BarChart3, Activity, Target, Zap,
+} from "lucide-react";
+import { useMemo } from "react";
+import { VegaChart, pieSpec, hbarSpec, barSpec, CORP_COLORS } from "@/components/VegaChart";
 
 function formatCurrency(val: number) {
-  if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
+  if (val >= 1e9) return `${(val / 1e9).toFixed(2)}B COP`;
   if (val >= 1e6) return `${(val / 1e6).toFixed(1)}M COP`;
   if (val >= 1e3) return `${(val / 1e3).toFixed(0)}K COP`;
   return `${val.toFixed(0)} COP`;
@@ -22,279 +25,254 @@ export default function Analytics() {
   const { data: kpis, isLoading: kpisLoading } = trpc.dashboard.kpis.useQuery();
   const { data: jit, isLoading: jitLoading } = trpc.dashboard.jitAlerts.useQuery();
   const { data: categories, isLoading: catLoading } = trpc.dashboard.valueByCategory.useQuery();
-  const { data: top20Value } = trpc.dashboard.top20Value.useQuery();
   const { data: orders } = trpc.orders.list.useQuery();
 
-  if (kpisLoading || jitLoading || catLoading) {
-    return (
-      <div className="flex items-center justify-center h-[60vh]">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin" style={{ color: '#8CB32A' }} />
-          <span className="text-sm font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#009890' }}>CARGANDO ANALYTICS...</span>
-        </div>
-      </div>
-    );
-  }
-
+  // ── Derived data ──────────────────────────────────────────────────────
   const totalRefs = Number(kpis?.totalRefs) || 0;
   const zeroStock = Number(kpis?.zeroStock) || 0;
   const withStock = Number(kpis?.withStock) || 0;
   const totalValue = Number(kpis?.totalValue) || 0;
   const pendingOrders = Number(kpis?.totalPending) || 0;
   const urgentOrders = Number(kpis?.urgentOrders) || 0;
+  const healthScore = totalRefs > 0 ? Math.round((withStock / totalRefs) * 100) : 0;
+  const healthColor = healthScore >= 70 ? CORP_COLORS.green : healthScore >= 50 ? CORP_COLORS.amber : CORP_COLORS.red;
 
-  // Risk distribution
-  const riskData = [
-    { label: "CRÍTICO", count: Number(jit?.critico) || 0, color: "#DC2626", bg: "#FEE2E2" },
-    { label: "REORDEN", count: Number(jit?.reorden) || 0, color: "#EA580C", bg: "#FFF7ED" },
-    { label: "PRECAUCIÓN", count: Number(jit?.precaucion) || 0, color: "#CA8A04", bg: "#FEFCE8" },
-    { label: "ÓPTIMO", count: Number(jit?.optimo) || 0, color: "#8CB32A", bg: "#F0F9E8" },
-  ];
-  const totalAlerts = riskData.reduce((s, d) => s + d.count, 0) || 1;
-
-  // Category analysis
-  const categoryData = (categories || []).map((c) => ({
-    name: c.cuenta || "N/A",
-    value: Number(c.totalValue) || 0,
-    items: Number(c.itemCount) || 0,
-    zero: Number(c.zeroStock) || 0,
-    healthPct: Number(c.itemCount) > 0 ? Math.round(((Number(c.itemCount) - Number(c.zeroStock)) / Number(c.itemCount)) * 100) : 100,
-  }));
-
-  // Order analysis
   const ordersArray = Array.isArray(orders) ? orders : [];
-  const ordersByStatus: Record<string, number> = {};
-  ordersArray.forEach((o: any) => {
-    const status = o.estado || "DESCONOCIDO";
-    ordersByStatus[status] = (ordersByStatus[status] || 0) + 1;
-  });
-
-  const orderStatusData = Object.entries(ordersByStatus).map(([status, count]) => ({
-    status,
-    count,
-    color: status === "PENDIENTE" ? "#F97316" : status === "VENCIDO" ? "#DC2626" : status === "RECIBIDO PARCIAL" ? "#CA8A04" : status === "CASI COMPLETO" ? "#8CB32A" : "#6B7280",
-  })).sort((a, b) => b.count - a.count);
-
-  // Top retraso
   const topRetraso = ordersArray
     .filter((o: any) => (o.diasRetraso || 0) > 0)
     .sort((a: any, b: any) => (b.diasRetraso || 0) - (a.diasRetraso || 0))
     .slice(0, 10);
 
-  // Health score
-  const healthScore = totalRefs > 0 ? Math.round((withStock / totalRefs) * 100) : 0;
-  const healthColor = healthScore >= 70 ? "#8CB32A" : healthScore >= 50 ? "#CA8A04" : "#DC2626";
+  // ── Vega-Lite specs ───────────────────────────────────────────────────
+
+  // Dona — distribución de riesgo JIT
+  const riskPieSpec = useMemo(() => pieSpec(
+    [
+      { label: "CRÍTICO", value: Number(jit?.critico) || 0 },
+      { label: "REORDEN", value: Number(jit?.reorden) || 0 },
+      { label: "PRECAUCIÓN", value: Number(jit?.precaucion) || 0 },
+      { label: "ÓPTIMO", value: Number(jit?.optimo) || 0 },
+    ].filter(d => d.value > 0),
+    { title: "Distribución JIT", width: 260, height: 220, innerRadius: 60 }
+  ), [jit]);
+
+  // Barras — valor por categoría
+  const categoryBarSpec = useMemo(() => {
+    const data = (categories || [])
+      .map((c) => ({
+        label: c.cuenta || "N/A",
+        value: Number(c.totalValue) || 0,
+      }))
+      .sort((a, b) => b.value - a.value);
+    return barSpec(data, {
+      title: "Valor inventario por categoría",
+      yLabel: "COP",
+      height: 220,
+      colorField: true,
+    });
+  }, [categories]);
+
+  // Barras horiz — top retraso OC
+  const retrasoBarSpec = useMemo(() => {
+    const data = topRetraso.map((o: any) => ({
+      label: `${o.ordenCompra} | ${(o.descripcion || "").slice(0, 22)}`,
+      value: o.diasRetraso || 0,
+    }));
+    return hbarSpec(data, {
+      title: "OC con mayor retraso",
+      xLabel: "Días de retraso",
+      height: 280,
+      color: CORP_COLORS.red,
+    });
+  }, [topRetraso]);
+
+  // Barras — estado de órdenes
+  const orderStatusSpec = useMemo(() => {
+    const ordersByStatus: Record<string, number> = {};
+    ordersArray.forEach((o: any) => {
+      const status = o.estado || "OTRO";
+      ordersByStatus[status] = (ordersByStatus[status] || 0) + 1;
+    });
+    const data = Object.entries(ordersByStatus)
+      .map(([label, value]) => ({ label, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+    return barSpec(data, {
+      title: "Órdenes por estado",
+      yLabel: "# órdenes",
+      height: 200,
+      colorField: true,
+    });
+  }, [ordersArray]);
+
+  // Barras — salud por categoría (% con stock)
+  const categoryHealthSpec = useMemo(() => {
+    const data = (categories || [])
+      .map((c) => {
+        const items = Number(c.itemCount) || 1;
+        const zero = Number(c.zeroStock) || 0;
+        return {
+          label: c.cuenta || "N/A",
+          value: Math.round(((items - zero) / items) * 100),
+        };
+      })
+      .sort((a, b) => b.value - a.value);
+    return hbarSpec(data, {
+      title: "Salud por categoría (%)",
+      xLabel: "% con stock disponible",
+      height: 220,
+      color: CORP_COLORS.teal,
+      format: ".0f",
+    });
+  }, [categories]);
+
+  if (kpisLoading || jitLoading || catLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin" style={{ color: "#8CB32A" }} />
+          <span className="text-sm font-semibold" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#009890" }}>
+            CARGANDO ANALYTICS...
+          </span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Activity className="h-6 w-6" style={{ color: '#009890' }} />
+        <Activity className="h-6 w-6" style={{ color: "#009890" }} />
         <div>
-          <h1 className="text-2xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
+          <h1 className="text-2xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
             ANALYTICS
           </h1>
-          <p className="text-sm text-muted-foreground">Análisis avanzado del inventario y abastecimiento</p>
+          <p className="text-sm text-muted-foreground">
+            Dashboard de abastecimiento — Gráficos declarativos Vega-Lite interactivos
+          </p>
         </div>
       </div>
 
-      {/* Health Score + Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Health Score Gauge */}
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        {[
+          { icon: Target, label: "Salud inventario", value: `${healthScore}%`, color: healthColor },
+          { icon: Zap, label: "Stock CERO", value: formatNumber(zeroStock), color: CORP_COLORS.red },
+          { icon: TrendingDown, label: "OC urgentes", value: formatNumber(urgentOrders), color: "#F97316" },
+          { icon: TrendingUp, label: "Valor total", value: formatCurrency(totalValue), color: CORP_COLORS.green },
+          { icon: BarChart3, label: "OC pendientes", value: formatNumber(pendingOrders), color: CORP_COLORS.teal },
+        ].map((kpi) => (
+          <Card key={kpi.label} className="kpi-card-corp p-4 rounded-xl" style={{ borderLeft: `3px solid ${kpi.color}` }}>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded flex items-center justify-center" style={{ background: `${kpi.color}18` }}>
+                <kpi.icon className="h-3.5 w-3.5" style={{ color: kpi.color }} />
+              </div>
+            </div>
+            <div className="text-xl font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", color: kpi.color }}>
+              {kpi.value}
+            </div>
+            <div className="text-xs font-semibold mt-1" style={{ color: "#281C19" }}>{kpi.label}</div>
+          </Card>
+        ))}
+      </div>
+
+      {/* Health Gauge + Risk Pie + Order Status */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Gauge de salud — SVG puro */}
         <Card className="cyber-card p-6 rounded-xl flex flex-col items-center justify-center">
-          <h3 className="text-xs font-bold tracking-wider mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
+          <h3 className="text-xs font-bold tracking-wider mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
             SALUD DEL INVENTARIO
           </h3>
-          <div className="relative w-32 h-32">
+          <div className="relative w-36 h-36">
             <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" strokeWidth="8" />
+              <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" strokeWidth="10" />
               <circle
                 cx="50" cy="50" r="40" fill="none"
                 stroke={healthColor}
-                strokeWidth="8"
+                strokeWidth="10"
                 strokeDasharray={`${healthScore * 2.51} 251`}
                 strokeLinecap="round"
-                style={{ transition: "stroke-dasharray 1s ease-out" }}
+                style={{ transition: "stroke-dasharray 1.2s ease-out" }}
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-black" style={{ fontFamily: "'Space Grotesk', sans-serif", color: healthColor }}>
                 {healthScore}%
               </span>
-              <span className="text-[10px]" style={{ color: '#6B7280' }}>disponible</span>
+              <span className="text-[10px]" style={{ color: "#6B7280" }}>disponible</span>
             </div>
           </div>
-          <div className="mt-3 text-center">
-            <p className="text-xs" style={{ color: '#6B7280' }}>{formatNumber(withStock)} de {formatNumber(totalRefs)} refs con stock</p>
+          <div className="mt-3 text-center space-y-0.5">
+            <p className="text-xs" style={{ color: "#6B7280" }}>
+              {formatNumber(withStock)} de {formatNumber(totalRefs)} refs con stock
+            </p>
+            <p className="text-[10px]" style={{ color: "#6B7280" }}>
+              {zeroStock} referencias en riesgo
+            </p>
           </div>
         </Card>
 
-        {/* Risk Distribution */}
-        <Card className="cyber-card p-6 rounded-xl">
-          <h3 className="text-xs font-bold tracking-wider mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
-            DISTRIBUCIÓN DE RIESGO
+        {/* Dona — distribución de riesgo JIT (Vega-Lite) */}
+        <Card className="cyber-card p-6 rounded-xl flex flex-col items-center">
+          <h3 className="text-xs font-bold tracking-wider mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
+            DISTRIBUCIÓN DE RIESGO JIT
           </h3>
-          <div className="space-y-3">
-            {riskData.map((d) => {
-              const pct = (d.count / totalAlerts) * 100;
-              return (
-                <div key={d.label} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
-                      <span className="font-semibold" style={{ color: '#281C19' }}>{d.label}</span>
-                    </div>
-                    <span className="font-mono font-bold" style={{ color: d.color }}>{formatNumber(d.count)}</span>
-                  </div>
-                  <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: d.bg }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-1000"
-                      style={{ width: `${pct}%`, background: d.color }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <p className="text-[10px] text-muted-foreground mb-2">Pasar el cursor para detalles</p>
+          <VegaChart spec={riskPieSpec} />
         </Card>
 
-        {/* Quick Stats */}
+        {/* Órdenes por estado (Vega-Lite) */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h3 className="text-xs font-bold tracking-wider mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
-            MÉTRICAS CLAVE
+          <h3 className="text-xs font-bold tracking-wider mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
+            ÓRDENES POR ESTADO
           </h3>
-          <div className="space-y-4">
-            <MetricRow icon={Target} label="Tasa de disponibilidad" value={`${healthScore}%`} color={healthColor} />
-            <MetricRow icon={Zap} label="Refs urgentes (stock 0)" value={formatNumber(zeroStock)} color="#DC2626" />
-            <MetricRow icon={TrendingDown} label="OC urgentes" value={formatNumber(urgentOrders)} color="#F97316" />
-            <MetricRow icon={TrendingUp} label="Valor inventario" value={formatCurrency(totalValue)} color="#8CB32A" />
-            <MetricRow icon={BarChart3} label="OC pendientes" value={formatNumber(pendingOrders)} color="#009890" />
-          </div>
+          <p className="text-[10px] text-muted-foreground mb-2">Total: {formatNumber(ordersArray.length)} órdenes</p>
+          <VegaChart spec={orderStatusSpec} style={{ width: "100%" }} />
         </Card>
       </div>
 
-      {/* Category Health */}
+      {/* Valor por categoría */}
       <Card className="cyber-card p-6 rounded-xl">
-        <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
-          SALUD POR CATEGORÍA
+        <h2 className="text-sm font-bold mb-1 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
+          VALOR DE INVENTARIO POR CATEGORÍA
         </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            <thead>
-              <tr className="table-header-corp border-b" style={{ borderColor: 'rgba(0,152,144,0.2)' }}>
-                <th className="text-left py-3 px-3 font-semibold">Categoría</th>
-                <th className="text-right py-3 px-3 font-semibold">Items</th>
-                <th className="text-right py-3 px-3 font-semibold">Stock 0</th>
-                <th className="text-right py-3 px-3 font-semibold">Valor</th>
-                <th className="text-right py-3 px-3 font-semibold">Salud</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryData.map((cat, i) => (
-                <tr key={i} className="border-b transition-colors hover:bg-lime-50" style={{ borderColor: 'rgba(140,179,42,0.12)' }}>
-                  <td className="py-2.5 px-3 font-medium" style={{ color: '#281C19' }}>{cat.name}</td>
-                  <td className="text-right py-2.5 px-3">{formatNumber(cat.items)}</td>
-                  <td className="text-right py-2.5 px-3">
-                    <span className={cat.zero > 0 ? "text-red-500 font-semibold" : "text-green-500"}>{cat.zero}</span>
-                  </td>
-                  <td className="text-right py-2.5 px-3 font-mono font-bold" style={{ color: '#009890' }}>{formatCurrency(cat.value)}</td>
-                  <td className="text-right py-2.5 px-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="w-16 h-2 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${cat.healthPct}%`,
-                            background: cat.healthPct >= 70 ? "#8CB32A" : cat.healthPct >= 50 ? "#CA8A04" : "#DC2626",
-                          }}
-                        />
-                      </div>
-                      <span className="text-xs font-mono w-10 text-right" style={{
-                        color: cat.healthPct >= 70 ? "#8CB32A" : cat.healthPct >= 50 ? "#CA8A04" : "#DC2626",
-                      }}>
-                        {cat.healthPct}%
-                      </span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <p className="text-[11px] text-muted-foreground mb-4">
+          Total: <strong style={{ color: "#009890" }}>{formatCurrency(totalValue)}</strong> — pasar el cursor para ver el monto exacto
+        </p>
+        <VegaChart spec={categoryBarSpec} style={{ width: "100%" }} />
       </Card>
 
-      {/* Orders Analysis */}
+      {/* Salud por categoría + Retraso OC */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Orders by Status */}
+        {/* Salud por categoría */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
-            ÓRDENES POR ESTADO
+          <h2 className="text-sm font-bold mb-1 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
+            SALUD POR CATEGORÍA
           </h2>
-          <div className="space-y-3">
-            {orderStatusData.map((d) => {
-              const maxCount = Math.max(...orderStatusData.map(x => x.count), 1);
-              const pct = (d.count / maxCount) * 100;
-              return (
-                <div key={d.status} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium" style={{ color: '#281C19' }}>{d.status}</span>
-                    <span className="font-mono font-bold" style={{ color: d.color }}>{d.count}</span>
-                  </div>
-                  <div className="w-full h-3 rounded-full overflow-hidden" style={{ background: '#F3F4F6' }}>
-                    <div
-                      className="h-full rounded-full transition-all duration-700"
-                      style={{ width: `${pct}%`, background: d.color }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+          <p className="text-[11px] text-muted-foreground mb-4">% de referencias con stock disponible</p>
+          <VegaChart spec={categoryHealthSpec} style={{ width: "100%" }} />
         </Card>
 
-        {/* Top 10 Retraso */}
+        {/* Top retraso OC */}
         <Card className="cyber-card p-6 rounded-xl">
-          <h2 className="text-sm font-bold mb-4 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
-            TOP 10 MAYOR RETRASO
+          <h2 className="text-sm font-bold mb-1 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
+            TOP 10 MAYOR RETRASO EN OC
           </h2>
-          <div className="space-y-2">
-            {topRetraso.length === 0 ? (
-              <p className="text-sm text-center py-4 text-muted-foreground">Sin órdenes con retraso</p>
-            ) : (
-              topRetraso.map((o: any, i: number) => {
-                const dias = o.diasRetraso || 0;
-                const color = dias > 60 ? "#DC2626" : dias > 30 ? "#F97316" : "#CA8A04";
-                return (
-                  <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg transition-colors hover:bg-gray-50">
-                    <span
-                      className="text-xs font-mono font-bold w-8 text-center py-1 rounded"
-                      style={{ background: `${color}15`, color }}
-                    >
-                      {dias}d
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate" style={{ color: '#1C1C1E' }}>{o.descripcion || "N/A"}</p>
-                      <p className="text-[10px] truncate" style={{ color: '#9CA3AF' }}>
-                        OC: {o.ordenCompra} | {o.proveedor || "Sin proveedor"}
-                      </p>
-                    </div>
-                    <span
-                      className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-                      style={{ background: `${color}15`, color, border: `1px solid ${color}30` }}
-                    >
-                      {o.prioridad || o.estado || "N/A"}
-                    </span>
-                  </div>
-                );
-              })
-            )}
-          </div>
+          <p className="text-[11px] text-muted-foreground mb-4">Días de retraso — pasar cursor para detalles</p>
+          {topRetraso.length === 0 ? (
+            <div className="flex items-center justify-center h-[200px]">
+              <p className="text-sm text-muted-foreground">Sin órdenes con retraso ✓</p>
+            </div>
+          ) : (
+            <VegaChart spec={retrasoBarSpec} style={{ width: "100%" }} />
+          )}
         </Card>
       </div>
 
       {/* Footer */}
       <div className="text-center text-xs text-muted-foreground py-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-        Analytics — Datos en tiempo real sincronizados desde Google Drive
+        Analytics v2.0 — Vega-Lite · Datos en tiempo real sincronizados desde Google Drive
       </div>
     </div>
   );
@@ -307,7 +285,7 @@ function MetricRow({ icon: Icon, label, value, color }: { icon: any; label: stri
         <Icon className="h-4 w-4" style={{ color }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs" style={{ color: '#6B7280' }}>{label}</p>
+        <p className="text-xs" style={{ color: "#6B7280" }}>{label}</p>
       </div>
       <span className="text-sm font-bold font-mono" style={{ color, fontFamily: "'Space Grotesk', sans-serif" }}>{value}</span>
     </div>
