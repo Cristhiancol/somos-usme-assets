@@ -62,7 +62,7 @@
 - [x] BUG PRODUCCIÓN: Sync falla en producción — CORREGIDO: archivo Excel subido a CDN público, gdrive-sync.ts usa URL CDN como fuente primaria
 - [x] Subir archivo Excel a S3/CDN para disponibilidad permanente en producción — COMPLETADO
 - [x] Mostrar columna MAINSAVER/Parte Fabricante en tabla de Órdenes — AGREGADA al lado derecho de Descripción
-- [ ] Conectar OAuth Google Cloud (client_id: 220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro) para sincronización automática cada 15 min desde Google Drive
+- [x] Conectar OAuth Google Cloud (client_id: 220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro) para sincronización automática cada 15 min desde Google Drive
 - [x] FIX CRÍTICO: Error insertBefore en producción móvil — Causa raíz: 1) localStorage.setItem dentro de useMemo (side-effect en render) en useAuth.ts, 2) DashboardLayout retornaba árboles DOM completamente diferentes según estado (loading/login/app). Solución: mover localStorage a useEffect, wrapper raíz estable con visibility toggle en vez de return trees diferentes.
 - [x] FIX CRÍTICO: Error insertBefore al sincronizar — Causa raíz: syncMutation.mutate() llamado directamente dentro de useEffect durante el montaje del componente. Solución: useRef pendingAutoSync + setTimeout(500ms) para diferir la llamada hasta que React termine de reconciliar.
 - [x] FIX DEFINITIVO insertBefore: Causa raíz confirmada en bundle — patrón `isPending ? <><Loader2/> texto</> : <><RefreshCw/> texto</>` causa que React intente reemplazar nodos de diferente tipo en el mismo Fragment. Solución: usar siempre el mismo icono `<RefreshCw className={animate-spin si isPending}>` + texto condicional. Bundle verificado: 0 patrones Fragment+isPending. Sincronización automática confirmada cada 15 min: 1828 refs, 216 órdenes, 190 proveedores.
@@ -70,11 +70,11 @@
 - [x] Ejecutar tests completos (13/13 pasando)
 - [x] Validar sincronización automática cada 15 min (confirmado: 1.828 refs, 171 órdenes, 190 proveedores)
 - [x] Verificar dashboard sin errores en móvil (funcionando correctamente)
-- [ ] Publicar y entregar resultado final confirmado
+- [x] Publicar y entregar resultado final confirmado
 - [x] Configurar alertas de Sentry por email para gestor.compras1@somos.co (documentado en sentry-alerts.ts)
 - [x] Ejecutar pruebas completas (13/13 tests pasando, dashboard respondiendo correctamente)
 - [x] Validar sincronización con Google Drive sin errores (4 ciclos validados, 1.828 refs, 171 órdenes, 190 proveedores)
-- [ ] Guardar checkpoint final y publicar
+- [x] Guardar checkpoint final y publicar — commit c23c3cd en main
 
 ## Dashboard de Predicción con Google Gemini
 
@@ -85,7 +85,7 @@
 - [x] Ejecutar pruebas de integración completas — Build de producción exitoso (691 KB bundle)
 - [x] Validar sincronización automática sin errores — 8 ciclos cada 15 min, 1.828 refs procesadas
 - [x] Pruebas manuales en producción — Dashboard respondiendo sin errores
-- [ ] Checkpoint final y entrega
+- [x] Checkpoint final y entrega — código en GitHub, 246 tests pasando
 
 ## Testing: Referencias Stock=0 con OC Activa
 
@@ -422,25 +422,52 @@
 - [x] PRUEBA: verificar visual + 246/246 tests pasan
 - [x] Actualizar GitHub
 
-
 ## Configuración Zapier Webhooks (Pendiente)
 
 - [ ] Crear Zap #1: Stock Cero → WhatsApp
   - Trigger: Catch Raw Hook
-  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/stock-cero
-  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+  - URL: https://usme.blog/api/webhooks/stock-cero
+  - Header: X-Internal-Token: configurado en env
 
 - [ ] Crear Zap #2: Orden Creada → WhatsApp
   - Trigger: Catch Raw Hook
-  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/orden-creada
-  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+  - URL: https://usme.blog/api/webhooks/orden-creada
+  - Header: X-Internal-Token: configurado en env
 
 - [ ] Crear Zap #3: Orden Aprobada → WhatsApp
   - Trigger: Catch Raw Hook
-  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/orden-aprobada
-  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+  - URL: https://usme.blog/api/webhooks/orden-aprobada
+  - Header: X-Internal-Token: configurado en env
 
 - [ ] Crear Zap #4: Sincronización Completada → WhatsApp
   - Trigger: Catch Raw Hook
-  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/sincronizacion
-  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+  - URL: https://usme.blog/api/webhooks/sincronizacion
+  - Header: X-Internal-Token: configurado en env
+
+## Integración Consumo Mensual + Mejoras v2.0 Profesionales
+
+### Consumo Mensual (datos históricos de abastecimiento)
+- [x] Nueva tabla `consumo_mensual` en schema.ts y migración SQL aplicada
+- [x] Parser hoja "Consumo general mensual" en gdrive-sync.ts (pivota meses a filas)
+- [x] Funciones DB: bulkUpsertConsumo, getConsumoMensual, getTopConsumers, getConsumoByMonth, getConsumoSummary
+- [x] Router consumo.ts: summary, byMonth, topConsumers, byRef, alerts (riesgo desabastecimiento, sin rotación, demanda en aumento)
+- [x] Página Consumo.tsx: KPIs, gráfico barras por mes, top 20, alertas, búsqueda por referencia
+- [x] Chatbot potencializado con tendencias de consumo por referencia (CONSUMO_REFERENCIA en system prompt)
+- [x] Fix valor inventario: ROUND(SUM, 2) para precisión decimal correcta
+- [x] Export Excel consumo mensual + top consumidores
+- [x] Manus aplicó migración en producción: 15,522 registros cargados
+- [x] Manus corrigió tests: stock-cero-oc (SU116119/128/116) y chatbot mocks — 246/246 pasando
+
+### v2.0 Mejoras Profesionales
+- [x] MarkdownRenderer.tsx — chatbot renderiza headers, tablas, código, negritas
+- [x] CommandPalette.tsx — búsqueda global Ctrl+K estilo VS Code (10 páginas indexadas)
+- [x] NotificationCenter.tsx — campanita con alertas automáticas de stock y sync
+- [x] ExportButton.tsx — descarga Excel desde Inventory, Orders, StockCeroConOC
+- [x] Analytics.tsx — gauge de salud, distribución riesgo, top retraso
+- [x] Admin.tsx — gestión usuarios + log auditoría (solo admin)
+- [x] server/routers/admin.ts — listar/activar/desactivar usuarios + auditoría
+- [x] server/routers/exports.ts — Excel inventario, órdenes, stock cero, consumo
+- [x] App.tsx lazy-loaded con páginas: Analytics, Admin, Consumo
+- [x] KPI cards clickeables con navegación a páginas relevantes
+- [x] Página Login holograma animado (dot grid, bus glow, fade-in secuencial)
+- [x] Push a GitHub: commit c23c3cd — todo funcional ✅
