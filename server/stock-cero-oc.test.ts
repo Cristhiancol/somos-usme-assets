@@ -111,36 +111,38 @@ describe("Cruce referencias stock=0 con OC activa", () => {
     expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(20);
   });
 
-  it("CASO 1: OC SU115560 debe cruzar con referencia de stock=0", async () => {
+  it("CASO 1: OC SU116119 debe cruzar con referencia de stock=0", async () => {
+    // OC SU116119 cruza con 7 referencias de stock=0 (datos actuales)
     const [rows] = await conn.execute(`
       SELECT i.referencia, i.stockActual, p.ordenCompra, p.prioridad, p.diasRetraso
       FROM inventory_items i
       INNER JOIN purchase_orders p ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
-      WHERE p.ordenCompra = 'SU115560' AND i.stockActual = 0
+      WHERE p.ordenCompra = 'SU116119' AND i.stockActual = 0
     `) as any[];
     expect(rows.length).toBeGreaterThan(0);
     expect(Number(rows[0].stockActual)).toBe(0);
-    expect(rows[0].ordenCompra).toBe("SU115560");
+    expect(rows[0].ordenCompra).toBe("SU116119");
   });
 
-  it("CASO 2: OC SU115947 debe cruzar con referencia de stock=0", async () => {
-    // SU116017 ya no cruza con stock=0 en la BD actual — reemplazada por SU115947 (6 cruces)
+  it("CASO 2: OC SU116128 debe cruzar con referencia de stock=0", async () => {
+    // OC SU116128 cruza con 5 referencias de stock=0 (datos actuales)
     const [rows] = await conn.execute(`
       SELECT i.referencia, i.stockActual, p.ordenCompra, p.prioridad
       FROM inventory_items i
       INNER JOIN purchase_orders p ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
-      WHERE p.ordenCompra = 'SU115947' AND i.stockActual = 0
+      WHERE p.ordenCompra = 'SU116128' AND i.stockActual = 0
     `) as any[];
     expect(rows.length).toBeGreaterThan(0);
     expect(Number(rows[0].stockActual)).toBe(0);
   });
 
-  it("CASO 3: OC SU115857 debe cruzar con referencia de stock=0", async () => {
+  it("CASO 3: OC SU116116 debe cruzar con referencia de stock=0", async () => {
+    // OC SU116116 cruza con 4 referencias de stock=0 (datos actuales)
     const [rows] = await conn.execute(`
       SELECT i.referencia, i.stockActual, p.ordenCompra, p.prioridad
       FROM inventory_items i
       INNER JOIN purchase_orders p ON UPPER(TRIM(i.descripcion)) = UPPER(TRIM(p.descripcion))
-      WHERE p.ordenCompra = 'SU115857' AND i.stockActual = 0
+      WHERE p.ordenCompra = 'SU116116' AND i.stockActual = 0
     `) as any[];
     expect(rows.length).toBeGreaterThan(0);
     expect(Number(rows[0].stockActual)).toBe(0);

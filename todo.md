@@ -421,3 +421,26 @@
 - [x] Integrar en DashboardLayout.tsx reemplazando login actual
 - [x] PRUEBA: verificar visual + 246/246 tests pasan
 - [x] Actualizar GitHub
+
+
+## Configuración Zapier Webhooks (Pendiente)
+
+- [ ] Crear Zap #1: Stock Cero → WhatsApp
+  - Trigger: Catch Raw Hook
+  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/stock-cero
+  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+
+- [ ] Crear Zap #2: Orden Creada → WhatsApp
+  - Trigger: Catch Raw Hook
+  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/orden-creada
+  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+
+- [ ] Crear Zap #3: Orden Aprobada → WhatsApp
+  - Trigger: Catch Raw Hook
+  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/orden-aprobada
+  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
+
+- [ ] Crear Zap #4: Sincronización Completada → WhatsApp
+  - Trigger: Catch Raw Hook
+  - URL: https://3000-iyvma9o1ak2tiafvlux3t-8c81a062.us2.manus.computer/api/webhooks/sincronizacion
+  - Header: X-Internal-Token: d5ed9e4a5772688a1d4d162e88ee200249791fb5b55a5b52e4c5b5c4f21fabc2
