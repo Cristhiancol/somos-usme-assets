@@ -1,0 +1,207 @@
+================================================================================
+  INSTRUCCIONES COMPLETAS PARA MANUS — 4 Mayo 2026
+  Somos Usme Assets — Repositorio: github.com/Cristhiancol/somos-usme-assets
+================================================================================
+
+IMPORTANTE: Ejecutar TODOS los pasos en ORDEN. No saltar ninguno.
+Commit objetivo: dc53b1f (branch main)
+
+================================================================================
+PASO 1 — ACTUALIZAR CÓDIGO DESDE GITHUB
+================================================================================
+
+cd /home/ubuntu/somos-usme-assets
+git pull origin main
+
+✅ Verificar que la salida muestre: dc53b1f (el commit más reciente)
+   Si hay conflictos, ejecutar: git reset --hard origin/main
+
+================================================================================
+PASO 2 — INSTALAR NUEVAS DEPENDENCIAS (Vega-Lite)
+================================================================================
+
+pnpm install
+
+✅ Esto instalará automáticamente:
+   - vega 6.2.0
+   - vega-lite 6.4.3
+   - vega-embed 7.1.0
+
+   Si pnpm no está disponible, usar: npm install --legacy-peer-deps
+
+================================================================================
+PASO 3 — VERIFICAR LOS DOS BUGS CORREGIDOS EN EL CÓDIGO
+================================================================================
+
+--- Bug 1: Valor inventario (formato colombiano $1.234.567,89) ---
+
+Ejecutar este comando para verificar que la corrección está en el archivo:
+
+grep -n "Colombian" /home/ubuntu/somos-usme-assets/server/gdrive-sync.ts
+
+✅ Debe mostrar una línea como:
+   117:    // Handle Colombian/European number format: 1.234.567,89 → 1234567.89
+
+Si NO muestra esa línea, el bug NO fue corregido. Aplicar manualmente:
+
+Abrir: server/gdrive-sync.ts
+Buscar el bloque (alrededor de línea 117):
+
+  function safeFloat(val: any, def = 0): number {
+    if (val === null || val === undefined || val === "") return def;
+    const n = Number(val);
+    return isNaN(n) ? def : n;
+  }
+
+Reemplazarlo COMPLETAMENTE con:
+
+  function safeFloat(val: any, def = 0): number {
+    if (val === null || val === undefined || val === "") return def;
+    // Handle Colombian/European number format: 1.234.567,89 → 1234567.89
+    if (typeof val === "string") {
+      // Remove thousand separators (dots) and replace decimal comma with dot
+      const cleaned = val.replace(/\./g, "").replace(",", ".");
+      const n = Number(cleaned);
+      return isNaN(n) ? def : n;
+    }
+    const n = Number(val);
+    return isNaN(n) ? def : n;
+  }
+
+
+--- Bug 2: Chatbot sin consumo para referencias -R ---
+
+Ejecutar este comando para verificar que la corrección está en el archivo:
+
+grep -n "baseRef" /home/ubuntu/somos-usme-assets/server/routers/chatbot.ts
+
+✅ Debe mostrar líneas como:
+   140:    const baseRef = topRef.replace(/-R$/i, "");
+   143:      if (consumoData.length === 0 && baseRef !== topRef) {
+
+Si NO muestra esas líneas, el bug NO fue corregido. Abrir:
+server/routers/chatbot.ts
+
+Buscar el bloque que dice:
+  // Buscar consumo mensual de la primera referencia encontrada
+  let consumoSection = "";
+  if (results.length > 0) {
+    const topRef = results[0].item.referencia;
+    try {
+      const consumoData = await getConsumoMensual(topRef);
+
+Reemplazarlo con:
+  // Buscar consumo mensual de la primera referencia encontrada
+  // Intentar referencia exacta y referencia base (sin sufijo -R)
+  let consumoSection = "";
+  if (results.length > 0) {
+    const topRef = results[0].item.referencia;
+    const baseRef = topRef.replace(/-R$/i, "");
+    try {
+      let consumoData = await getConsumoMensual(topRef);
+      // Si no hay datos con la referencia exacta, intentar sin el sufijo -R
+      if (consumoData.length === 0 && baseRef !== topRef) {
+        consumoData = await getConsumoMensual(baseRef);
+      }
+
+================================================================================
+PASO 4 — EJECUTAR TESTS (DEBEN PASAR 246/246)
+================================================================================
+
+pnpm vitest run
+
+✅ Resultado esperado: "246 passed"
+❌ Si algún test falla, revisar qué test y reportar.
+
+================================================================================
+PASO 5 — REINICIAR EL SERVIDOR DE PRODUCCIÓN
+================================================================================
+
+pm2 restart somos-usme-assets
+pm2 status
+
+✅ El proceso debe aparecer en estado "online"
+
+Si el nombre del proceso es diferente, listar con: pm2 list
+
+================================================================================
+PASO 6 — SINCRONIZAR DATOS (MUY IMPORTANTE)
+================================================================================
+
+Esto es necesario para que el nuevo parser de formato colombiano
+calcule correctamente el valor del inventario.
+
+Ir al dashboard en: https://usme.blog
+Navegar a: Sincronizar (/sync)
+Presionar el botón "Sincronizar ahora"
+
+O ejecutar via API:
+curl -X POST https://usme.blog/api/trpc/sync.trigger \
+  -H "Content-Type: application/json" \
+  -H "Cookie: [cookie de sesión activa]"
+
+✅ Esperar que termine y mostrar resultado
+
+================================================================================
+PASO 7 — VERIFICACIONES FINALES
+================================================================================
+
+1. VALOR INVENTARIO:
+   - Ir al Dashboard (/)
+   - El card "Valor Inventario" debe mostrar: ~$1.588.123.242 COP
+   - Antes mostraba: ~$1.586.759.860 COP (diferencia ~$1.36M)
+   - Si sigue igual → la sincronización del Paso 6 no se ejecutó
+
+2. CHATBOT CON CONSUMO:
+   - Abrir el chatbot (ícono del perrito en la esquina inferior derecha)
+   - Escribir: "consumo inyector bomba 12330007-R"
+   - El chatbot DEBE responder con datos de consumo mensual:
+     ✅ Correcto: "Esta referencia ha consumido X unidades. Historial: 2025-04: 18 | 2025-05: 66 | 2025-06: 78..."
+     ❌ Incorrecto: "No tengo el dato de consumo total acumulado..."
+
+3. GRÁFICOS VEGA-LITE:
+   - Ir a Analytics (/analytics)
+   - Deben aparecer gráficos interactivos (donut, barras, horizontales)
+   - Pasar el cursor sobre los gráficos → debe mostrar tooltip con valores
+   - Ir a Consumo (/consumo)
+   - Debe aparecer gráfico de área de tendencia mensual
+   - Gráfico horizontal top 15 referencias
+   - Input de búsqueda por referencia con gráfico interactivo
+
+================================================================================
+RESUMEN DE CAMBIOS EN ESTE DEPLOY
+================================================================================
+
+Commits incluidos (desde el último deploy de Manus):
+  0210093 — fix chatbot consumo + ROUND valor inventario
+  1bf8fb2 — fix safeFloat formato COP + chatbot busca ref base sin -R
+  dc53b1f — Vega-Lite v6: gráficos declarativos interactivos
+
+Archivos modificados clave:
+  server/gdrive-sync.ts        ← safeFloat acepta formato 1.234.567,89
+  server/routers/chatbot.ts    ← busca consumo por ref exacta Y sin -R
+  server/db.ts                 ← ROUND(SUM, 2) para valor inventario
+  client/src/components/VegaChart.tsx  ← NUEVO: wrapper Vega-Lite
+  client/src/pages/Analytics.tsx       ← gráficos Vega-Lite reales
+  client/src/pages/Consumo.tsx         ← gráficos Vega-Lite reales
+  package.json + pnpm-lock.yaml        ← vega 6.2, vega-lite 6.4, vega-embed 7.1
+
+================================================================================
+SI ALGO FALLA
+================================================================================
+
+Error "Cannot find module 'vega-embed'":
+  → Ejecutar: pnpm install  (asegura que las nuevas deps están instaladas)
+
+Error "SyntaxError" al iniciar:
+  → Ejecutar: pnpm build  y ver qué error aparece
+
+El valor del inventario sigue mal:
+  → Verificar Paso 3 (Bug 1) y repetir Paso 6 (sincronizar)
+
+El chatbot sigue sin mostrar consumo:
+  → Verificar Paso 3 (Bug 2) y reiniciar servidor (Paso 5)
+
+================================================================================
+Documento generado: 4 mayo 2026 | Commit: dc53b1f | Branch: main
+================================================================================
