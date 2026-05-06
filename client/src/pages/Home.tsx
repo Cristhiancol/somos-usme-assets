@@ -1,8 +1,58 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, Package, AlertTriangle, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Zap, Banknote, Siren } from "lucide-react";
+import { Loader2, Package, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Zap, Banknote } from "lucide-react";
 import { BusTransmilenio } from "@/components/BusTransmilenio";
 import { useLocation } from "wouter";
+
+// SVG inline para AlertTriangle — evita que Lucide renderice como cuadrado en algunos entornos
+function AlertIcon({ size = 20, color = "#dc2626", className = "" }: { size?: number; color?: string; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
+// SVG inline para Siren (sirena de alerta)
+function SirenIcon({ size = 20, color = "#dc2626", className = "" }: { size?: number; color?: string; className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M7 12a5 5 0 0 1 5-5v0a5 5 0 0 1 5 5v6H7v-6z" />
+      <path d="M5 20h14" />
+      <path d="M12 3V1" />
+      <path d="M4.22 4.22l1.42 1.42" />
+      <path d="M19.78 4.22l-1.42 1.42" />
+      <path d="M2 12H1" />
+      <path d="M23 12h-1" />
+    </svg>
+  );
+}
 
 function formatCurrency(val: number) {
   if (val >= 1e9) return `${(val / 1e9).toFixed(1)}B COP`;
@@ -110,7 +160,7 @@ export default function Home() {
           title="Stock CERO"
           value={formatNumber(Number(kpis?.zeroStock) || 0)}
           subtitle="Riesgo parada de flota"
-          icon={AlertTriangle}
+          icon="alert"
           accentColor="#dc2626"
           pulse
           href="/stock-cero"
@@ -127,7 +177,7 @@ export default function Home() {
           title="Stock 0 + OC Activa"
           value={formatNumber(Number(kpis?.stockCeroConOC) || 0)}
           subtitle="Presionar proveedor"
-          icon={Siren}
+          icon="siren"
           accentColor="#dc2626"
           pulse
           href="/stock-cero-oc"
@@ -348,26 +398,89 @@ export default function Home() {
 }
 
 function KPICard({
-  title, value, subtitle, icon: Icon, accentColor, pulse, href,
+  title, value, subtitle, icon, accentColor, pulse, href,
 }: {
-  title: string; value: string; subtitle: string; icon: any; accentColor: string; pulse?: boolean; href?: string;
+  title: string; value: string; subtitle: string;
+  icon: any; // puede ser componente Lucide o string 'alert' | 'siren'
+  accentColor: string; pulse?: boolean; href?: string;
 }) {
   const [, setLocation] = useLocation();
+  const isAlert = icon === 'alert';
+  const isSiren = icon === 'siren';
+  const isCustomSvg = isAlert || isSiren;
+
   return (
     <Card
       className={`kpi-card-corp p-4 rounded-xl transition-all hover:scale-[1.02] ${href ? "cursor-pointer" : ""}`}
-      style={{ borderLeft: `3px solid ${accentColor}` }}
+      style={{
+        borderLeft: `3px solid ${accentColor}`,
+        ...(pulse ? { boxShadow: `0 0 16px ${accentColor}35, inset 0 0 24px ${accentColor}08` } : {}),
+      }}
       onClick={() => href && setLocation(href)}
     >
       <div className="flex items-start justify-between mb-2">
-        <Icon className={`h-5 w-5 ${pulse ? 'animate-pulse-neon' : ''}`} style={{ color: accentColor }} />
-        {href && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ background: `${accentColor}15`, color: accentColor }}>→</span>}
+        {/* Icono: SVG inline si es alert/siren, Lucide en caso contrario */}
+        {isAlert ? (
+          <div
+            style={{
+              background: `${accentColor}18`,
+              borderRadius: '8px',
+              padding: '5px',
+              display: 'inline-flex',
+              boxShadow: pulse ? `0 0 10px ${accentColor}60` : 'none',
+            }}
+            className={pulse ? 'animate-pulse-neon' : ''}
+          >
+            <AlertIcon size={18} color={accentColor} />
+          </div>
+        ) : isSiren ? (
+          <div
+            style={{
+              background: `${accentColor}18`,
+              borderRadius: '8px',
+              padding: '5px',
+              display: 'inline-flex',
+              boxShadow: pulse ? `0 0 10px ${accentColor}60` : 'none',
+            }}
+            className={pulse ? 'animate-pulse-neon' : ''}
+          >
+            <SirenIcon size={18} color={accentColor} />
+          </div>
+        ) : (
+          (() => {
+            const Icon = icon;
+            return (
+              <Icon
+                className={`h-5 w-5 ${pulse ? 'animate-pulse-neon' : ''}`}
+                style={{ color: accentColor }}
+              />);
+          })()
+        )}
+        {href && (
+          <span
+            className="text-[9px] px-1.5 py-0.5 rounded font-bold"
+            style={{ background: `${accentColor}15`, color: accentColor }}
+          >
+            →
+          </span>
+        )}
       </div>
-      <div className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}>
+      <div
+        className="text-2xl md:text-3xl font-black tracking-wider"
+        style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          color: accentColor,
+          ...(pulse ? { textShadow: `0 0 12px ${accentColor}80` } : {}),
+        }}
+      >
         {value}
       </div>
-      <div className="text-xs font-semibold mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>{title}</div>
-      <div className="text-[10px] mt-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>{subtitle}</div>
+      <div className="text-xs font-semibold mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
+        {title}
+      </div>
+      <div className="text-[10px] mt-0.5" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>
+        {subtitle}
+      </div>
     </Card>
   );
 }
@@ -379,20 +492,41 @@ function SemaphoreCard({
 }) {
   return (
     <div
-      className="rounded-xl p-4 transition-all hover:scale-[1.02]"
+      className={`rounded-xl p-4 transition-all hover:scale-[1.02] ${pulse ? 'animate-pulse-neon' : ''}`}
       style={{
-        background: bgHex,
-        border: `1px solid ${accentColor}40`,
-        boxShadow: `0 0 8px ${accentColor}30`,
+        background: `linear-gradient(135deg, ${bgHex} 60%, ${accentColor}10 100%)`,
+        border: `1.5px solid ${accentColor}55`,
+        boxShadow: `0 0 18px ${accentColor}35, 0 2px 8px ${accentColor}20`,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Barra decorativa superior */}
       <div
-        className={`text-3xl md:text-4xl font-black ${pulse ? 'animate-pulse-neon' : ''}`}
-        style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '3px',
+          background: `linear-gradient(90deg, ${accentColor}, ${accentColor}40)`,
+          borderRadius: '12px 12px 0 0',
+        }}
+      />
+      <div
+        className="text-3xl md:text-4xl font-black"
+        style={{
+          fontFamily: "'Space Grotesk', sans-serif",
+          color: accentColor,
+          textShadow: pulse ? `0 0 14px ${accentColor}90` : `0 0 6px ${accentColor}30`,
+        }}
       >
         {formatNumber(count)}
       </div>
-      <div className="text-xs font-bold mt-2 tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}>
+      <div
+        className="text-xs font-bold mt-2 tracking-widest uppercase"
+        style={{ fontFamily: "'Space Grotesk', sans-serif", color: accentColor }}
+      >
         {label}
       </div>
       <div className="text-[10px] mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#6b7280' }}>
