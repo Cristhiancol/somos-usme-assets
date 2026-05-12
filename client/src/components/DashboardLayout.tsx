@@ -4,7 +4,7 @@ import { StockChatbot } from "./StockChatbot";
 import { CommandPalette, CommandPaletteTrigger } from "./CommandPalette";
 import { NotificationCenter } from "./NotificationCenter";
 import LoginScreen from "./LoginScreen";
-import { LogOut, Bus, Zap, Menu, X, ShieldAlert, type LucideIcon } from "lucide-react";
+import { LogOut, Bus, Menu, X, ShieldAlert, type LucideIcon } from "lucide-react";
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation } from "wouter";
 

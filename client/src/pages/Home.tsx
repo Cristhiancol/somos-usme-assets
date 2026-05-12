@@ -1,6 +1,6 @@
 import { trpc } from "@/lib/trpc";
 import { Card } from "@/components/ui/card";
-import { Loader2, Package, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Zap, Banknote } from "lucide-react";
+import { Loader2, Package, ShoppingCart, TrendingUp, TrendingDown, Shield, Clock, Banknote } from "lucide-react";
 import { BusTransmilenio } from "@/components/BusTransmilenio";
 import { useLocation } from "wouter";
 
@@ -124,7 +124,27 @@ export default function Home() {
             <h1 className="text-2xl md:text-3xl font-black tracking-wider" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}>
               SISTEMA JIT
             </h1>
-            <Zap className="h-5 w-5 animate-pulse-neon" style={{ color: '#009890' }} />
+            {/* Icono de cadena de suministro — reemplaza el Zap que se distorsionaba */}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#009890"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="shrink-0"
+              style={{ filter: 'drop-shadow(0 0 4px rgba(0,152,144,0.4))' }}
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="4.5" r="2.5" />
+              <path d="M12 7v3" />
+              <circle cx="5" cy="19.5" r="2.5" />
+              <path d="M5 17v-3.5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2V17" />
+              <circle cx="19" cy="19.5" r="2.5" />
+            </svg>
           </div>
           <p className="text-muted-foreground text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             Control de Inventario y Abastecimiento — Gestión de Flota 260 Buses — Somos Bogotá Usme

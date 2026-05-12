@@ -18,6 +18,7 @@ import {
   Activity,
   Shield,
   BarChart3,
+  QrCode,
 } from "lucide-react";
 
 // Lazy-loaded pages for better performance
@@ -31,6 +32,7 @@ const StockCeroConOCPage = lazy(() => import("./pages/StockCeroConOC"));
 const AnalyticsPage = lazy(() => import("./pages/Analytics"));
 const AdminPage = lazy(() => import("./pages/Admin"));
 const ConsumoPage = lazy(() => import("./pages/Consumo"));
+const QRAccessPage = lazy(() => import("./pages/QRAccess"));
 
 const navItems = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
@@ -41,6 +43,7 @@ const navItems = [
   { label: "Órdenes", href: "/ordenes", icon: ShoppingCart },
   { label: "Stock 0 + OC", href: "/stock-cero-oc", icon: Siren },
   { label: "Consumo", href: "/consumo", icon: BarChart3 },
+  { label: "QR Acceso", href: "/qr-acceso", icon: QrCode },
   { label: "Proveedores", href: "/proveedores", icon: Users },
   { label: "Sincronizar", href: "/sync", icon: RefreshCw },
   { label: "Admin", href: "/admin", icon: Shield },
@@ -76,6 +79,7 @@ function Router() {
           <Route path="/sync" component={SyncPage} />
           <Route path="/admin" component={AdminPage} />
           <Route path="/consumo" component={ConsumoPage} />
+          <Route path="/qr-acceso" component={QRAccessPage} />
           <Route path="/404" component={NotFound} />
           <Route component={NotFound} />
         </Switch>

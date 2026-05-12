@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, ShoppingCart, Bell, Wrench, Package, Settings } from "lucide-react";
+import { Loader2, Search, ShoppingCart, Bell, Wrench, Package, Settings, CalendarDays, TrendingUp, AlertTriangle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { ExportButton } from "@/components/ExportButton";
 
@@ -150,6 +150,15 @@ export default function OrdersPage() {
 
   const totalPendingValue = (data || []).reduce((s, o) => s + (o.valorPendiente || 0), 0);
 
+  // KPIs de órdenes
+  const totalOrders = data?.length ?? 0;
+  const ordersConRetraso = useMemo(() => (data || []).filter(o => (o.diasRetraso || 0) > 0).length, [data]);
+  const promedioRetraso = useMemo(() => {
+    const retrasadas = (data || []).filter(o => (o.diasRetraso || 0) > 0);
+    return retrasadas.length > 0 ? Math.round(retrasadas.reduce((s, o) => s + (o.diasRetraso || 0), 0) / retrasadas.length) : 0;
+  }, [data]);
+  const ordenesVencidas = useMemo(() => (data || []).filter(o => o.estado === 'VENCIDO').length, [data]);
+
   // Conteos por tipo para los botones de filtro
   const conteoNuevos = useMemo(() =>
     (data || []).filter(o => (o as any).tipoReferencia === 'NUEVO').length, [data]);
@@ -191,6 +200,41 @@ export default function OrdersPage() {
           {notifyDelayed.isPending ? "Enviando..." : "ALERTAR RETRASOS"}
         </Button>
       </div>
+
+      {/* KPI Summary Cards */}
+      {data && data.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 rounded-xl" style={{ background: 'rgba(0,152,144,0.06)', border: '1px solid rgba(0,152,144,0.15)' }}>
+            <div className="flex items-center gap-2 mb-1">
+              <ShoppingCart className="h-3.5 w-3.5" style={{ color: '#009890' }} />
+              <span className="text-[10px] font-bold tracking-wider" style={{ color: '#009890', fontFamily: "'Space Grotesk', sans-serif" }}>TOTAL ÓRDENES</span>
+            </div>
+            <span className="text-xl font-black" style={{ color: '#281C19', fontFamily: "'Space Grotesk', sans-serif" }}>{totalOrders}</span>
+          </div>
+          <div className="p-3 rounded-xl" style={{ background: 'rgba(140,179,42,0.06)', border: '1px solid rgba(140,179,42,0.15)' }}>
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-3.5 w-3.5" style={{ color: '#8CB32A' }} />
+              <span className="text-[10px] font-bold tracking-wider" style={{ color: '#8CB32A', fontFamily: "'Space Grotesk', sans-serif" }}>VALOR PENDIENTE</span>
+            </div>
+            <span className="text-xl font-black" style={{ color: '#281C19', fontFamily: "'Space Grotesk', sans-serif" }}>{formatCurrency(totalPendingValue)}</span>
+          </div>
+          <div className="p-3 rounded-xl" style={{ background: ordersConRetraso > 0 ? 'rgba(220,38,38,0.06)' : 'rgba(140,179,42,0.06)', border: `1px solid ${ordersConRetraso > 0 ? 'rgba(220,38,38,0.15)' : 'rgba(140,179,42,0.15)'}` }}>
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-3.5 w-3.5" style={{ color: ordersConRetraso > 0 ? '#dc2626' : '#8CB32A' }} />
+              <span className="text-[10px] font-bold tracking-wider" style={{ color: ordersConRetraso > 0 ? '#dc2626' : '#8CB32A', fontFamily: "'Space Grotesk', sans-serif" }}>CON RETRASO</span>
+            </div>
+            <span className="text-xl font-black" style={{ color: '#281C19', fontFamily: "'Space Grotesk', sans-serif" }}>{ordersConRetraso}</span>
+            <span className="text-[10px] text-muted-foreground ml-1">({promedioRetraso}d promedio)</span>
+          </div>
+          <div className="p-3 rounded-xl" style={{ background: ordenesVencidas > 0 ? 'rgba(234,88,12,0.06)' : 'rgba(0,152,144,0.06)', border: `1px solid ${ordenesVencidas > 0 ? 'rgba(234,88,12,0.15)' : 'rgba(0,152,144,0.15)'}` }}>
+            <div className="flex items-center gap-2 mb-1">
+              <CalendarDays className="h-3.5 w-3.5" style={{ color: ordenesVencidas > 0 ? '#ea580c' : '#009890' }} />
+              <span className="text-[10px] font-bold tracking-wider" style={{ color: ordenesVencidas > 0 ? '#ea580c' : '#009890', fontFamily: "'Space Grotesk', sans-serif" }}>VENCIDAS</span>
+            </div>
+            <span className="text-xl font-black" style={{ color: '#281C19', fontFamily: "'Space Grotesk', sans-serif" }}>{ordenesVencidas}</span>
+          </div>
+        </div>
+      )}
 
       {alertMsg && (
         <div className="p-3 rounded-lg border border-neon-cyan/30 bg-neon-cyan/10 text-neon-cyan text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
@@ -291,6 +335,7 @@ export default function OrdersPage() {
                   <th className="text-center py-3 px-2 font-semibold text-xs">RETRASO</th>
                   <th className="text-center py-3 px-2 font-semibold text-xs">ESTADO</th>
                   <th className="text-center py-3 px-2 font-semibold text-xs">PRIORIDAD</th>
+                  <th className="text-center py-3 px-2 font-semibold text-xs">F. PROMESA</th>
                 </tr>
               </thead>
               <tbody>
@@ -337,6 +382,11 @@ export default function OrdersPage() {
                       </td>
                       <td className="py-2 px-2 text-center">{getEstadoBadge(o.estado)}</td>
                       <td className="py-2 px-2 text-center">{getPrioridadBadge(o.prioridad)}</td>
+                      <td className="py-2 px-2 text-center text-xs font-mono" style={{ color: '#6b7280' }}>
+                        {o.fechaPromesa
+                          ? new Date(o.fechaPromesa).toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" })
+                          : "—"}
+                      </td>
                     </tr>
                   );
                 })}

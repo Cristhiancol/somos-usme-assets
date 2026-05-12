@@ -1,8 +1,8 @@
 /**
- * StockChatbot v2.0 — Asistente Virtual JIT de Somos Bogotá Usme
+ * StockChatbot v3.0 — Asistente Virtual JIT de Somos Bogotá Usme
  * React Portal → document.body (fuera de cualquier overflow/transform)
  * position: fixed + z-index: 9999 + isolation: isolate
- * Fuzzy search, datos completos, drawer móvil, sessionStorage persistente.
+ * Fuzzy search, datos completos, drawer móvil, localStorage persistente.
  */
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
@@ -32,12 +32,12 @@ interface ChatMessage {
   timestamp: number;
 }
 
-// ── SessionStorage helpers ───────────────────────────────────────────────────
-const STORAGE_KEY = "stock-chatbot-messages";
+// ── SessionStorage → localStorage helpers (persistencia entre sesiones) ───
+const STORAGE_KEY = "stock-chatbot-messages-v3";
 
 function loadMessages(): ChatMessage[] {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -46,7 +46,7 @@ function loadMessages(): ChatMessage[] {
 
 function saveMessages(msgs: ChatMessage[]) {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-50)));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(msgs.slice(-80)));
   } catch { /* quota exceeded — ignore */ }
 }
 
@@ -232,7 +232,7 @@ function ChatbotUI() {
   const handleClearChat = () => {
     setMessages([]);
     setWelcomeLoaded(false);
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const handleQuickReply = (text: string) => {
@@ -343,7 +343,10 @@ function ChatbotUI() {
             {/* ── Header ── */}
             <div
               className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
-              style={{ background: COLORS.headerBg }}
+              style={{
+                background: 'linear-gradient(135deg, #1C1C1E 0%, #281C19 100%)',
+                borderBottom: '2px solid rgba(34,197,94,0.3)',
+              }}
             >
               <div className="relative flex-shrink-0">
                 <img
@@ -442,6 +445,8 @@ function ChatbotUI() {
                   "📈 Tendencias de consumo",
                   "🔧 Servicios pendientes",
                   "📊 Valor total inventario",
+                  "📅 Órdenes con más retraso",
+                  "🏭 Proveedores principales",
                 ].map((suggestion) => (
                   <button
                     key={suggestion}
