@@ -1,5 +1,5 @@
 import { getLoginUrl } from "@/const";
-import { Bus, Zap, ShieldAlert, ArrowRight } from "lucide-react";
+import { Bus, ShieldAlert, ArrowRight } from "lucide-react";
 import { useEffect, useRef, useMemo } from "react";
 
 // ── Mensajes de error OAuth ──────────────────────────────────────────
@@ -178,19 +178,32 @@ export default function LoginScreen() {
               }}
             />
           </div>
-          {/* Zap accent */}
-          <Zap
+          {/* Supply chain icon accent — reemplaza Zap que se distorsionaba */}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#009890"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             style={{
               position: "absolute",
               top: -4,
               right: -8,
-              width: 20,
-              height: 20,
-              color: "#009890",
               filter: "drop-shadow(0 0 8px rgba(0,152,144,0.6))",
               animation: "loginZapBlink 2s ease-in-out infinite",
             }}
-          />
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="4.5" r="2.5" />
+            <path d="M12 7v3" />
+            <circle cx="5" cy="19.5" r="2.5" />
+            <path d="M5 17v-3.5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2V17" />
+            <circle cx="19" cy="19.5" r="2.5" />
+          </svg>
         </div>
 
         {/* Título */}

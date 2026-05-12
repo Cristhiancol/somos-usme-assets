@@ -175,14 +175,17 @@ export async function getPurchaseOrders(filters?: { estado?: string; prioridad?:
   const conditions = [];
   if (filters?.estado) conditions.push(eq(purchaseOrders.estado, filters.estado));
   if (filters?.prioridad) conditions.push(eq(purchaseOrders.prioridad, filters.prioridad));
-  if (filters?.search) conditions.push(
-    or(
-      like(purchaseOrders.descripcion, `%${filters.search}%`),
-      like(purchaseOrders.ordenCompra, `%${filters.search}%`),
-      like(purchaseOrders.proveedor, `%${filters.search}%`),
-      like(purchaseOrders.mainsaver, `%${filters.search}%`)
-    )
-  );
+  if (filters?.search) {
+    const searchLower = filters.search.toLowerCase();
+    conditions.push(
+      or(
+        sql`LOWER(${purchaseOrders.descripcion}) LIKE ${`%${searchLower}%`}`,
+        sql`LOWER(${purchaseOrders.ordenCompra}) LIKE ${`%${searchLower}%`}`,
+        sql`LOWER(${purchaseOrders.proveedor}) LIKE ${`%${searchLower}%`}`,
+        sql`LOWER(${purchaseOrders.mainsaver}) LIKE ${`%${searchLower}%`}`
+      )
+    );
+  }
   // Filtro por tipo: NUEVO (sin -R, sin SRV), REPARADO (-R), SERVICIO (SRV)
   // NOTA: El valor real en la BD es 'SRV' (no 'SVR') — verificado en purchase_orders
   if (filters?.tipoReferencia === 'SERVICIO') {
@@ -221,13 +224,17 @@ export async function getInventory(filters?: { cuenta?: string; claseAbc?: strin
   if (filters?.cuenta) conditions.push(eq(inventoryItems.cuenta, filters.cuenta));
   if (filters?.claseAbc) conditions.push(eq(inventoryItems.claseAbc, filters.claseAbc));
   if (filters?.estado) conditions.push(eq(inventoryItems.estado, filters.estado));
-  if (filters?.search) conditions.push(
-    or(
-      like(inventoryItems.referencia, `%${filters.search}%`),
-      like(inventoryItems.descripcion, `%${filters.search}%`),
-      like(inventoryItems.proveedor, `%${filters.search}%`)
-    )
-  );
+  if (filters?.search) {
+    const searchLower = filters.search.toLowerCase();
+    conditions.push(
+      or(
+        sql`LOWER(${inventoryItems.referencia}) LIKE ${`%${searchLower}%`}`,
+        sql`LOWER(${inventoryItems.descripcion}) LIKE ${`%${searchLower}%`}`,
+        sql`LOWER(${inventoryItems.proveedor}) LIKE ${`%${searchLower}%`}`,
+        sql`LOWER(${inventoryItems.parteFabricante}) LIKE ${`%${searchLower}%`}`
+      )
+    );
+  }
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
