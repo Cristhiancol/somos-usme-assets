@@ -150,26 +150,45 @@ export default function OrdersPage() {
 
   const totalPendingValue = (data || []).reduce((s, o) => s + (o.valorPendiente || 0), 0);
 
-  // KPIs de órdenes
-  const totalOrders = data?.length ?? 0;
-  const ordersConRetraso = useMemo(() => (data || []).filter(o => (o.diasRetraso || 0) > 0).length, [data]);
-  const promedioRetraso = useMemo(() => {
-    const retrasadas = (data || []).filter(o => (o.diasRetraso || 0) > 0);
-    return retrasadas.length > 0 ? Math.round(retrasadas.reduce((s, o) => s + (o.diasRetraso || 0), 0) / retrasadas.length) : 0;
-  }, [data]);
-  const ordenesVencidas = useMemo(() => (data || []).filter(o => o.estado === 'VENCIDO').length, [data]);
+  // Conteo de OC únicas (una OC puede tener múltiples líneas/referencias)
+  const uniqueOCSet = useMemo(() => new Set((data || []).map(o => o.ordenCompra)), [data]);
+  const totalOrders = uniqueOCSet.size;
 
-  // Conteos por tipo para los botones de filtro
+  // KPIs de órdenes — conteo por OC únicas
+  const ordersConRetraso = useMemo(() => {
+    const ocsRetraso = new Set((data || []).filter(o => (o.diasRetraso || 0) > 0).map(o => o.ordenCompra));
+    return ocsRetraso.size;
+  }, [data]);
+  const promedioRetraso = useMemo(() => {
+    // Promedio de retraso por OC única (tomar el máximo retraso de cada OC)
+    const retrasoByOC: Record<string, number> = {};
+    (data || []).forEach(o => {
+      if ((o.diasRetraso || 0) > 0 && o.ordenCompra) {
+        retrasoByOC[o.ordenCompra] = Math.max(retrasoByOC[o.ordenCompra] || 0, o.diasRetraso || 0);
+      }
+    });
+    const vals = Object.values(retrasoByOC);
+    return vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
+  }, [data]);
+  const ordenesVencidas = useMemo(() => {
+    const ocsVencidas = new Set((data || []).filter(o => o.estado === 'VENCIDO').map(o => o.ordenCompra));
+    return ocsVencidas.size;
+  }, [data]);
+
+  // Conteos por tipo para los botones de filtro — OC únicas
   const conteoNuevos = useMemo(() =>
-    (data || []).filter(o => (o as any).tipoReferencia === 'NUEVO').length, [data]);
+    new Set((data || []).filter(o => (o as any).tipoReferencia === 'NUEVO').map(o => o.ordenCompra)).size, [data]);
   const conteoReparados = useMemo(() =>
-    (data || []).filter(o => (o as any).tipoReferencia === 'REPARADO').length, [data]);
+    new Set((data || []).filter(o => (o as any).tipoReferencia === 'REPARADO').map(o => o.ordenCompra)).size, [data]);
   const conteoServicios = useMemo(() =>
-    (data || []).filter(o => (o as any).tipoReferencia === 'SERVICIO').length, [data]);
+    new Set((data || []).filter(o => (o as any).tipoReferencia === 'SERVICIO').map(o => o.ordenCompra)).size, [data]);
+
+  // Líneas totales (referencias individuales dentro de las OC)
+  const totalLineas = data?.length ?? 0;
 
   // Clases activas con paleta corporativa
   const tipoButtons: { key: TipoFiltro; label: string; count?: number; activeClass: string }[] = [
-    { key: "TODOS",    label: "Todos",     count: data?.length,   activeClass: "active-lime" },
+    { key: "TODOS",    label: "Todos",     count: totalOrders,    activeClass: "active-lime" },
     { key: "NUEVO",    label: "Nuevos",    count: conteoNuevos,   activeClass: "active-lime" },
     { key: "REPARADO", label: "Reparados", count: conteoReparados, activeClass: "active-dark" },
     { key: "SERVICIO", label: "Servicios", count: conteoServicios, activeClass: "active-teal" },
@@ -185,7 +204,7 @@ export default function OrdersPage() {
             ÓRDENES PENDIENTES
           </h1>
           <span className="text-xs text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            {data?.length ?? "..."} órdenes — {formatCurrency(totalPendingValue)}
+            {totalOrders} órdenes ({totalLineas} líneas) — {formatCurrency(totalPendingValue)}
           </span>
         </div>
         <ExportButton type="orders" label="Excel" />

@@ -38,6 +38,8 @@ export default function Analytics() {
   const healthColor = healthScore >= 70 ? CORP_COLORS.green : healthScore >= 50 ? CORP_COLORS.amber : CORP_COLORS.red;
 
   const ordersArray = Array.isArray(orders) ? orders : [];
+  // Contar OC únicas (una OC puede tener múltiples líneas/referencias)
+  const uniqueOCCount = useMemo(() => new Set(ordersArray.map((o: any) => o.ordenCompra)).size, [ordersArray]);
   const topRetraso = ordersArray
     .filter((o: any) => (o.diasRetraso || 0) > 0)
     .sort((a: any, b: any) => (b.diasRetraso || 0) - (a.diasRetraso || 0))
@@ -88,13 +90,14 @@ export default function Analytics() {
 
   // Barras — estado de órdenes
   const orderStatusSpec = useMemo(() => {
-    const ordersByStatus: Record<string, number> = {};
+    const ordersByStatus: Record<string, Set<string>> = {};
     ordersArray.forEach((o: any) => {
       const status = o.estado || "OTRO";
-      ordersByStatus[status] = (ordersByStatus[status] || 0) + 1;
+      if (!ordersByStatus[status]) ordersByStatus[status] = new Set();
+      ordersByStatus[status].add(o.ordenCompra || `unknown-${Math.random()}`);
     });
     const data = Object.entries(ordersByStatus)
-      .map(([label, value]) => ({ label, value }))
+      .map(([label, ocSet]) => ({ label, value: ocSet.size }))
       .sort((a, b) => b.value - a.value)
       .slice(0, 8);
     return barSpec(data, {
@@ -227,7 +230,7 @@ export default function Analytics() {
           <h3 className="text-xs font-bold tracking-wider mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif", color: "#281C19" }}>
             ÓRDENES POR ESTADO
           </h3>
-          <p className="text-[10px] text-muted-foreground mb-2">Total: {formatNumber(ordersArray.length)} órdenes</p>
+          <p className="text-[10px] text-muted-foreground mb-2">Total: {formatNumber(uniqueOCCount)} órdenes</p>
           <VegaChart spec={orderStatusSpec} style={{ width: "100%" }} />
         </Card>
       </div>

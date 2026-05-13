@@ -74,10 +74,11 @@ export async function getDashboardKPIs() {
   }).from(inventoryItems);
 
   const [ordersResult] = await db.select({
-    totalPending: sql<number>`COUNT(*)`,
+    // Contar OC unicas (una OC puede tener multiples lineas/referencias)
+    totalPending: sql<number>`COUNT(DISTINCT ${purchaseOrders.ordenCompra})`,
     totalPendingValue: sql<number>`COALESCE(SUM(${purchaseOrders.valorPendiente}), 0)`,
-    // Urgentes: CRITICO o REORDEN INMEDIATO (valores reales del Drive)
-    urgentOrders: sql<number>`SUM(CASE WHEN ${purchaseOrders.prioridad} IN ('CRITICO','REORDEN INMEDIATO') THEN 1 ELSE 0 END)`,
+    // Urgentes: contar OC unicas con prioridad CRITICO o REORDEN INMEDIATO
+    urgentOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${purchaseOrders.prioridad} IN ('CRITICO','REORDEN INMEDIATO') THEN ${purchaseOrders.ordenCompra} END)`,
   }).from(purchaseOrders).where(
     or(eq(purchaseOrders.estado, 'PENDIENTE'), eq(purchaseOrders.estado, 'RECIBIDO PARCIAL'), eq(purchaseOrders.estado, 'VENCIDO'), eq(purchaseOrders.estado, 'CASI COMPLETO'))
   );
