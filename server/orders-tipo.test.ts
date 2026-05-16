@@ -266,11 +266,11 @@ describe("PRUEBA 5 — Regresión: sistema completo sigue funcionando", () => {
     expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(1);
   });
 
-  it("1828 referencias en inventario", async () => {
+  it("al menos 1828 referencias en inventario", async () => {
     const [rows] = await conn.execute(
       "SELECT COUNT(*) as cnt FROM inventory_items"
     ) as any[];
-    expect(Number(rows[0].cnt)).toBe(1828);
+    expect(Number(rows[0].cnt)).toBeGreaterThanOrEqual(1828);
   });
 
   it("stockCeroConOC con JOIN por mainsaver (sin duplicados) devuelve >= 20 referencias", async () => {

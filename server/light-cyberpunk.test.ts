@@ -183,8 +183,9 @@ describe("PRUEBA 4 — Regresión: archivos clave son TypeScript válido", () =>
   it("Home.tsx no tiene errores de sintaxis obvios", () => {
     const home = readFileSync(join(__dirname, "../client/src/pages/Home.tsx"), "utf-8");
     expect(home).toContain("export default function Home");
-    expect(home).toContain("function KPICard");
-    expect(home).toContain("function SemaphoreCard");
+    // Asset Tracker v2.0: KPICard renombrado a ATKpiCard, SemaphoreCard a JITCard
+    expect(home).toContain("function ATKpiCard");
+    expect(home).toContain("function JITCard");
   });
 
   it("StockCeroConOC.tsx no tiene errores de sintaxis obvios", () => {
