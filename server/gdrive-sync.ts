@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, logSync } from "./db";
+import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, logSync, updateSyncLog } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
 import { serverLogger } from "./logger";
 import { notificarSincronizacion, notificarStockCero, isZapierConfigured } from "./zapier";
@@ -46,8 +46,17 @@ async function getFileData(): Promise<Buffer> {
       serverLogger.warn(`[Sync] Google Drive returned ${exportRes.status}, trying local file...`);
     } else {
       serverLogger.warn("[Sync] No Google Drive OAuth token available, trying local file...");
+      // Si no hay token, lanzar error claro para que el usuario re-autorice
+      // (solo si no hay fallback local disponible)
+      if (!existsSync(DATA_FILE)) {
+        throw new Error("TOKEN_REVOKED: El token de Google Drive ha expirado o fue revocado. Por favor, haz clic en 'Re-autorizar' en la p\u00e1gina de Sincronizaci\u00f3n para reconectar tu cuenta de Google.");
+      }
     }
-  } catch (e) {
+  } catch (e: any) {
+    // Si es un error de token revocado, propagarlo directamente
+    if (e?.message?.startsWith("TOKEN_REVOKED")) {
+      throw e;
+    }
     serverLogger.warn("[Sync] Google Drive fetch failed, trying local file...", e);
   }
 
@@ -368,6 +377,8 @@ async function parseConsumoSheet(filePath: string) {
 }
 
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
+  // Insert 'running' record immediately so polling can detect it
+  const syncId = await logSync({ syncType: "gdrive_import", status: "running" });
   try {
     // Ensure temp dir exists
     if (!existsSync(LOCAL_DIR)) mkdirSync(LOCAL_DIR, { recursive: true });
@@ -400,13 +411,24 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
       serverLogger.warn("[Sync] Error parsing consumption data (non-fatal):", e);
     }
 
-    await logSync({
-      syncType: "gdrive_import",
-      status: "success",
-      itemsProcessed: itemsCount,
-      ordersProcessed: ordersCount,
-      suppliersProcessed: suppliersCount,
-    });
+    // Update sync log to 'success'
+    if (syncId) {
+      await updateSyncLog(syncId, {
+        status: "success",
+        itemsProcessed: itemsCount,
+        ordersProcessed: ordersCount,
+        suppliersProcessed: suppliersCount,
+        completedAt: new Date(),
+      });
+    } else {
+      await logSync({
+        syncType: "gdrive_import",
+        status: "success",
+        itemsProcessed: itemsCount,
+        ordersProcessed: ordersCount,
+        suppliersProcessed: suppliersCount,
+      });
+    }
 
     // ── Zapier: Detectar stock cero y notificar sincronización ──
     if (isZapierConfigured()) {
@@ -452,11 +474,11 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     };
   } catch (error: any) {
     serverLogger.error("[Sync] Error:", error);
-    await logSync({
-      syncType: "gdrive_import",
-      status: "error",
-      errorMessage: error.message,
-    });
+    if (syncId) {
+      await updateSyncLog(syncId, { status: "error", errorMessage: error.message, completedAt: new Date() });
+    } else {
+      await logSync({ syncType: "gdrive_import", status: "error", errorMessage: error.message });
+    }
     return { success: false, message: error.message };
   }
 }

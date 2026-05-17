@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { syncFromGoogleDrive } from "../gdrive-sync";
+import { getLastSync, getRunningSync } from "../db";
 import { getGDriveAuthUrl, exchangeCodeForTokens, isGDriveAuthorized, parseGDriveState } from "../gdrive-oauth";
 import { initSentryServer, captureException } from "./sentry";
 import { registerStorageProxy } from "./storageProxy";
@@ -99,13 +100,44 @@ async function startServer() {
     res.json({ authorized });
   });
 
-  // Google Drive sync endpoint
+  // Google Drive sync endpoint — síncrono directo
+  // La sync tarda ~10s, bien dentro del timeout de 180s de Cloud Run
+  // No fire-and-forget: responde con el resultado completo
   app.post('/api/sync-drive', async (_req, res) => {
     try {
       const result = await syncFromGoogleDrive();
-      res.json(result);
+      serverLogger.log('[Sync] Sync completed:', result.message);
+      return res.json({
+        success: result.success,
+        message: result.message,
+        stats: result.stats,
+      });
     } catch (error: any) {
-      res.status(500).json({ success: false, message: error.message });
+      serverLogger.error('[Sync] Sync failed:', error.message);
+      captureException(error, { context: 'SyncDrive' });
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  });
+
+  // Sync status endpoint — devuelve la última sync completada
+  app.get('/api/sync-status', async (_req, res) => {
+    try {
+      const last = await getLastSync();
+      if (!last) {
+        return res.json({ inProgress: false, lastResult: null });
+      }
+      const lastResult = {
+        success: last.status === 'success',
+        message: last.status === 'success'
+          ? `Sincronización exitosa: ${last.itemsProcessed || 0} referencias, ${last.ordersProcessed || 0} órdenes, ${last.suppliersProcessed || 0} proveedores`
+          : (last.errorMessage || 'Error en sincronización'),
+        completedAt: last.completedAt?.toISOString() ?? last.startedAt.toISOString(),
+        startedAt: last.startedAt?.toISOString(),
+      };
+      return res.json({ inProgress: false, lastResult });
+    } catch (err: any) {
+      serverLogger.error('[SyncStatus] Error:', err.message);
+      return res.status(500).json({ inProgress: false, lastResult: null, error: err.message });
     }
   });
 

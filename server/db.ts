@@ -270,10 +270,11 @@ export async function bulkUpsertInventory(items: any[]) {
   if (!db) return 0;
   
   // Clear and re-insert (simpler for full sync)
+  // Batch size 500 to minimize round-trips to TiDB (was 100 = ~19 inserts, now ~4 inserts)
   await db.delete(inventoryItems);
   let count = 0;
-  for (let i = 0; i < items.length; i += 100) {
-    const batch = items.slice(i, i + 100);
+  for (let i = 0; i < items.length; i += 500) {
+    const batch = items.slice(i, i + 500);
     await db.insert(inventoryItems).values(batch);
     count += batch.length;
   }
@@ -286,8 +287,8 @@ export async function bulkUpsertOrders(orders: any[]) {
   
   await db.delete(purchaseOrders);
   let count = 0;
-  for (let i = 0; i < orders.length; i += 100) {
-    const batch = orders.slice(i, i + 100).map((o: any) => ({
+  for (let i = 0; i < orders.length; i += 500) {
+    const batch = orders.slice(i, i + 500).map((o: any) => ({
       ...o,
       fechaPromesa: o.fechaPromesa ? new Date(o.fechaPromesa) : null,
       fechaRequerida: o.fechaRequerida ? new Date(o.fechaRequerida) : null,
@@ -304,18 +305,69 @@ export async function bulkUpsertSuppliers(suppliersList: any[]) {
   
   await db.delete(suppliers);
   let count = 0;
-  for (let i = 0; i < suppliersList.length; i += 100) {
-    const batch = suppliersList.slice(i, i + 100);
+  for (let i = 0; i < suppliersList.length; i += 500) {
+    const batch = suppliersList.slice(i, i + 500);
     await db.insert(suppliers).values(batch);
     count += batch.length;
   }
   return count;
 }
 
-export async function logSync(data: { syncType: string; status: string; itemsProcessed?: number; ordersProcessed?: number; suppliersProcessed?: number; errorMessage?: string }) {
+export async function logSync(data: { syncType: string; status: string; itemsProcessed?: number; ordersProcessed?: number; suppliersProcessed?: number; errorMessage?: string }): Promise<number | null> {
+  const db = await getDb();
+  if (!db) return null;
+  try {
+    // Insert and then SELECT the most recent record to get the real ID
+    // This avoids relying on Drizzle's insertId which is inconsistent with TiDB
+    await db.insert(syncLogs).values({
+      syncType: data.syncType,
+      status: data.status,
+      itemsProcessed: data.itemsProcessed ?? 0,
+      ordersProcessed: data.ordersProcessed ?? 0,
+      suppliersProcessed: data.suppliersProcessed ?? 0,
+      errorMessage: data.errorMessage ?? null,
+    });
+    // SELECT the most recent record of this type and status
+    const rows = await db.select({ id: syncLogs.id })
+      .from(syncLogs)
+      .where(and(eq(syncLogs.syncType, data.syncType), eq(syncLogs.status, data.status)))
+      .orderBy(desc(syncLogs.id))
+      .limit(1);
+    const insertId = rows.length > 0 ? rows[0].id : null;
+    serverLogger.log(`[DB] logSync insertId: ${insertId}, status: ${data.status}`);
+    return insertId;
+  } catch (err: any) {
+    serverLogger.error('[DB] logSync error:', err.message);
+    return null;
+  }
+}
+
+export async function updateSyncLog(id: number, data: { status: string; itemsProcessed?: number; ordersProcessed?: number; suppliersProcessed?: number; errorMessage?: string; completedAt?: Date }) {
   const db = await getDb();
   if (!db) return;
-  await db.insert(syncLogs).values(data);
+  await db.update(syncLogs).set({ ...data, completedAt: data.completedAt ?? new Date() }).where(eq(syncLogs.id, id));
+}
+
+export async function getRunningSync() {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Auto-cleanup: mark as error any 'running' record older than 3 minutes (zombie from Cloud Run restart)
+  try {
+    const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000);
+    await db.update(syncLogs)
+      .set({ status: 'error', errorMessage: 'Timeout - proceso interrumpido (Cloud Run)', completedAt: new Date() })
+      .where(and(
+        eq(syncLogs.status, 'running'),
+        sql`${syncLogs.startedAt} < ${threeMinutesAgo}`
+      ));
+  } catch { /* ignore cleanup errors */ }
+
+  const result = await db.select().from(syncLogs)
+    .where(eq(syncLogs.status, 'running'))
+    .orderBy(desc(syncLogs.startedAt))
+    .limit(1);
+  return result.length > 0 ? result[0] : null;
 }
 
 // ── Orders Summary for notifications ──
@@ -416,13 +468,13 @@ export async function bulkUpsertConsumo(items: { referencia: string; fabricante:
   if (!db) return 0;
 
   await db.delete(consumoMensual);
-  let count = 0;
-  for (let i = 0; i < items.length; i += 100) {
-    const batch = items.slice(i, i + 100);
-    await db.insert(consumoMensual).values(batch);
-    count += batch.length;
+  const BATCH = 500;
+  const batches: typeof items[] = [];
+  for (let i = 0; i < items.length; i += BATCH) {
+    batches.push(items.slice(i, i + BATCH));
   }
-  return count;
+  if (batches.length > 0) await Promise.all(batches.map(batch => db.insert(consumoMensual).values(batch)));
+  return items.length;
 }
 
 export async function getConsumoMensual(referencia?: string) {

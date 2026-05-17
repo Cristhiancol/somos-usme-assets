@@ -1,335 +1,353 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
+import { useIsMobile } from "@/hooks/useMobile";
+import { trpc } from "@/lib/trpc";
+import {
+  Activity,
+  AlertTriangle,
+  BarChart3,
+  Boxes,
+  LayoutDashboard,
+  LogOut,
+  PanelLeft,
+  QrCode,
+  RefreshCw,
+  Search,
+  Settings,
+  ShoppingCart,
+  Siren,
+  TrendingUp,
+  Truck,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
+import { useLocation } from "wouter";
+import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
+import { Button } from "./ui/button";
 import { StockChatbot } from "./StockChatbot";
 import { CommandPalette, CommandPaletteTrigger } from "./CommandPalette";
-import { NotificationCenter } from "./NotificationCenter";
-import LoginScreen from "./LoginScreen";
-import { LogOut, Bus, Menu, X, ShieldAlert, type LucideIcon } from "lucide-react";
-import { useState, useRef, useEffect, useMemo } from "react";
-import { useLocation } from "wouter";
 
-// ── Mensajes de error OAuth movidos a LoginScreen.tsx ──
+export const navItems = [
+  { icon: LayoutDashboard, label: "Dashboard", path: "/", description: "Resumen general del inventario" },
+  { icon: BarChart3, label: "Analytics", path: "/analytics", description: "Análisis avanzado y tendencias" },
+  { icon: Boxes, label: "Inventario", path: "/inventario", description: "Catálogo completo de referencias" },
+  { icon: TrendingUp, label: "Top 20 Valor", path: "/top-valor", description: "Referencias de mayor valor" },
+  { icon: AlertTriangle, label: "Stock Cero", path: "/stock-cero", description: "Referencias sin existencias" },
+  { icon: ShoppingCart, label: "Órdenes", path: "/ordenes", description: "Órdenes de compra activas" },
+  { icon: Siren, label: "Stock 0 + OC", path: "/stock-cero-oc", description: "Stock cero con orden activa" },
+  { icon: Activity, label: "Consumo", path: "/consumo", description: "Histórico de consumo mensual" },
+  { icon: QrCode, label: "QR Acceso", path: "/qr-acceso", description: "Códigos QR de referencias" },
+  { icon: Truck, label: "Proveedores", path: "/proveedores", description: "Gestión de proveedores" },
+  { icon: RefreshCw, label: "Sincronizar", path: "/sync", description: "Sincronización con Drive" },
+  { icon: Settings, label: "Admin", path: "/admin", description: "Administración del sistema" },
+];
 
-// ── Paleta Corporativa ──────────────────────────────────────────────
-// Sidebar: #281C19 (fondo oscuro) con texto #f5f5f5
-// Activo:  borde izquierdo #8CB32A, fondo #8CB32A/15, texto #8CB32A
-// Hover:   fondo #009890/10, texto #009890
-// ───────────────────────────────────────────────────────────────────
+function formatRelativeDate(date: Date | string | null | undefined): string {
+  if (!date) return "\u2014";
+  const d = typeof date === "string" ? new Date(date) : date;
+  const diffMs = Date.now() - d.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "hace instantes";
+  if (mins < 60) return `hace ${mins} min`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `hace ${hrs} h`;
+  return d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" });
+}
 
-type NavItem = {
-  label: string;
-  href: string;
-  icon: LucideIcon;
-};
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const { loading, user } = useAuth();
 
-export default function DashboardLayout({
-  children,
-  navItems = [],
-  title = "SOMOS USME // JIT",
-}: {
-  children: React.ReactNode;
-  navItems?: NavItem[];
-  title?: string;
-}) {
-  const { loading, user, logout } = useAuth();
-  const [location, setLocation] = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
+  if (loading) return <DashboardLayoutSkeleton />;
 
-  // Error OAuth ahora se maneja en LoginScreen.tsx
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    }
-    if (userMenuOpen) {
-      document.addEventListener("mousedown", handleClick);
-      return () => document.removeEventListener("mousedown", handleClick);
-    }
-  }, [userMenuOpen]);
-
-  const activeMenuItem = navItems.find((item) => item.href === location);
-
-  const showLoading = loading;
-  const showLogin = !loading && !user;
-  const showApp = !loading && !!user;
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-[#8CB32A]/5">
+        <div className="flex flex-col items-center gap-8 p-10 max-w-md w-full bg-white rounded-2xl shadow-xl border border-slate-200/60">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-[#8CB32A] to-[#6d8c1f] text-[#281C19] flex items-center justify-center font-bold text-lg shadow-lg">AT</div>
+            <div className="flex flex-col">
+              <span className="font-bold text-base tracking-tight">Asset Tracker</span>
+              <span className="text-xs text-muted-foreground">Somos Bogotá Usme</span>
+            </div>
+          </div>
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h1 className="text-xl font-semibold tracking-tight">Inicia sesión para continuar</h1>
+            <p className="text-sm text-muted-foreground max-w-sm">
+              El acceso a este panel requiere autenticación. Continúa para iniciar el flujo de acceso.
+            </p>
+          </div>
+          <Button onClick={() => (window.location.href = getLoginUrl())} size="lg" className="w-full">
+            Iniciar sesión
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex min-h-screen bg-background" style={{ contain: "layout" }}>
+    <SidebarProvider style={{ "--sidebar-width": "260px" } as React.CSSProperties}>
+      <DashboardLayoutContent>{children}</DashboardLayoutContent>
+    </SidebarProvider>
+  );
+}
 
-      {/* ── LOADING ── */}
-      {showLoading && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background">
-          <div className="flex flex-col items-center gap-4">
-            <Bus className="h-10 w-10 animate-pulse" style={{ color: '#8CB32A' }} />
-            <div className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#009890' }}>
-              Cargando sistema...
+function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
+  const { user, logout } = useAuth();
+  const [location, setLocation] = useLocation();
+  const isMobile = useIsMobile();
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  const { data: lastSyncData } = trpc.dashboard.lastSync.useQuery(undefined, {
+    refetchInterval: 60_000,
+  });
+  const { data: kpis } = trpc.dashboard.kpis.useQuery();
+
+  // Sync fire-and-forget + polling — evita 503 en producción Cloud Run
+  const [syncPending, setSyncPending] = useState(false);
+  const syncPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => { if (syncPollingRef.current) clearInterval(syncPollingRef.current); };
+  }, []);
+
+  const handleSync = async () => {
+    if (syncPending) return;
+    setSyncPending(true);
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 120_000); // 2 min timeout
+
+      const response = await fetch('/api/sync-drive', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
+      const ct = response.headers.get('content-type') || '';
+      if (!ct.includes('application/json')) {
+        toast.error("Servidor no disponible", { description: "Espera 30 segundos e intenta de nuevo" });
+        setSyncPending(false);
+        return;
+      }
+
+      const result = await response.json();
+      setSyncPending(false);
+
+      if (result.success) {
+        toast.success("Sincronización completada", { description: result.message });
+      } else {
+        toast.error("Error en sincronización", { description: result.message || "Error desconocido" });
+      }
+    } catch (err: any) {
+      setSyncPending(false);
+      if (err.name === 'AbortError') {
+        toast.info("Sync en progreso", { description: "Los datos se actualizarán automáticamente" });
+      } else {
+        toast.error("Error de conexión", { description: "Verifica tu internet e intenta de nuevo" });
+      }
+    }
+  };
+
+  // Shortcut ⌘K / Ctrl+K
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setSearchOpen((o) => !o);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  const activeItem = navItems.find((item) => item.path === location) ?? navItems[0];
+
+  const initials = (user?.name ?? "U")
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  return (
+    <>
+      <Sidebar collapsible="icon" className="border-r border-slate-200/70">
+        <SidebarHeader className="h-16 justify-center border-b border-slate-200/70">
+          <div className="flex items-center gap-2.5 px-2 w-full">
+            <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#8CB32A] to-[#6d8c1f] text-[#281C19] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
+              AT
+            </div>
+            <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
+              <span className="font-semibold text-sm tracking-tight truncate">Asset Tracker</span>
+              <span className="text-[11px] text-muted-foreground truncate">Somos Bogotá Usme</span>
             </div>
           </div>
-        </div>
-      )}
+        </SidebarHeader>
 
-      {/* ── LOGIN — Pantalla Holograma ── */}
-      {showLogin && <LoginScreen />}
-
-      {/* ── MOBILE OVERLAY ── */}
-      <div
-        aria-hidden="true"
-        className={`fixed inset-0 bg-black/50 z-40 md:hidden transition-opacity duration-300 ${
-          showApp && mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
-        onClick={() => setMobileOpen(false)}
-      />
-
-      {/* ── DESKTOP SIDEBAR ── */}
-      <div
-        className="hidden md:flex md:flex-col md:w-[240px] md:shrink-0 md:sticky md:top-0 md:h-screen"
-        style={{ visibility: showApp ? "visible" : "hidden" }}
-      >
-        <aside
-          className="flex flex-col h-full"
-          style={{ background: '#281C19', borderRight: '1px solid rgba(140,179,42,0.2)' }}
-        >
-          {/* Logo */}
-          <div
-            className="h-16 flex items-center gap-3 px-4 shrink-0"
-            style={{ borderBottom: '1px solid rgba(140,179,42,0.2)' }}
+        <SidebarContent className="gap-0 px-2 py-3">
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 transition-colors px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
           >
-            <Bus className="h-5 w-5 shrink-0" style={{ color: '#8CB32A' }} />
-            <span
-              className="font-bold tracking-wider truncate text-xs"
-              style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#8CB32A' }}
-            >
-              {title}
-            </span>
-          </div>
+            <Search className="h-3.5 w-3.5" />
+            <span className="flex-1 text-left">Buscar referencia...</span>
+            <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500">
+              ⌘K
+            </kbd>
+          </button>
 
-          {/* Nav */}
-          <nav className="flex-1 overflow-y-auto py-3 px-2">
+          <SidebarMenu>
             {navItems.map((item) => {
-              const isActive = location === item.href;
+              const isActive = location === item.path;
+              const Icon = item.icon;
               return (
-                <button
-                  key={item.href}
-                  onClick={() => setLocation(item.href)}
-                  className="w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left"
-                  style={{
-                    background: isActive ? 'rgba(140,179,42,0.15)' : 'transparent',
-                    borderLeft: isActive ? '2px solid #8CB32A' : '2px solid transparent',
-                    color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.7)',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) {
-                      (e.currentTarget as HTMLButtonElement).style.background = 'rgba(0,152,144,0.12)';
-                      (e.currentTarget as HTMLButtonElement).style.color = '#009890';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) {
-                      (e.currentTarget as HTMLButtonElement).style.background = 'transparent';
-                      (e.currentTarget as HTMLButtonElement).style.color = 'rgba(245,245,245,0.7)';
-                    }
-                  }}
-                >
-                  <item.icon
-                    className="h-4 w-4 shrink-0"
-                    style={{ color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.5)' }}
-                  />
-                  <span className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
-                    {item.label}
-                  </span>
-                </button>
+                <SidebarMenuItem key={item.path}>
+                  <SidebarMenuButton
+                    isActive={isActive}
+                    onClick={() => setLocation(item.path)}
+                    tooltip={item.label}
+                    className={`h-9 text-sm font-normal transition-colors ${
+                      isActive ? "bg-[#8CB32A]/10 text-[#8CB32A] hover:bg-[#8CB32A]/10 hover:text-[#8CB32A] font-medium" : ""
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 ${isActive ? "text-[#8CB32A]" : "text-slate-500"}`} />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               );
             })}
-          </nav>
+          </SidebarMenu>
+        </SidebarContent>
 
-          {/* Search trigger */}
-          <div className="px-2 pb-2">
-            <CommandPaletteTrigger />
+        <SidebarFooter className="border-t border-slate-200/70 p-3 gap-2">
+          <div className="flex items-center justify-between px-1 group-data-[collapsible=icon]:hidden">
+            <div className="flex flex-col">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Última sync</span>
+              <span className="text-xs text-slate-700 font-medium">
+                {formatRelativeDate(lastSyncData?.completedAt ?? lastSyncData?.startedAt)}
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs gap-1 bg-white"
+              onClick={handleSync}
+              disabled={syncPending}
+            >
+              <RefreshCw className={`h-3 w-3 ${syncPending ? "animate-spin" : ""}`} />
+              Sync
+            </Button>
           </div>
 
-          {/* User menu */}
-          <div
-            className="p-3 shrink-0 relative"
-            style={{ borderTop: '1px solid rgba(140,179,42,0.2)' }}
-            ref={userMenuRef}
-          >
-            {userMenuOpen && (
-              <div
-                className="absolute bottom-full left-3 right-3 mb-2 rounded-lg overflow-hidden"
-                style={{
-                  background: '#1a1210',
-                  border: '1px solid rgba(140,179,42,0.3)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
-                }}
-              >
-                <button
-                  onClick={() => { setUserMenuOpen(false); logout(); }}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors"
-                  style={{ color: '#f87171' }}
-                  onMouseEnter={(e) => { (e.currentTarget).style.background = 'rgba(239,68,68,0.1)'; }}
-                  onMouseLeave={(e) => { (e.currentTarget).style.background = 'transparent'; }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Cerrar Sesión</span>
-                </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-slate-100 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8CB32A]/50">
+                <Avatar className="h-8 w-8 border border-slate-200 shrink-0">
+                  <AvatarFallback className="text-[11px] font-semibold bg-[#8CB32A]/20 text-[#281C19]">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden">
+                  <p className="text-sm font-medium truncate leading-tight">{user?.name || "Usuario"}</p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email || "\u2014"}</p>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5 border-b">
+                <p className="text-sm font-medium truncate">{user?.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
               </div>
+              <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive">
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Cerrar sesión</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SidebarInset className="bg-slate-50/50">
+        <header className="flex h-14 items-center justify-between border-b border-slate-200/70 bg-white/80 backdrop-blur px-4 sm:px-6 sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            {isMobile && <SidebarTrigger className="h-8 w-8" />}
+            {!isMobile && (
+              <button
+                onClick={() => {
+                  const trigger = document.querySelector("[data-sidebar='trigger']") as HTMLButtonElement | null;
+                  trigger?.click();
+                }}
+                className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-slate-100 transition-colors"
+                aria-label="Alternar sidebar"
+              >
+                <PanelLeft className="h-4 w-4 text-slate-500" />
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <activeItem.icon className="h-4 w-4 text-[#009890]" />
+              <h1 className="text-sm font-semibold tracking-tight text-slate-900">{activeItem.label}</h1>
+              <span className="hidden sm:inline text-xs text-muted-foreground">/ {activeItem.description}</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {kpis && kpis.zeroStock > 0 && (
+              <Badge variant="outline" className="hidden sm:flex bg-red-50 text-red-700 border-red-200 font-medium">
+                <AlertTriangle className="h-3 w-3 mr-1" />
+                {kpis.zeroStock} stock cero
+              </Badge>
             )}
             <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors w-full text-left focus:outline-none"
-              style={{ background: 'transparent' }}
-              onMouseEnter={(e) => { (e.currentTarget).style.background = 'rgba(140,179,42,0.08)'; }}
-              onMouseLeave={(e) => { (e.currentTarget).style.background = 'transparent'; }}
+              onClick={() => setSearchOpen(true)}
+              className="hidden md:flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition-colors px-2.5 py-1.5 text-xs text-muted-foreground"
             >
-              <div
-                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs"
-                style={{ background: '#8CB32A', color: '#281C19' }}
-              >
-                {user?.name?.charAt(0).toUpperCase() || "?"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate leading-none" style={{ color: '#f5f5f5' }}>
-                  {user?.name || "-"}
-                </p>
-                <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: "'Space Grotesk', sans-serif" }}>
-                  {user?.email || "Gestor"}
-                </p>
-              </div>
+              <Search className="h-3 w-3" />
+              <span>Buscar...</span>
+              <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
             </button>
-          </div>
-        </aside>
-      </div>
-
-      {/* ── MOBILE SIDEBAR ── */}
-      <aside
-        className={`fixed top-0 left-0 h-full w-[240px] z-50 flex flex-col transition-transform duration-300 md:hidden ${
-          showApp && mobileOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-        style={{
-          visibility: showApp ? "visible" : "hidden",
-          background: '#281C19',
-          borderRight: '1px solid rgba(140,179,42,0.2)',
-        }}
-      >
-        <div
-          className="h-16 flex items-center gap-3 px-4 shrink-0"
-          style={{ borderBottom: '1px solid rgba(140,179,42,0.2)' }}
-        >
-          <Bus className="h-5 w-5 shrink-0" style={{ color: '#8CB32A' }} />
-          <span
-            className="font-bold tracking-wider truncate text-xs flex-1"
-            style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#8CB32A' }}
-          >
-            {title}
-          </span>
-          <button
-            className="ml-auto h-8 w-8 flex items-center justify-center rounded-lg"
-            style={{ color: '#8CB32A' }}
-            onClick={() => setMobileOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-        <nav className="flex-1 overflow-y-auto py-3 px-2">
-          {navItems.map((item) => {
-            const isActive = location === item.href;
-            return (
-              <button
-                key={item.href}
-                onClick={() => { setLocation(item.href); setMobileOpen(false); }}
-                className="w-full flex items-center gap-3 h-10 px-3 rounded-lg mb-1 transition-all text-left"
-                style={{
-                  background: isActive ? 'rgba(140,179,42,0.15)' : 'transparent',
-                  borderLeft: isActive ? '2px solid #8CB32A' : '2px solid transparent',
-                  color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.7)',
-                }}
-              >
-                <item.icon
-                  className="h-4 w-4 shrink-0"
-                  style={{ color: isActive ? '#8CB32A' : 'rgba(245,245,245,0.5)' }}
-                />
-                <span className="text-sm" style={{ fontFamily: "'Space Grotesk', sans-serif", fontWeight: 600 }}>
-                  {item.label}
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-        <div
-          className="p-3 shrink-0"
-          style={{ borderTop: '1px solid rgba(140,179,42,0.2)' }}
-        >
-          <button
-            onClick={() => logout()}
-            className="flex items-center gap-2 px-3 py-2.5 text-sm transition-colors w-full rounded-lg"
-            style={{ color: '#f87171' }}
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Cerrar Sesión</span>
-          </button>
-          <div className="flex items-center gap-3 px-2 py-1.5 mt-1">
-            <div
-              className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 font-bold text-xs"
-              style={{ background: '#8CB32A', color: '#281C19' }}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 gap-1.5 text-xs bg-white"
+              onClick={handleSync}
+              disabled={syncPending}
             >
-              {user?.name?.charAt(0).toUpperCase() || "?"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold truncate leading-none" style={{ color: '#f5f5f5' }}>
-                {user?.name || "-"}
-              </p>
-              <p className="text-xs truncate mt-0.5" style={{ color: 'rgba(140,179,42,0.7)', fontFamily: "'Space Grotesk', sans-serif" }}>
-                {user?.email || "Gestor"}
-              </p>
-            </div>
+              <RefreshCw className={`h-3.5 w-3.5 ${syncPending ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{syncPending ? "Sincronizando..." : "Sincronizar"}</span>
+            </Button>
           </div>
-        </div>
-      </aside>
-
-      {/* ── MAIN CONTENT ── */}
-      <div
-        className="flex-1 flex flex-col min-w-0"
-        style={{ visibility: showApp ? "visible" : "hidden" }}
-      >
-        {/* Mobile Header */}
-        <header
-          className="md:hidden flex items-center justify-between h-14 px-4 sticky top-0 z-30 backdrop-blur"
-          style={{
-            background: 'rgba(255,255,255,0.95)',
-            borderBottom: '1px solid rgba(140,179,42,0.2)',
-          }}
-        >
-          <button
-            onClick={() => setMobileOpen(true)}
-            className="h-9 w-9 flex items-center justify-center rounded-lg"
-            style={{ color: '#8CB32A' }}
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-          <span
-            className="text-sm font-bold"
-            style={{ fontFamily: "'Space Grotesk', sans-serif", color: '#281C19' }}
-          >
-            {activeMenuItem?.label ?? "SOMOS USME"}
-          </span>
-          <NotificationCenter />
         </header>
+        <main className="flex-1 p-4 sm:p-6">{children}</main>
+      </SidebarInset>
 
-        {/* Main */}
-        <main className="flex-1 p-4 md:p-6 cyber-grid-bg min-h-screen">
-          {children}
-        </main>
-      </div>
-
-      {/* Chatbot Stock — disponible en todas las páginas del dashboard */}
+      {/* Chatbot Stock — disponible en todas las páginas */}
       <StockChatbot />
 
       {/* Command Palette — búsqueda global Ctrl+K */}
       <CommandPalette />
-    </div>
+    </>
   );
 }
