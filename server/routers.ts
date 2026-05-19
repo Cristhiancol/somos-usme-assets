@@ -17,6 +17,7 @@ import {
   getCriticalStockItems,
   getStockCeroConOC,
 } from "./db";
+import { isGDriveAuthorized, getValidAccessToken } from "./gdrive-oauth";
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
 import * as predictionsModule from "./routers/predictions";
@@ -137,6 +138,19 @@ export const appRouter = router({
 
     lastSync: publicProcedure.query(async () => {
       return getLastSync();
+    }),
+
+    tokenStatus: publicProcedure.query(async () => {
+      const authorized = await isGDriveAuthorized();
+      if (!authorized) {
+        return { status: 'none' as const };
+      }
+      // Check if the access token can still be obtained (not revoked)
+      const token = await getValidAccessToken();
+      if (!token) {
+        return { status: 'revoked' as const };
+      }
+      return { status: 'authorized' as const };
     }),
   }),
 

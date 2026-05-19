@@ -394,22 +394,29 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
 
     serverLogger.log(`[Sync] Parsed: ${parsed.inventory.length} inventory, ${parsed.orders.length} orders, ${parsed.suppliers.length} suppliers`);
 
-    // Upsert to database
-    const itemsCount = await bulkUpsertInventory(parsed.inventory);
-    const ordersCount = await bulkUpsertOrders(parsed.orders);
-    const suppliersCount = await bulkUpsertSuppliers(parsed.suppliers);
-
-    // Parse and upsert consumption data
-    let consumoCount = 0;
-    try {
-      const consumoData = await parseConsumoSheet(LOCAL_FILE);
-      if (consumoData.length > 0) {
-        consumoCount = await bulkUpsertConsumo(consumoData);
-        serverLogger.log(`[Sync] Consumo: ${consumoCount} registros`);
-      }
-    } catch (e) {
-      serverLogger.warn("[Sync] Error parsing consumption data (non-fatal):", e);
-    }
+    // Upsert to database — all 4 tables in parallel (independent, no deadlock risk)
+    // Also parse consumo sheet concurrently with the first 3 upserts
+    const [itemsCount, ordersCount, suppliersCount, consumoResult] = await Promise.all([
+      bulkUpsertInventory(parsed.inventory),
+      bulkUpsertOrders(parsed.orders),
+      bulkUpsertSuppliers(parsed.suppliers),
+      // Parse + upsert consumo in one pipeline
+      (async () => {
+        try {
+          const consumoData = await parseConsumoSheet(LOCAL_FILE);
+          if (consumoData.length > 0) {
+            const count = await bulkUpsertConsumo(consumoData);
+            serverLogger.log(`[Sync] Consumo: ${count} registros`);
+            return count;
+          }
+          return 0;
+        } catch (e) {
+          serverLogger.warn("[Sync] Error parsing consumption data (non-fatal):", e);
+          return 0;
+        }
+      })(),
+    ]);
+    const consumoCount = consumoResult;
 
     // Update sync log to 'success'
     if (syncId) {

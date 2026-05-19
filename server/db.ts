@@ -469,12 +469,13 @@ export async function bulkUpsertConsumo(items: { referencia: string; fabricante:
 
   await db.delete(consumoMensual);
   const BATCH = 500;
-  const batches: typeof items[] = [];
+  let count = 0;
   for (let i = 0; i < items.length; i += BATCH) {
-    batches.push(items.slice(i, i + BATCH));
+    const batch = items.slice(i, i + BATCH);
+    await db.insert(consumoMensual).values(batch);
+    count += batch.length;
   }
-  if (batches.length > 0) await Promise.all(batches.map(batch => db.insert(consumoMensual).values(batch)));
-  return items.length;
+  return count;
 }
 
 export async function getConsumoMensual(referencia?: string) {

@@ -45,7 +45,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 import { StockChatbot } from "./StockChatbot";
-import { CommandPalette, CommandPaletteTrigger } from "./CommandPalette";
+import { CommandPalette } from "./CommandPalette";
 
 export const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", description: "Resumen general del inventario" },
@@ -115,7 +115,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const isMobile = useIsMobile();
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const { data: lastSyncData } = trpc.dashboard.lastSync.useQuery(undefined, {
     refetchInterval: 60_000,
@@ -171,18 +170,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Shortcut ⌘K / Ctrl+K
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setSearchOpen((o) => !o);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
   const activeItem = navItems.find((item) => item.path === location) ?? navItems[0];
 
   const initials = (user?.name ?? "U")
@@ -208,16 +195,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
 
         <SidebarContent className="gap-0 px-2 py-3">
-          <button
-            onClick={() => setSearchOpen(true)}
-            className="mb-3 flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-white hover:border-slate-300 transition-colors px-3 py-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden"
-          >
-            <Search className="h-3.5 w-3.5" />
-            <span className="flex-1 text-left">Buscar referencia...</span>
-            <kbd className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] font-mono text-slate-500">
-              ⌘K
-            </kbd>
-          </button>
 
           <SidebarMenu>
             {navItems.map((item) => {
@@ -321,7 +298,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               </Badge>
             )}
             <button
-              onClick={() => setSearchOpen(true)}
+              onClick={() => {
+                document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
+              }}
               className="hidden md:flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition-colors px-2.5 py-1.5 text-xs text-muted-foreground"
             >
               <Search className="h-3 w-3" />
