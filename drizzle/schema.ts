@@ -171,3 +171,57 @@ export const consumoMensual = mysqlTable("consumo_mensual", {
 export type ConsumoMensual = typeof consumoMensual.$inferSelect;
 export type InsertConsumoMensual = typeof consumoMensual.$inferInsert;
 
+// ── Facturación OC (Órdenes de Compra pendientes por pagar) ──
+export const facturacionOC = mysqlTable("facturacion_oc", {
+  id: int("id").autoincrement().primaryKey(),
+  fechaEntrega: varchar("fechaEntrega", { length: 32 }),
+  fechaOC: varchar("fechaOC", { length: 32 }),
+  bodega: varchar("bodega", { length: 16 }),
+  referencia: varchar("referencia", { length: 64 }),
+  item: varchar("item", { length: 16 }),
+  moneda: varchar("moneda", { length: 8 }),
+  descItem: text("descItem"),
+  um: varchar("um", { length: 16 }),
+  cantidad: double("cantidad").default(0),
+  precioUnit: double("precioUnit").default(0),
+  valorImptos: double("valorImptos").default(0),
+  valorSubtotal: double("valorSubtotal").default(0),
+  valorNeto: double("valorNeto").default(0),
+  documento: varchar("documento", { length: 64 }),
+  proveedor: text("proveedor"),
+  doctoSolicitud: varchar("doctoSolicitud", { length: 64 }),
+  doctoOrden: varchar("doctoOrden", { length: 64 }),
+  referenciaOC: varchar("referenciaOC", { length: 64 }),
+  comprador: varchar("comprador", { length: 128 }),
+  estado: varchar("estado", { length: 32 }),
+  fecha: varchar("fecha", { length: 32 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FacturacionOC = typeof facturacionOC.$inferSelect;
+export type InsertFacturacionOC = typeof facturacionOC.$inferInsert;
+
+// ── Facturación OCS (Órdenes de Compra de Servicios pendientes por pagar) ──
+export const facturacionOCS = mysqlTable("facturacion_ocs", {
+  id: int("id").autoincrement().primaryKey(),
+  referencia: varchar("referencia", { length: 64 }),
+  notasDocto: text("notasDocto"),
+  co: varchar("co", { length: 16 }),
+  nroDocto: varchar("nroDocto", { length: 32 }),
+  fecha: varchar("fecha", { length: 32 }),
+  estado: varchar("estado", { length: 32 }),
+  nroFactura: varchar("nroFactura", { length: 64 }),
+  razonSocial: text("razonSocial"),
+  descServicio: text("descServicio"),
+  moneda: varchar("moneda", { length: 8 }),
+  valorBruto: double("valorBruto").default(0),
+  valorDescuentos: double("valorDescuentos").default(0),
+  subtotal: double("subtotal").default(0),
+  valorImpuestos: double("valorImpuestos").default(0),
+  valorNeto: double("valorNeto").default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type FacturacionOCS = typeof facturacionOCS.$inferSelect;
+export type InsertFacturacionOCS = typeof facturacionOCS.$inferInsert;
+

@@ -1,6 +1,6 @@
 import { eq, sql, desc, asc, like, and, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, inventoryItems, purchaseOrders, suppliers, syncLogs, consumoMensual } from "../drizzle/schema";
+import { InsertUser, users, inventoryItems, purchaseOrders, suppliers, syncLogs, consumoMensual, facturacionOC, facturacionOCS } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { serverLogger } from './logger';
 
@@ -534,4 +534,166 @@ export async function getConsumoByMonth() {
   }).from(consumoMensual)
     .groupBy(consumoMensual.mes)
     .orderBy(asc(consumoMensual.mes));
+}
+
+// ── Facturación OC ──
+export async function bulkUpsertFacturacionOC(items: any[]) {
+  const db = await getDb();
+  if (!db) return 0;
+  await db.delete(facturacionOC);
+  let count = 0;
+  for (let i = 0; i < items.length; i += 500) {
+    const batch = items.slice(i, i + 500);
+    await db.insert(facturacionOC).values(batch);
+    count += batch.length;
+  }
+  return count;
+}
+
+export async function bulkUpsertFacturacionOCS(items: any[]) {
+  const db = await getDb();
+  if (!db) return 0;
+  await db.delete(facturacionOCS);
+  let count = 0;
+  for (let i = 0; i < items.length; i += 500) {
+    const batch = items.slice(i, i + 500);
+    await db.insert(facturacionOCS).values(batch);
+    count += batch.length;
+  }
+  return count;
+}
+
+export async function getFacturacionKPIs() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [ocResult] = await db.select({
+    totalOC: sql<number>`COUNT(*)`,
+    docsUnicos: sql<number>`COUNT(DISTINCT ${facturacionOC.documento})`,
+    totalSubtotal: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorSubtotal})), 0)`,
+    totalNeto: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorNeto})), 0)`,
+    totalImpuestos: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorImptos})), 0)`,
+  }).from(facturacionOC);
+
+  const [ocsResult] = await db.select({
+    totalOCS: sql<number>`COUNT(*)`,
+    docsUnicos: sql<number>`COUNT(DISTINCT ${facturacionOCS.nroDocto})`,
+    totalSubtotal: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.subtotal})), 0)`,
+    totalNeto: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.valorNeto})), 0)`,
+    totalImpuestos: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.valorImpuestos})), 0)`,
+  }).from(facturacionOCS);
+
+  return {
+    oc: ocResult,
+    ocs: ocsResult,
+    totalCombinado: (ocResult.totalNeto || 0) + (ocsResult.totalNeto || 0),
+    docsTotales: (ocResult.docsUnicos || 0) + (ocsResult.docsUnicos || 0),
+  };
+}
+
+export async function getFacturacionOCList(filters?: { search?: string; estado?: string; proveedor?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  if (filters?.estado) conditions.push(eq(facturacionOC.estado, filters.estado));
+  if (filters?.search) {
+    const s = filters.search.toLowerCase();
+    conditions.push(
+      or(
+        sql`LOWER(${facturacionOC.descItem}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOC.proveedor}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOC.documento}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOC.referencia}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOC.comprador}) LIKE ${`%${s}%`}`
+      )
+    );
+  }
+  if (filters?.proveedor) {
+    conditions.push(sql`LOWER(${facturacionOC.proveedor}) LIKE ${`%${filters.proveedor.toLowerCase()}%`}`);
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  return db.select().from(facturacionOC).where(where).orderBy(desc(facturacionOC.id));
+}
+
+export async function getFacturacionOCSList(filters?: { search?: string; estado?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  if (filters?.estado) conditions.push(eq(facturacionOCS.estado, filters.estado));
+  if (filters?.search) {
+    const s = filters.search.toLowerCase();
+    conditions.push(
+      or(
+        sql`LOWER(${facturacionOCS.descServicio}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOCS.razonSocial}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOCS.nroDocto}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${facturacionOCS.referencia}) LIKE ${`%${s}%`}`
+      )
+    );
+  }
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+  return db.select().from(facturacionOCS).where(where).orderBy(desc(facturacionOCS.id));
+}
+
+export async function getFacturacionResumenProveedores() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const ocByProv = await db.select({
+    proveedor: facturacionOC.proveedor,
+    ocSubtotal: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorSubtotal})), 0)`,
+    ocNeto: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorNeto})), 0)`,
+    ocCount: sql<number>`COUNT(*)`,
+  }).from(facturacionOC)
+    .groupBy(facturacionOC.proveedor)
+    .orderBy(desc(sql`SUM(ABS(${facturacionOC.valorNeto}))`));
+
+  const ocsByProv = await db.select({
+    proveedor: facturacionOCS.razonSocial,
+    ocsSubtotal: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.subtotal})), 0)`,
+    ocsNeto: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.valorNeto})), 0)`,
+    ocsCount: sql<number>`COUNT(*)`,
+  }).from(facturacionOCS)
+    .groupBy(facturacionOCS.razonSocial)
+    .orderBy(desc(sql`SUM(ABS(${facturacionOCS.valorNeto}))`));
+
+  const provMap = new Map<string, { proveedor: string; ocSubtotal: number; ocNeto: number; ocCount: number; ocsSubtotal: number; ocsNeto: number; ocsCount: number }>();
+  
+  for (const row of ocByProv) {
+    const key = (row.proveedor || 'SIN PROVEEDOR').trim().toUpperCase();
+    provMap.set(key, {
+      proveedor: (row.proveedor || 'SIN PROVEEDOR').trim(),
+      ocSubtotal: row.ocSubtotal, ocNeto: row.ocNeto, ocCount: row.ocCount,
+      ocsSubtotal: 0, ocsNeto: 0, ocsCount: 0,
+    });
+  }
+
+  for (const row of ocsByProv) {
+    const key = (row.proveedor || 'SIN PROVEEDOR').trim().toUpperCase();
+    const existing = provMap.get(key);
+    if (existing) {
+      existing.ocsSubtotal = row.ocsSubtotal;
+      existing.ocsNeto = row.ocsNeto;
+      existing.ocsCount = row.ocsCount;
+    } else {
+      provMap.set(key, {
+        proveedor: (row.proveedor || 'SIN PROVEEDOR').trim(),
+        ocSubtotal: 0, ocNeto: 0, ocCount: 0,
+        ocsSubtotal: row.ocsSubtotal, ocsNeto: row.ocsNeto, ocsCount: row.ocsCount,
+      });
+    }
+  }
+
+  const result = Array.from(provMap.values()).map(p => ({
+    ...p,
+    totalNeto: p.ocNeto + p.ocsNeto,
+    totalSubtotal: p.ocSubtotal + p.ocsSubtotal,
+  }));
+
+  result.sort((a, b) => b.totalNeto - a.totalNeto);
+  return result;
 }

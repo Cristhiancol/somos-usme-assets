@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, logSync, updateSyncLog } from "./db";
+import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, bulkUpsertFacturacionOC, bulkUpsertFacturacionOCS, logSync, updateSyncLog } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
 import { serverLogger } from "./logger";
 import { notificarSincronizacion, notificarStockCero, isZapierConfigured } from "./zapier";
@@ -11,6 +11,8 @@ const DATA_FILE = "/home/ubuntu/somos-usme-assets/data/DASBOARD_SOMOS_U_GESTOR_1
 const CDN_FILE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663355008483/Cn82Y4DQbN9nyZtZuLDx26/DASBOARD_SOMOS_U_GESTOR_1_a015c179.xlsx";
 // Google Drive file ID (direct — no search needed)
 const DRIVE_FILE_ID = "1sMQ-SsIfguGHGWnhm7IkHFIrBxjC3YZ8";
+// Google Sheets — Facturación pendiente por pagar (segundo Drive)
+const DRIVE_FACTURACION_ID = "18FXUJRjG79rFAqc2EDY-bnlFk5aHov4UjVPywnNDbL8";
 
 /**
  * Get file data: Google Drive OAuth (primary) > local file (dev) > CDN (fallback)
@@ -82,6 +84,45 @@ async function getFileData(): Promise<Buffer> {
   }
 
   throw new Error("No se encontró token de Google Drive. Autoriza el acceso en la página de Sincronización.");
+}
+
+/**
+ * Get facturacion file data from Google Drive (second spreadsheet)
+ */
+async function getFacturacionFileData(): Promise<Buffer | null> {
+  try {
+    const accessToken = await getValidAccessToken();
+    if (!accessToken) {
+      serverLogger.warn("[Sync] No OAuth token for facturacion sheet, skipping...");
+      return null;
+    }
+    serverLogger.log("[Sync] Downloading facturacion sheet from Google Drive...");
+    const exportUrl = `https://www.googleapis.com/drive/v3/files/${DRIVE_FACTURACION_ID}/export?mimeType=application%2Fvnd.openxmlformats-officedocument.spreadsheetml.sheet`;
+    const exportRes = await fetch(exportUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (exportRes.ok) {
+      const arrayBuffer = await exportRes.arrayBuffer();
+      const buf = Buffer.from(arrayBuffer);
+      serverLogger.log(`[Sync] Facturacion export OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+      return buf;
+    }
+    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${DRIVE_FACTURACION_ID}?alt=media`;
+    const downloadRes = await fetch(downloadUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    if (downloadRes.ok) {
+      const arrayBuffer = await downloadRes.arrayBuffer();
+      const buf = Buffer.from(arrayBuffer);
+      serverLogger.log(`[Sync] Facturacion direct download OK: ${(buf.length / 1024 / 1024).toFixed(2)} MB`);
+      return buf;
+    }
+    serverLogger.warn(`[Sync] Facturacion download failed: ${exportRes.status}`);
+    return null;
+  } catch (e) {
+    serverLogger.warn("[Sync] Error downloading facturacion sheet (non-fatal):", e);
+    return null;
+  }
 }
 
 /**
@@ -376,6 +417,103 @@ async function parseConsumoSheet(filePath: string) {
   return result;
 }
 
+/**
+ * Parse Facturación sheets (DATOS_OC + DATOS_OCS) from the second spreadsheet
+ */
+async function parseFacturacionData(buffer: Buffer) {
+  const { read, utils } = await import("xlsx");
+  const workbook = read(buffer, { type: "buffer" });
+
+  function safeFloatCOP(val: any, def = 0): number {
+    if (val === null || val === undefined || val === "") return def;
+    if (typeof val === "number") return isNaN(val) ? def : val;
+    if (typeof val === "string") {
+      let cleaned = val.replace(/\$/g, "").replace(/\s/g, "").trim();
+      const isNegative = cleaned.startsWith("(") && cleaned.endsWith(")");
+      if (isNegative) cleaned = cleaned.slice(1, -1);
+      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+      const n = Number(cleaned);
+      if (isNaN(n)) return def;
+      return isNegative ? -n : n;
+    }
+    return def;
+  }
+
+  function safeStr(val: any): string | null {
+    if (val === null || val === undefined || val === "") return null;
+    return String(val).trim() || null;
+  }
+
+  // ── Parse DATOS_OC ──
+  const ocSheet = workbook.Sheets["DATOS_OC"];
+  const ocItems: any[] = [];
+  if (ocSheet) {
+    const raw = utils.sheet_to_json(ocSheet, { header: 1, defval: null }) as any[][];
+    for (let r = 3; r < raw.length; r++) {
+      const row = raw[r];
+      if (!row) continue;
+      const hasData = row.some((v: any) => v !== null && v !== undefined && v !== "");
+      if (!hasData) continue;
+      ocItems.push({
+        fechaEntrega: safeStr(row[0]),
+        fechaOC: safeStr(row[1]),
+        bodega: safeStr(row[2]),
+        referencia: safeStr(row[3]),
+        item: safeStr(row[4]),
+        moneda: safeStr(row[5]),
+        descItem: safeStr(row[6]),
+        um: safeStr(row[7]),
+        cantidad: safeFloatCOP(row[8]),
+        precioUnit: safeFloatCOP(row[9]),
+        valorImptos: safeFloatCOP(row[10]),
+        valorSubtotal: safeFloatCOP(row[11]),
+        valorNeto: safeFloatCOP(row[12]),
+        documento: safeStr(row[13]),
+        proveedor: safeStr(row[14]),
+        doctoSolicitud: safeStr(row[15]),
+        doctoOrden: safeStr(row[16]),
+        referenciaOC: safeStr(row[17]),
+        comprador: safeStr(row[18]),
+        estado: safeStr(row[19]),
+        fecha: safeStr(row[20]),
+      });
+    }
+  }
+
+  // ── Parse DATOS_OCS ──
+  const ocsSheet = workbook.Sheets["DATOS_OCS"];
+  const ocsItems: any[] = [];
+  if (ocsSheet) {
+    const raw = utils.sheet_to_json(ocsSheet, { header: 1, defval: null }) as any[][];
+    for (let r = 3; r < raw.length; r++) {
+      const row = raw[r];
+      if (!row) continue;
+      const hasData = row.some((v: any) => v !== null && v !== undefined && v !== "");
+      if (!hasData) continue;
+      ocsItems.push({
+        referencia: safeStr(row[0]),
+        notasDocto: safeStr(row[1]),
+        co: safeStr(row[2]),
+        nroDocto: safeStr(row[3]),
+        fecha: safeStr(row[4]),
+        estado: safeStr(row[5]),
+        nroFactura: safeStr(row[6]),
+        razonSocial: safeStr(row[7]),
+        descServicio: safeStr(row[8]),
+        moneda: safeStr(row[9]),
+        valorBruto: safeFloatCOP(row[10]),
+        valorDescuentos: safeFloatCOP(row[11]),
+        subtotal: safeFloatCOP(row[12]),
+        valorImpuestos: safeFloatCOP(row[13]),
+        valorNeto: safeFloatCOP(row[14]),
+      });
+    }
+  }
+
+  serverLogger.log(`[Sync] Facturación parsed: ${ocItems.length} OC, ${ocsItems.length} OCS`);
+  return { ocItems, ocsItems };
+}
+
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   // Insert 'running' record immediately so polling can detect it
   const syncId = await logSync({ syncType: "gdrive_import", status: "running" });
@@ -396,7 +534,7 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
 
     // Upsert to database — all 4 tables in parallel (independent, no deadlock risk)
     // Also parse consumo sheet concurrently with the first 3 upserts
-    const [itemsCount, ordersCount, suppliersCount, consumoResult] = await Promise.all([
+    const [itemsCount, ordersCount, suppliersCount, consumoResult, facturacionResult] = await Promise.all([
       bulkUpsertInventory(parsed.inventory),
       bulkUpsertOrders(parsed.orders),
       bulkUpsertSuppliers(parsed.suppliers),
@@ -415,8 +553,26 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
           return 0;
         }
       })(),
+      // Download + parse + upsert facturacion (second Drive) in one pipeline
+      (async () => {
+        try {
+          const facBuffer = await getFacturacionFileData();
+          if (!facBuffer) return { ocCount: 0, ocsCount: 0 };
+          const facData = await parseFacturacionData(facBuffer);
+          const [ocCount, ocsCount] = await Promise.all([
+            facData.ocItems.length > 0 ? bulkUpsertFacturacionOC(facData.ocItems) : 0,
+            facData.ocsItems.length > 0 ? bulkUpsertFacturacionOCS(facData.ocsItems) : 0,
+          ]);
+          serverLogger.log(`[Sync] Facturación: ${ocCount} OC, ${ocsCount} OCS`);
+          return { ocCount, ocsCount };
+        } catch (e) {
+          serverLogger.warn("[Sync] Error syncing facturacion (non-fatal):", e);
+          return { ocCount: 0, ocsCount: 0 };
+        }
+      })(),
     ]);
     const consumoCount = consumoResult;
+    const { ocCount: facOCCount, ocsCount: facOCSCount } = facturacionResult;
 
     // Update sync log to 'success'
     if (syncId) {
@@ -476,8 +632,8 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     serverLogger.log("[Sync] Complete!");
     return {
       success: true,
-      message: `Sincronización exitosa: ${itemsCount} referencias, ${ordersCount} órdenes, ${suppliersCount} proveedores, ${consumoCount} consumos`,
-      stats: { itemsCount, ordersCount, suppliersCount, consumoCount },
+      message: `Sincronización exitosa: ${itemsCount} referencias, ${ordersCount} órdenes, ${suppliersCount} proveedores, ${consumoCount} consumos, ${facOCCount} fact. OC, ${facOCSCount} fact. OCS`,
+      stats: { itemsCount, ordersCount, suppliersCount, consumoCount, facOCCount, facOCSCount },
     };
   } catch (error: any) {
     serverLogger.error("[Sync] Error:", error);

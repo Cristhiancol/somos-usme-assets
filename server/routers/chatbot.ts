@@ -22,6 +22,8 @@ import {
   getTopConsumers,
   getConsumoByMonth,
   getConsumoMensual,
+  getFacturacionKPIs,
+  getFacturacionResumenProveedores,
 } from "../db";
 import Fuse from "fuse.js";
 
@@ -257,6 +259,7 @@ CAPACIDADES:
 - **Análisis de consumo mensual y tendencias de demanda**
 - **Alertas de riesgo de desabastecimiento**
 - **Recomendaciones de compra basadas en tendencias**
+- **Facturación pendiente: OC y OCS pendientes por pagar, resumen por proveedor**
 
 REGLAS ESTRICTAS:
 1. Solo proporciona datos que estén en el contexto del sistema. NO inventes stocks, precios ni referencias.
@@ -312,12 +315,18 @@ INSTRUCCIONES POR TIPO DE CONSULTA:
 ⚠ CUANDO PREGUNTEN "QUÉ COMPRAR" o "PRIORIDAD DE COMPRA":
 - Combinar datos de [NECESITAN_COMPRA] con [CONSUMO_TENDENCIAS].
 - Priorizar: consumo creciente + stock bajo = COMPRAR PRIMERO.
-- Consumo decreciente + stock alto = NO COMPRAR / EVALUAR.`;
+- Consumo decreciente + stock alto = NO COMPRAR / EVALUAR.
+
+💳 CUANDO PREGUNTEN "PENDIENTE POR FACTURAR" o "FACTURACIÓN" o "CUÁNTO DEBEMOS" o "CUENTAS POR PAGAR":
+- Usar la sección [FACTURACION_PENDIENTE] del contexto.
+- Mostrar totales de OC y OCS por separado y combinados.
+- Si preguntan por un proveedor específico, buscar en el resumen [FACTURACION_TOP_PROVEEDORES].
+- Formato: $XXX.XXX COP`;
 
 // ── Construir contexto dinámico enriquecido v3.0 ───────────────────────────
 async function buildInventoryContext(userMessage: string): Promise<string> {
   try {
-    const [kpis, alerts, criticalOrders, ordersData, suppliersData, catalog, fuzzyResults, topConsumo, consumoMeses] = await Promise.all([
+    const [kpis, alerts, criticalOrders, ordersData, suppliersData, catalog, fuzzyResults, topConsumo, consumoMeses, facKpis, facResumen] = await Promise.all([
       getDashboardKPIs(),
       getJITAlerts(),
       getStockCeroConOC(),
@@ -327,6 +336,8 @@ async function buildInventoryContext(userMessage: string): Promise<string> {
       fuzzySearch(userMessage),
       getTopConsumers(15),
       getConsumoByMonth(),
+      getFacturacionKPIs(),
+      getFacturacionResumenProveedores(),
     ]);
 
     const alertSummary = alerts
@@ -431,6 +442,17 @@ ${(topConsumo || []).map((tc: any, i: number) =>
 ${(consumoMeses || []).map((m: any) => 
   `  ${m.mes}: ${Number(m.totalConsumo).toLocaleString("es-CO")} unidades (${m.refsActivas} refs activas)`
 ).join("\n") || "  (Sin datos de consumo mensual)"}
+
+[FACTURACION_PENDIENTE] OC y OCS pendientes por pagar:
+${facKpis ? `  - Total OC (sin IVA): $${Number(facKpis.oc?.totalSubtotal ?? 0).toLocaleString("es-CO")} COP (${facKpis.oc?.totalOC ?? 0} líneas, ${facKpis.oc?.docsUnicos ?? 0} documentos)
+  - Total OCS (sin IVA): $${Number(facKpis.ocs?.totalSubtotal ?? 0).toLocaleString("es-CO")} COP (${facKpis.ocs?.totalOCS ?? 0} líneas, ${facKpis.ocs?.docsUnicos ?? 0} documentos)
+  - Total combinado neto: $${Number(facKpis.totalCombinado ?? 0).toLocaleString("es-CO")} COP
+  - Documentos únicos totales: ${facKpis.docsTotales ?? 0}` : "  (Sin datos de facturación)"}
+
+[FACTURACION_TOP_PROVEEDORES] Top 15 proveedores por valor pendiente:
+${(facResumen || []).slice(0, 15).map((p: any, i: number) =>
+  `  ${i + 1}. ${p.proveedor} | OC: $${Number(p.ocSubtotal).toLocaleString("es-CO")} | OCS: $${Number(p.ocsSubtotal).toLocaleString("es-CO")} | Total: $${Number(p.totalNeto).toLocaleString("es-CO")} COP`
+).join("\n") || "  (Sin datos de proveedores)"}
 ${fuzzyResults}
 ===`;
   } catch (e) {
@@ -514,7 +536,8 @@ export const chatbotRouter = router({
       welcomeMsg += "• 🛒 Calcular cuánto comprar de una referencia\n";
       welcomeMsg += "• 📋 Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
       welcomeMsg += "• 🔧 Servicios pendientes (SRV)\n";
-      welcomeMsg += "• 💰 Top 20 referencias de mayor valor\n\n";
+      welcomeMsg += "• 💰 Top 20 referencias de mayor valor\n";
+      welcomeMsg += "• 💳 Facturación pendiente por pagar (OC y OCS)\n\n";
       welcomeMsg += "¿En qué te puedo ayudar?";
 
       return {

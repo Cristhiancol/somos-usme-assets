@@ -17,6 +17,7 @@ import {
   getCriticalStockItems,
   getStockCeroConOC,
 } from "./db";
+import { getFacturacionKPIs, getFacturacionOCList, getFacturacionOCSList, getFacturacionResumenProveedores } from "./db";
 import { isGDriveAuthorized, getValidAccessToken } from "./gdrive-oauth";
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
@@ -203,6 +204,35 @@ export const appRouter = router({
       });
 
       return { sent: true, count: critical.length };
+    }),
+  }),
+
+  facturacion: router({
+    kpis: publicProcedure.query(async () => {
+      return getFacturacionKPIs();
+    }),
+
+    oc: publicProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        estado: z.string().optional(),
+        proveedor: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return getFacturacionOCList(input ?? undefined);
+      }),
+
+    ocs: publicProcedure
+      .input(z.object({
+        search: z.string().optional(),
+        estado: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return getFacturacionOCSList(input ?? undefined);
+      }),
+
+    resumen: publicProcedure.query(async () => {
+      return getFacturacionResumenProveedores();
     }),
   }),
 });

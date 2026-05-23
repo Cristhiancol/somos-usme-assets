@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   BarChart3,
   Boxes,
+  FileText,
   LayoutDashboard,
   LogOut,
   PanelLeft,
@@ -47,19 +48,50 @@ import { Button } from "./ui/button";
 import { StockChatbot } from "./StockChatbot";
 import { CommandPalette } from "./CommandPalette";
 
+// Flat list for CommandPalette + breadcrumb compatibility
 export const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/", description: "Resumen general del inventario" },
-  { icon: BarChart3, label: "Analytics", path: "/analytics", description: "Análisis avanzado y tendencias" },
+  { icon: Activity, label: "Analytics", path: "/analytics", description: "Análisis avanzado y tendencias" },
   { icon: Boxes, label: "Inventario", path: "/inventario", description: "Catálogo completo de referencias" },
   { icon: TrendingUp, label: "Top 20 Valor", path: "/top-valor", description: "Referencias de mayor valor" },
-  { icon: AlertTriangle, label: "Stock Cero", path: "/stock-cero", description: "Referencias sin existencias" },
+  { icon: BarChart3, label: "Consumo", path: "/consumo", description: "Histórico de consumo mensual" },
   { icon: ShoppingCart, label: "Órdenes", path: "/ordenes", description: "Órdenes de compra activas" },
   { icon: Siren, label: "Stock 0 + OC", path: "/stock-cero-oc", description: "Stock cero con orden activa" },
-  { icon: Activity, label: "Consumo", path: "/consumo", description: "Histórico de consumo mensual" },
-  { icon: QrCode, label: "QR Acceso", path: "/qr-acceso", description: "Códigos QR de referencias" },
   { icon: Truck, label: "Proveedores", path: "/proveedores", description: "Gestión de proveedores" },
+  { icon: FileText, label: "Facturación", path: "/facturacion", description: "Pendiente por facturar OC/OCS" },
+  { icon: QrCode, label: "QR Acceso", path: "/qr-acceso", description: "Códigos QR de referencias" },
   { icon: RefreshCw, label: "Sincronizar", path: "/sync", description: "Sincronización con Drive" },
   { icon: Settings, label: "Admin", path: "/admin", description: "Administración del sistema" },
+];
+
+// Grouped sections for sidebar navigation
+export const navSections = [
+  {
+    label: "Análisis Almacén",
+    items: [
+      { icon: LayoutDashboard, label: "Dashboard", path: "/" },
+      { icon: Activity, label: "Analytics", path: "/analytics" },
+      { icon: Boxes, label: "Inventario", path: "/inventario" },
+      { icon: TrendingUp, label: "Top 20 Valor", path: "/top-valor" },
+      { icon: BarChart3, label: "Consumo", path: "/consumo" },
+    ],
+  },
+  {
+    label: "Compras",
+    items: [
+      { icon: ShoppingCart, label: "Órdenes", path: "/ordenes" },
+      { icon: Siren, label: "Stock 0 + OC", path: "/stock-cero-oc" },
+      { icon: Truck, label: "Proveedores", path: "/proveedores" },
+      { icon: FileText, label: "Facturación", path: "/facturacion" },
+    ],
+  },
+];
+
+// Utility items (no section label, shown after separator)
+export const utilityItems = [
+  { icon: QrCode, label: "QR Acceso", path: "/qr-acceso" },
+  { icon: RefreshCw, label: "Sincronizar", path: "/sync" },
+  { icon: Settings, label: "Admin", path: "/admin" },
 ];
 
 function formatRelativeDate(date: Date | string | null | undefined): string {
@@ -195,9 +227,43 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
 
         <SidebarContent className="gap-0 px-2 py-3">
+          {navSections.map((section) => (
+            <div key={section.label} className="mb-1">
+              <div className="px-3 py-2 group-data-[collapsible=icon]:hidden">
+                <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">
+                  {section.label}
+                </span>
+              </div>
+              <SidebarMenu>
+                {section.items.map((item) => {
+                  const isActive = location === item.path;
+                  const Icon = item.icon;
+                  return (
+                    <SidebarMenuItem key={item.path}>
+                      <SidebarMenuButton
+                        isActive={isActive}
+                        onClick={() => setLocation(item.path)}
+                        tooltip={item.label}
+                        className={`h-9 text-sm font-normal transition-colors ${
+                          isActive ? "bg-[#8CB32A]/10 text-[#8CB32A] hover:bg-[#8CB32A]/10 hover:text-[#8CB32A] font-medium" : ""
+                        }`}
+                      >
+                        <Icon className={`h-4 w-4 ${isActive ? "text-[#8CB32A]" : "text-slate-500"}`} />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </div>
+          ))}
 
+          {/* Separator */}
+          <div className="my-2 mx-3 border-t border-slate-200/70 group-data-[collapsible=icon]:mx-1" />
+
+          {/* Utility items */}
           <SidebarMenu>
-            {navItems.map((item) => {
+            {utilityItems.map((item) => {
               const isActive = location === item.path;
               const Icon = item.icon;
               return (
