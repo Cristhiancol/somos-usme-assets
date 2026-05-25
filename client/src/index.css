@@ -114,39 +114,39 @@
   --sidebar-ring:               oklch(0.68 0.17 120);
 }
 
-/* Mantener clase .dark por compatibilidad pero apuntando al mismo tema light */
+/* ── Dark Mode (Modo Oscuro Real) ── */
 .dark {
-  --background:            oklch(1 0 0);
-  --foreground:            oklch(0.18 0.03 30);
-  --card:                  oklch(1 0 0);
-  --card-foreground:       oklch(0.18 0.03 30);
-  --popover:               oklch(1 0 0);
-  --popover-foreground:    oklch(0.18 0.03 30);
-  --primary:               oklch(0.18 0.03 30);
-  --primary-foreground:    oklch(1 0 0);
-  --secondary:             oklch(0.68 0.17 120);
-  --secondary-foreground:  oklch(0.18 0.03 30);
-  --muted:                 oklch(0.95 0.005 120);
-  --muted-foreground:      oklch(0.45 0.04 30);
-  --accent:                oklch(0.58 0.12 185);
+  --background:            oklch(0.07 0.02 30);       /* #120D0B negro profundo */
+  --foreground:            oklch(1 0 0);               /* Blanco texto */
+  --card:                  oklch(0.18 0.03 30 / 0.8); /* rgba(40, 28, 25, 0.8) */
+  --card-foreground:       oklch(1 0 0);
+  --popover:               oklch(0.18 0.03 30);
+  --popover-foreground:    oklch(1 0 0);
+  --primary:               oklch(0.68 0.17 120);       /* Verde Lima */
+  --primary-foreground:    oklch(0.18 0.03 30);        /* Oscuro sobre Lima */
+  --secondary:             oklch(0.58 0.12 185);       /* Teal */
+  --secondary-foreground:  oklch(1 0 0);
+  --muted:                 oklch(0.25 0.04 30);        /* Oscuro muted */
+  --muted-foreground:      oklch(0.65 0.02 120);       /* #A19B99 texto secundario */
+  --accent:                oklch(0.58 0.12 185);       /* Teal */
   --accent-foreground:     oklch(1 0 0);
-  --destructive:           oklch(0.55 0.22 25);
+  --destructive:           oklch(0.55 0.22 25);        /* Rojo */
   --destructive-foreground: oklch(1 0 0);
-  --border:                oklch(0.85 0.02 120);
-  --input:                 oklch(0.96 0.005 120);
+  --border:                oklch(1 0 0 / 0.08);        /* rgba(255, 255, 255, 0.08) */
+  --input:                 oklch(0.25 0.04 30);
   --ring:                  oklch(0.68 0.17 120);
-  --chart-1: oklch(0.68 0.17 120);
-  --chart-2: oklch(0.58 0.12 185);
-  --chart-3: oklch(0.18 0.03 30);
-  --chart-4: oklch(0.55 0.22 25);
-  --chart-5: oklch(0.65 0.18 50);
-  --sidebar:                    oklch(0.18 0.03 30);
-  --sidebar-foreground:         oklch(0.95 0.01 120);
-  --sidebar-primary:            oklch(0.68 0.17 120);
-  --sidebar-primary-foreground: oklch(0.18 0.03 30);
-  --sidebar-accent:             oklch(0.25 0.04 30);
-  --sidebar-accent-foreground:  oklch(0.95 0.01 120);
-  --sidebar-border:             oklch(0.28 0.04 30);
+  --chart-1: oklch(0.68 0.17 120);   /* Lima */
+  --chart-2: oklch(0.58 0.12 185);   /* Teal */
+  --chart-3: oklch(0.55 0.22 25);    /* Rojo */
+  --chart-4: oklch(0.65 0.18 50);    /* Naranja */
+  --chart-5: oklch(0.18 0.03 30);    /* Oscuro */
+  --sidebar:                    oklch(0.18 0.03 30);      
+  --sidebar-foreground:         oklch(1 0 0);     
+  --sidebar-primary:            oklch(0.68 0.17 120);     
+  --sidebar-primary-foreground: oklch(0.18 0.03 30);      
+  --sidebar-accent:             oklch(0.25 0.04 30);      
+  --sidebar-accent-foreground:  oklch(1 0 0);
+  --sidebar-border:             oklch(1 0 0 / 0.08);      
   --sidebar-ring:               oklch(0.68 0.17 120);
 }
 
@@ -156,11 +156,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+    font-family: 'IBM Plex Sans', 'Inter', system-ui, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
   h1, h2, h3, .font-orbitron {
-    font-family: 'Space Grotesk', 'Inter', system-ui, sans-serif;
-    font-weight: 600;
+    font-family: 'Work Sans', 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
   }
   code, .font-mono {
     font-family: 'JetBrains Mono', monospace;
@@ -786,4 +787,99 @@ tbody tr:nth-child(10) { animation-delay: 0.2s; }
 .at-table tbody tr:hover { background: oklch(0.97 0.01 120 / 0.5); }
 .at-table tbody tr:last-child td { border-bottom: none; }
 .at-footer { text-align: center; font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; color: #9ca3af; padding: 1rem 0; }
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   GLASSMORPHISM MODERNO — Dark & Light
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Glassmorphism Card — Dark Mode */
+.dark .glass-card {
+  background: rgba(40, 28, 25, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    0 8px 32px 0 rgba(0, 0, 0, 0.37),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
+}
+
+/* Glassmorphism Card — Light Mode */
+.glass-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 
+    0 8px 32px 0 rgba(31, 38, 135, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
+}
+
+/* Glass hover effect */
+.glass-card:hover {
+  transform: translateY(-2px);
+  transition: all 0.3s ease;
+}
+
+.dark .glass-card:hover {
+  border-color: rgba(140, 179, 42, 0.3);
+  box-shadow: 
+    0 12px 40px 0 rgba(140, 179, 42, 0.15),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.glass-card:hover {
+  border-color: rgba(140, 179, 42, 0.2);
+  box-shadow: 
+    0 12px 40px 0 rgba(140, 179, 42, 0.1),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
+}
+
+/* Glassmorphism KPI Card */
+.glass-kpi {
+  background: rgba(40, 28, 25, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .glass-kpi {
+  background: rgba(40, 28, 25, 0.7);
+}
+
+.glass-kpi:hover {
+  transform: translateY(-4px) scale(1.02);
+  border-color: rgba(140, 179, 42, 0.3);
+}
+
+/* Pulse animation for critical items */
+@keyframes glass-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+}
+
+.glass-pulse-red {
+  animation: glass-pulse 2s infinite;
+}
+
+/* Dark mode specific glassmorphism utilities */
+.dark .glass-subtle {
+  background: rgba(40, 28, 25, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
 

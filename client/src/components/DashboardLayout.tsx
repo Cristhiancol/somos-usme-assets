@@ -30,6 +30,7 @@ import {
   FileText,
   LayoutDashboard,
   LogOut,
+  Moon,
   PanelLeft,
   QrCode,
   RefreshCw,
@@ -37,6 +38,7 @@ import {
   Settings,
   ShoppingCart,
   Siren,
+  Sun,
   TrendingUp,
   Truck,
 } from "lucide-react";
@@ -47,6 +49,7 @@ import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 import { StockChatbot } from "./StockChatbot";
 import { CommandPalette } from "./CommandPalette";
+import { useTheme } from "@/contexts/ThemeContext";
 
 // Flat list for CommandPalette + breadcrumb compatibility
 export const navItems = [
@@ -147,6 +150,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
   const isMobile = useIsMobile();
+  const { theme, toggleTheme } = useTheme();
 
   const { data: lastSyncData } = trpc.dashboard.lastSync.useQuery(undefined, {
     refetchInterval: 60_000,
@@ -213,8 +217,8 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <Sidebar collapsible="icon" className="border-r border-slate-200/70">
-        <SidebarHeader className="h-16 justify-center border-b border-slate-200/70">
+      <Sidebar collapsible="icon" className="border-r border-slate-200/70 dark:border-slate-800 dark:bg-slate-900">
+        <SidebarHeader className="h-16 justify-center border-b border-slate-200/70 dark:border-slate-800">
           <div className="flex items-center gap-2.5 px-2 w-full">
             <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#8CB32A] to-[#6d8c1f] text-[#281C19] flex items-center justify-center font-bold text-sm shadow-sm shrink-0">
               AT
@@ -333,7 +337,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset className="bg-slate-50/50">
+      <SidebarInset className="bg-slate-50/50 dark:bg-slate-950">
         <header className="flex h-14 items-center justify-between border-b border-slate-200/70 bg-white/80 backdrop-blur px-4 sm:px-6 sticky top-0 z-30">
           <div className="flex items-center gap-3">
             {isMobile && <SidebarTrigger className="h-8 w-8" />}
@@ -358,25 +362,37 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2">
             {kpis && kpis.zeroStock > 0 && (
-              <Badge variant="outline" className="hidden sm:flex bg-red-50 text-red-700 border-red-200 font-medium">
+              <Badge variant="outline" className="hidden sm:flex bg-red-50 text-red-700 border-red-200 font-medium dark:bg-red-950/50 dark:text-red-400 dark:border-red-800/50">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 {kpis.zeroStock} stock cero
               </Badge>
             )}
             <button
+              onClick={toggleTheme}
+              className="h-8 w-8 flex items-center justify-center rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              data-testid="theme-toggle"
+            >
+              {theme === 'dark' ? (
+                <Sun className="h-4 w-4 text-yellow-500" />
+              ) : (
+                <Moon className="h-4 w-4 text-slate-600" />
+              )}
+            </button>
+            <button
               onClick={() => {
                 document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
               }}
-              className="hidden md:flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 transition-colors px-2.5 py-1.5 text-xs text-muted-foreground"
+              className="hidden md:flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors px-2.5 py-1.5 text-xs text-muted-foreground"
             >
               <Search className="h-3 w-3" />
               <span>Buscar...</span>
-              <kbd className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
+              <kbd className="rounded border border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
             </button>
             <Button
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-xs bg-white"
+              className="h-8 gap-1.5 text-xs bg-white dark:bg-slate-800"
               onClick={handleSync}
               disabled={syncPending}
             >
