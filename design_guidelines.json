@@ -1,0 +1,103 @@
+{
+  "theme": "Archetype 4: Swiss & High-Contrast (Industrial/Control Room Variant with Tech Accents)",
+  "global_rules": {
+    "theme_mode": "dark/light toggle support",
+    "design_pattern": "Industrial Asset Tracker modernizado con toques tech/futuristas",
+    "mobile_first": true,
+    "glassmorphism": "Subtle tactile glassmorphism for cards. High opacity + blur + 1px border."
+  },
+  "colors": {
+    "brand": {
+      "primary": "#8CB32A",
+      "secondary": "#009890",
+      "dark_base": "#281C19"
+    },
+    "dark_mode": {
+      "background": "#120D0B",
+      "surface": "rgba(40, 28, 25, 0.8)",
+      "border": "rgba(255, 255, 255, 0.08)",
+      "text_primary": "#FFFFFF",
+      "text_secondary": "#A19B99"
+    },
+    "light_mode": {
+      "background": "#F4F5F6",
+      "surface": "rgba(255, 255, 255, 0.9)",
+      "border": "rgba(0, 0, 0, 0.08)",
+      "text_primary": "#1A1514",
+      "text_secondary": "#5C5655"
+    },
+    "jit_status": {
+      "critico": "#EF4444",
+      "reorden": "#F59E0B",
+      "precaucion": "#009890",
+      "optimo": "#8CB32A"
+    }
+  },
+  "typography": {
+    "strategy": "Swiss Brutalist (Tech/Industrial)",
+    "font_family": {
+      "headings": "Work Sans, sans-serif",
+      "body": "IBM Plex Sans, sans-serif",
+      "monospace": "JetBrains Mono, monospace"
+    },
+    "scale": {
+      "h1": "text-4xl tracking-tight font-black",
+      "h2": "text-2xl tracking-tight font-bold",
+      "h3": "text-xl tracking-tight font-semibold",
+      "body": "text-sm",
+      "labels": "text-xs uppercase tracking-[0.2em] font-semibold"
+    }
+  },
+  "layout": {
+    "strategy": "MODE B: THE CONTROL ROOM GRID",
+    "base_grid": "grid-cols-1 md:grid-cols-3 lg:grid-cols-4",
+    "gap": "gap-4 md:gap-6",
+    "spacing_scale": "dense (p-4 to p-6 inside cards)",
+    "widgets": {
+      "kpi_summary": "col-span-1",
+      "main_chart": "col-span-1 md:col-span-2 lg:col-span-3 row-span-2",
+      "list_feed": "col-span-1 row-span-2"
+    }
+  },
+  "components": {
+    "strategy": "Shadcn UI (React JS, NOT TSX)",
+    "cards": "Subtle glassmorphism: backdrop-blur-xl, 1px subtle inner border, max-rounded (8px).",
+    "tables": "Sticky headers, right-aligned numbers, zebra striping on light mode, compact row height.",
+    "buttons": "Flat colors, no heavy gradients. Primary action uses #8CB32A.",
+    "charts": "Recharts. Interactive Tooltips, hover effects, dark-mode compliant grid lines (opacity 0.1)."
+  },
+  "interactions_and_animations": {
+    "hover_states": "Cards lift -translate-y-1 with expanded shadow. Button brightness increases.",
+    "page_transitions": "Framer Motion: fade in and slide up (y: 10, opacity: 0).",
+    "data_viz": "Recharts default animations enabled. Tooltips must show detailed split.",
+    "micro_interactions": "Status indicators (semáforo) should have a soft pulse animation (ping) for 'Crítico'."
+  },
+  "assets": {
+    "image_urls": [
+      {
+        "category": "login_background",
+        "url": "https://static.prod-images.emergentagent.com/jobs/50ceb9b8-c9c3-40a8-ba7c-376a126b14d0/images/8faa5de400b4e7715e13b586d2cbadf62708b4095005efe5d54b99a544e1ef31.png",
+        "description": "Abstract dark tech futuristic background for industrial asset tracker, subtle glowing green and teal accents"
+      },
+      {
+        "category": "hero_depot_reference",
+        "url": "https://images.unsplash.com/photo-1572675339312-3e8b094a544d?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NTYxOTF8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBwdWJsaWMlMjB0cmFuc2l0JTIwYnVzJTIwZGVwb3R8ZW58MHx8fHwxNzc5NjczNTc1fDA&ixlib=rb-4.1.0&q=85",
+        "description": "Modern public transit bus depot background alternative"
+      }
+    ],
+    "icons": {
+      "library": "lucide-react",
+      "style": "Stroke width 1.5, technical and clean."
+    }
+  },
+  "instructions_to_main_agent": [
+    "CREATE FILES WITH .js EXTENSION ONLY, NOT .tsx",
+    "Ensure global dark/light toggle is implemented at the root layout level using standard Tailwind 'dark' class.",
+    "Inject the custom brand colors (#8CB32A, #009890, #281C19) into tailwind.config.js theme extension.",
+    "All interactive elements (buttons, links, inputs, dropdowns) MUST include a 'data-testid' attribute formatted as kebab-case.",
+    "Use Recharts for the interactive donut and area charts, ensuring they reflect the JIT semáforo colors.",
+    "The UI should feel dense but readable (Control Room Archetype). Use precise paddings (p-4 or p-6 in cards).",
+    "For cards, implement a subtle glassmorphism: in dark mode 'bg-[#281C19]/80 backdrop-blur-md border border-white/10'.",
+    "Maintain all requested pages: Dashboard, Inventory, Purchase Orders, Monthly Consumption, Sync, Chatbot, Billing."
+  ]
+}
