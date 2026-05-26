@@ -67,7 +67,7 @@ function SirenIcon({ size = 18, color = CORP_RED }: { size?: number; color?: str
   );
 }
 
-// ─── Componente KPI Card (Asset Tracker style) ────────────────────────────────
+// ─── Componente KPI Card (Glassmorphism Modernizado) ──────────────────────────
 function ATKpiCard({
   title, value, subtitle, accentColor, icon, pulse, href,
 }: {
@@ -81,8 +81,8 @@ function ATKpiCard({
     const cls = `at-kpi-icon${pulse ? " animate-pulse-neon" : ""}`;
     const style = { color: accentColor };
     switch (icon) {
-      case "alert":   return <AlertIcon size={18} color={accentColor} />;
-      case "siren":   return <SirenIcon size={18} color={accentColor} />;
+      case "alert":   return <AlertIcon size={20} color={accentColor} />;
+      case "siren":   return <SirenIcon size={20} color={accentColor} />;
       case "package": return <Package  className={cls} style={style} />;
       case "cart":    return <ShoppingCart className={cls} style={style} />;
       case "up":      return <TrendingUp   className={cls} style={style} />;
@@ -94,38 +94,52 @@ function ATKpiCard({
 
   return (
     <div
-      className={`at-card at-kpi${href ? " cursor-pointer" : ""}${pulse ? " at-pulse" : ""}`}
-      style={{ "--at-accent": accentColor } as React.CSSProperties}
+      className={`glass-kpi${href ? " cursor-pointer" : ""}${pulse ? " glass-pulse-red" : ""} group transition-all duration-300`}
+      style={{ 
+        "--at-accent": accentColor,
+        borderTop: `2px solid ${accentColor}`,
+      } as React.CSSProperties}
       onClick={() => href && setLocation(href)}
       role={href ? "button" : undefined}
       tabIndex={href ? 0 : undefined}
       onKeyDown={(e) => e.key === "Enter" && href && setLocation(href)}
+      data-testid={`kpi-card-${title.toLowerCase().replace(/\s+/g, '-')}`}
     >
-      <div className="at-kpi-header">
+      <div className="flex items-start justify-between mb-3">
         <div
-          className="at-kpi-icon-wrap"
+          className="p-2.5 rounded-lg transition-all duration-300 group-hover:scale-110"
           style={{
             background: `${accentColor}18`,
-            boxShadow: pulse ? `0 0 10px ${accentColor}60` : "none",
+            boxShadow: pulse ? `0 0 16px ${accentColor}60` : `0 0 8px ${accentColor}30`,
           }}
         >
           {iconEl}
         </div>
         {href && (
-          <span className="at-badge" style={{ background: `${accentColor}18`, color: accentColor }}>→</span>
+          <span 
+            className="text-xs font-bold px-2 py-1 rounded-md transition-all opacity-0 group-hover:opacity-100" 
+            style={{ background: `${accentColor}18`, color: accentColor }}
+          >
+            Ver →
+          </span>
         )}
       </div>
       <div
-        className="at-kpi-value"
+        className="text-3xl font-black mb-2 transition-all duration-300 group-hover:scale-105"
         style={{
+          fontFamily: "'Work Sans', sans-serif",
           color: accentColor,
-          textShadow: pulse ? `0 0 14px ${accentColor}80` : "none",
+          textShadow: pulse ? `0 0 20px ${accentColor}90` : `0 0 10px ${accentColor}40`,
         }}
       >
         {value}
       </div>
-      <div className="at-kpi-title">{title}</div>
-      <div className="at-kpi-sub">{subtitle}</div>
+      <div className="text-sm font-semibold mb-1 dark:text-gray-200" style={{ fontFamily: "'Work Sans', sans-serif" }}>
+        {title}
+      </div>
+      <div className="text-xs text-gray-500 dark:text-gray-400">
+        {subtitle}
+      </div>
     </div>
   );
 }
