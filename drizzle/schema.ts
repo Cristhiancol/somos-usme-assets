@@ -225,3 +225,24 @@ export const facturacionOCS = mysqlTable("facturacion_ocs", {
 export type FacturacionOCS = typeof facturacionOCS.$inferSelect;
 export type InsertFacturacionOCS = typeof facturacionOCS.$inferInsert;
 
+// ── Informe Mensual OC/OCS por Proveedor (con enlaces Paz y Salvo) ──
+export const informeMensualProveedor = mysqlTable("informe_mensual_proveedor", {
+  id: int("id").autoincrement().primaryKey(),
+  anno: int("anno").notNull(),
+  mes: int("mes").notNull(),
+  nombreMes: varchar("nombreMes", { length: 32 }),
+  proveedor: text("proveedor"),
+  ocSinIVA: double("ocSinIVA").default(0),
+  ocConIVA: double("ocConIVA").default(0),
+  ocsSinIVA: double("ocsSinIVA").default(0),
+  ocsConIVA: double("ocsConIVA").default(0),
+  totalConIVA: double("totalConIVA").default(0),
+  observaciones: text("observaciones"),
+  enlacePazSalvo: text("enlacePazSalvo"), // URL del documento PDF
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InformeMensualProveedor = typeof informeMensualProveedor.$inferSelect;
+export type InsertInformeMensualProveedor = typeof informeMensualProveedor.$inferInsert;
+
