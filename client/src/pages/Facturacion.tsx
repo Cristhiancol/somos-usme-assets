@@ -100,6 +100,7 @@ export default function FacturacionPage() {
   // Charts
   const donutData = useMemo(() => {
     if (!kpis) return null;
+    if ((kpis.oc?.totalNeto || 0) === 0 && (kpis.ocs?.totalNeto || 0) === 0) return null;
     return pieSpec(
       [
         { label: "OC (Compras)", value: kpis.oc?.totalNeto || 0 },
