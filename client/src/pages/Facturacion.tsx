@@ -97,6 +97,15 @@ export default function FacturacionPage() {
     searchInforme.length >= 3 ? { search: searchInforme } : undefined
   );
 
+  const filteredInforme = useMemo(() => {
+    if (!informeMensual) return [];
+    return informeMensual.filter((r: any) => 
+      Math.abs(r.totalConIVA || 0) > 0 || 
+      r.enlacePazSalvo || 
+      (r.observaciones && r.observaciones.trim() !== "")
+    );
+  }, [informeMensual]);
+
   // Charts
   const donutData = useMemo(() => {
     if (!kpis) return null;
@@ -137,8 +146,8 @@ export default function FacturacionPage() {
 
   // ── Paz y Salvo computed data ──
   const pazSalvoData = useMemo(() => {
-    if (!pazSalvoProveedor || !informeMensual) return null;
-    const provRows = (informeMensual as any[]).filter((r: any) => r.proveedor === pazSalvoProveedor);
+    if (!pazSalvoProveedor || !filteredInforme) return null;
+    const provRows = (filteredInforme as any[]).filter((r: any) => r.proveedor === pazSalvoProveedor);
     if (provRows.length === 0) return null;
     const conPazSalvo = provRows.filter((r: any) =>
       r.enlacePazSalvo || (r.observaciones && r.observaciones.toLowerCase().includes("paz"))
@@ -154,7 +163,7 @@ export default function FacturacionPage() {
       .filter((r: any) => r.enlacePazSalvo)
       .map((r: any) => ({ mes: r.nombreMes || r.mes, enlace: r.enlacePazSalvo, anno: r.anno }));
     return { provRows, conPazSalvo, sinPazSalvo, totalConPaz, totalSinPaz, totalGeneral, porcentaje, enlaces };
-  }, [pazSalvoProveedor, informeMensual]);
+  }, [pazSalvoProveedor, filteredInforme]);
 
   const pazSalvoChartData = useMemo(() => {
     if (!pazSalvoData) return null;
@@ -536,9 +545,9 @@ export default function FacturacionPage() {
               </div>
               <button
                 onClick={() => {
-                  if (!informeMensual || informeMensual.length === 0) return;
+                  if (!filteredInforme || filteredInforme.length === 0) return;
                   downloadCSV(
-                    informeMensual,
+                    filteredInforme,
                     [
                       { key: "anno", header: "Año" },
                       { key: "mes", header: "Mes" },
@@ -554,7 +563,7 @@ export default function FacturacionPage() {
                     "informe_mensual"
                   );
                 }}
-                disabled={!informeMensual || informeMensual.length === 0}
+                disabled={!filteredInforme || filteredInforme.length === 0}
                 className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
                 style={{
                   fontFamily: "'Work Sans', sans-serif",
@@ -585,10 +594,10 @@ export default function FacturacionPage() {
                 <tbody>
                   {informeLoading ? (
                     <tr><td colSpan={9} className="text-center py-8 text-slate-400"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></td></tr>
-                  ) : !informeMensual || informeMensual.length === 0 ? (
+                  ) : !filteredInforme || filteredInforme.length === 0 ? (
                     <tr><td colSpan={9} className="text-center py-8 text-slate-400">No hay datos del informe mensual. Sincronice primero.</td></tr>
                   ) : (
-                    informeMensual.map((item: any, i: number) => (
+                    filteredInforme.map((item: any, i: number) => (
                       <tr key={item.id ?? i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setPazSalvoProveedor(item.proveedor)}>
                         <td className="px-4 py-2.5 font-mono text-xs text-slate-700">{item.anno}</td>
                         <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{item.nombreMes || item.mes}</td>

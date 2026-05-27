@@ -635,11 +635,14 @@ async function extractInformeMensualHyperlinks(items: any[]): Promise<any[]> {
 
     // Match hyperlinks with items
     let hyperlinkCount = 0;
-    for (let i = 0; i < items.length && i < rowData.length; i++) {
-      const cellData = rowData[i]?.values?.[0];
-      if (cellData?.hyperlink) {
-        items[i].enlacePazSalvo = cellData.hyperlink;
-        hyperlinkCount++;
+    for (const item of items) {
+      const rowDataIndex = item.rowIndex - 4; // Since range starts at J5 and row[4] in raw
+      if (rowDataIndex >= 0 && rowDataIndex < rowData.length) {
+        const cellData = rowData[rowDataIndex]?.values?.[0];
+        if (cellData?.hyperlink) {
+          item.enlacePazSalvo = cellData.hyperlink;
+          hyperlinkCount++;
+        }
       }
     }
 
