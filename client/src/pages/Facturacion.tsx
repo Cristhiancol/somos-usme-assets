@@ -11,6 +11,9 @@ import {
   TrendingUp,
   Loader2,
   Download,
+  X,
+  Eye,
+  CheckCircle2,
 } from "lucide-react";
 
 function formatCurrency(n: number | null | undefined): string {
@@ -80,6 +83,7 @@ export default function FacturacionPage() {
   const [searchOC, setSearchOC] = useState("");
   const [searchOCS, setSearchOCS] = useState("");
   const [searchInforme, setSearchInforme] = useState("");
+  const [pazSalvoProveedor, setPazSalvoProveedor] = useState<string | null>(null);
 
   const { data: kpis, isLoading: kpisLoading } = trpc.facturacion.kpis.useQuery();
   const { data: ocData, isLoading: ocLoading } = trpc.facturacion.oc.useQuery(
@@ -129,6 +133,49 @@ export default function FacturacionPage() {
       { title: "OC por Estado", width: 400, height: 220 }
     );
   }, [ocData]);
+
+  // ── Paz y Salvo computed data ──
+  const pazSalvoData = useMemo(() => {
+    if (!pazSalvoProveedor || !informeMensual) return null;
+    const provRows = (informeMensual as any[]).filter((r: any) => r.proveedor === pazSalvoProveedor);
+    if (provRows.length === 0) return null;
+    const conPazSalvo = provRows.filter((r: any) =>
+      r.enlacePazSalvo || (r.observaciones && r.observaciones.toLowerCase().includes("paz"))
+    );
+    const sinPazSalvo = provRows.filter((r: any) =>
+      !r.enlacePazSalvo && !(r.observaciones && r.observaciones.toLowerCase().includes("paz"))
+    );
+    const totalConPaz = conPazSalvo.reduce((sum: number, r: any) => sum + Math.abs(r.totalConIVA || 0), 0);
+    const totalSinPaz = sinPazSalvo.reduce((sum: number, r: any) => sum + Math.abs(r.totalConIVA || 0), 0);
+    const totalGeneral = totalConPaz + totalSinPaz;
+    const porcentaje = totalGeneral > 0 ? (totalConPaz / totalGeneral) * 100 : 0;
+    const enlaces = conPazSalvo
+      .filter((r: any) => r.enlacePazSalvo)
+      .map((r: any) => ({ mes: r.nombreMes || r.mes, enlace: r.enlacePazSalvo, anno: r.anno }));
+    return { provRows, conPazSalvo, sinPazSalvo, totalConPaz, totalSinPaz, totalGeneral, porcentaje, enlaces };
+  }, [pazSalvoProveedor, informeMensual]);
+
+  const pazSalvoChartData = useMemo(() => {
+    if (!pazSalvoData) return null;
+    return barSpec(
+      pazSalvoData.provRows.map((r: any) => ({
+        label: `${r.nombreMes || r.mes}`,
+        value: Math.abs(r.totalConIVA || 0),
+      })),
+      { title: "Facturación Mensual", width: 480, height: 220 }
+    );
+  }, [pazSalvoData]);
+
+  const pazSalvoPieData = useMemo(() => {
+    if (!pazSalvoData || (pazSalvoData.totalConPaz === 0 && pazSalvoData.totalSinPaz === 0)) return null;
+    return pieSpec(
+      [
+        { label: "Con Paz y Salvo", value: pazSalvoData.totalConPaz },
+        { label: "Pendiente", value: pazSalvoData.totalSinPaz },
+      ],
+      { title: "Estado Paz y Salvo", width: 280, height: 200 }
+    );
+  }, [pazSalvoData]);
 
   const handleExportOC = useCallback(() => {
     if (!ocData) return;
@@ -469,10 +516,7 @@ export default function FacturacionPage() {
             </div>
           </div>
         </TabsContent>
-      </Tabs>
-    </div>
-  );
-}
+
 
 
         {/* Tab Informe Mensual */}
@@ -544,7 +588,7 @@ export default function FacturacionPage() {
                     <tr><td colSpan={9} className="text-center py-8 text-slate-400">No hay datos del informe mensual. Sincronice primero.</td></tr>
                   ) : (
                     informeMensual.map((item: any, i: number) => (
-                      <tr key={item.id ?? i} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                      <tr key={item.id ?? i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setPazSalvoProveedor(item.proveedor)}>
                         <td className="px-4 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">{item.anno}</td>
                         <td className="px-4 py-2.5 text-xs font-medium text-slate-800 dark:text-slate-200">{item.nombreMes || item.mes}</td>
                         <td className="px-4 py-2.5 text-xs text-slate-600 dark:text-slate-400 max-w-[250px] truncate">{item.proveedor || "—"}</td>
@@ -555,26 +599,29 @@ export default function FacturacionPage() {
                         <td className="px-4 py-2.5 text-xs font-mono text-right font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(item.totalConIVA)}</td>
                         <td className="px-4 py-2.5">
                           {item.enlacePazSalvo && item.observaciones?.toLowerCase().includes("paz") ? (
-                            <a
-                              href={item.enlacePazSalvo}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setPazSalvoProveedor(item.proveedor); }}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all hover:scale-105 hover:shadow-md"
                               style={{
-                                fontFamily: "'Work Sans', sans-serif",
+                                fontFamily: "'Space Grotesk', sans-serif",
                                 background: "linear-gradient(135deg, #8CB32A 0%, #6d8c1f 100%)",
                                 color: "white",
                                 boxShadow: "0 0 10px rgba(140,179,42,0.3)",
                               }}
                               data-testid={`paz-salvo-link-${i}`}
                             >
-                              <FileText className="h-3.5 w-3.5" />
+                              <CheckCircle2 className="h-3.5 w-3.5" />
                               Paz y Salvo
-                            </a>
+                            </button>
                           ) : item.observaciones ? (
-                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.observaciones}</span>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setPazSalvoProveedor(item.proveedor); }}
+                              className="text-xs text-slate-500 hover:text-[#8CB32A] hover:underline transition-colors text-left"
+                            >
+                              {item.observaciones}
+                            </button>
                           ) : (
-                            <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+                            <span className="text-xs text-slate-400">—</span>
                           )}
                         </td>
                       </tr>
@@ -585,3 +632,151 @@ export default function FacturacionPage() {
             </div>
           </div>
         </TabsContent>
+      </Tabs>
+
+      {/* ── Modal Paz y Salvo ── */}
+      {pazSalvoProveedor && pazSalvoData && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => setPazSalvoProveedor(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto m-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-slate-200 rounded-t-2xl px-6 py-4 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  Paz y Salvo — Detalle
+                </h2>
+                <p className="text-sm text-slate-500 mt-0.5 max-w-[400px] truncate">{pazSalvoProveedor}</p>
+              </div>
+              <button
+                onClick={() => setPazSalvoProveedor(null)}
+                className="h-9 w-9 rounded-lg flex items-center justify-center bg-slate-100 hover:bg-slate-200 transition-colors"
+              >
+                <X className="h-4 w-4 text-slate-600" />
+              </button>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 px-6 py-5">
+              <div className="rounded-xl border border-slate-200/70 bg-gradient-to-br from-slate-50 to-white p-4">
+                <p className="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Total Facturado</p>
+                <p className="text-xl font-bold text-slate-900 mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {formatCurrency(pazSalvoData.totalGeneral)}
+                </p>
+                <p className="text-[10px] text-slate-400 mt-0.5">{pazSalvoData.provRows.length} registros mensuales</p>
+              </div>
+              <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 to-white p-4">
+                <p className="text-[11px] uppercase tracking-wider text-emerald-600 font-medium">Con Paz y Salvo</p>
+                <p className="text-xl font-bold text-emerald-700 mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {formatCurrency(pazSalvoData.totalConPaz)}
+                </p>
+                <p className="text-[10px] text-emerald-500 mt-0.5">{pazSalvoData.conPazSalvo.length} meses liquidados</p>
+              </div>
+              <div className="rounded-xl border border-amber-200/70 bg-gradient-to-br from-amber-50 to-white p-4">
+                <p className="text-[11px] uppercase tracking-wider text-amber-600 font-medium">Pendiente</p>
+                <p className="text-xl font-bold text-amber-700 mt-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+                  {formatCurrency(pazSalvoData.totalSinPaz)}
+                </p>
+                <p className="text-[10px] text-amber-500 mt-0.5">{pazSalvoData.sinPazSalvo.length} meses por liquidar</p>
+              </div>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="px-6 pb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-slate-600">Progreso Paz y Salvo</span>
+                <span className="text-xs font-bold" style={{ color: CORP_COLORS.green }}>
+                  {pazSalvoData.porcentaje.toFixed(1)}%
+                </span>
+              </div>
+              <div className="h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                <div
+                  className="h-full rounded-full transition-all duration-700 ease-out"
+                  style={{
+                    width: `${pazSalvoData.porcentaje}%`,
+                    background: "linear-gradient(90deg, #8CB32A 0%, #a5d633 100%)",
+                    boxShadow: "0 0 8px rgba(140,179,42,0.4)",
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 px-6 pb-4">
+              {pazSalvoChartData && (
+                <div className="rounded-xl border border-slate-200/70 bg-white p-4">
+                  <VegaChart spec={pazSalvoChartData} />
+                </div>
+              )}
+              {pazSalvoPieData && (
+                <div className="rounded-xl border border-slate-200/70 bg-white p-4">
+                  <VegaChart spec={pazSalvoPieData} />
+                </div>
+              )}
+            </div>
+
+            {/* Monthly Detail Table */}
+            <div className="px-6 pb-6">
+              <h3 className="text-sm font-semibold text-slate-800 mb-3">Detalle Mensual</h3>
+              <div className="rounded-lg border border-slate-200/70 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase">Mes</th>
+                      <th className="px-3 py-2 text-right text-xs font-medium text-slate-500 uppercase">Total</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase">Estado</th>
+                      <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase">Documento</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {pazSalvoData.provRows.map((r: any, idx: number) => {
+                      const tienePaz = r.enlacePazSalvo || (r.observaciones && r.observaciones.toLowerCase().includes("paz"));
+                      return (
+                        <tr key={idx} className="border-b border-slate-50 hover:bg-slate-50/50">
+                          <td className="px-3 py-2 text-xs font-medium text-slate-700">{r.nombreMes || r.mes} {r.anno}</td>
+                          <td className="px-3 py-2 text-xs font-mono text-right font-semibold text-slate-800">{formatCurrency(r.totalConIVA)}</td>
+                          <td className="px-3 py-2 text-center">
+                            {tienePaz ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Paz y Salvo
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700">
+                                Pendiente
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            {r.enlacePazSalvo ? (
+                              <a
+                                href={r.enlacePazSalvo}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold bg-[#8CB32A]/10 text-[#8CB32A] hover:bg-[#8CB32A]/20 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <Eye className="h-3 w-3" />
+                                Ver PDF
+                              </a>
+                            ) : (
+                              <span className="text-xs text-slate-300">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
