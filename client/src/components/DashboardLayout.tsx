@@ -368,18 +368,6 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
               </Badge>
             )}
             <button
-              onClick={toggleTheme}
-              className="h-8 w-8 flex items-center justify-center rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors"
-              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-              data-testid="theme-toggle"
-            >
-              {theme === 'dark' ? (
-                <Sun className="h-4 w-4 text-yellow-500" />
-              ) : (
-                <Moon className="h-4 w-4 text-slate-600" />
-              )}
-            </button>
-            <button
               onClick={() => {
                 document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
               }}

@@ -428,13 +428,21 @@ async function parseFacturacionData(buffer: Buffer) {
     if (val === null || val === undefined || val === "") return def;
     if (typeof val === "number") return isNaN(val) ? def : val;
     if (typeof val === "string") {
-      let cleaned = val.replace(/\$/g, "").replace(/\s/g, "").trim();
-      const isNegative = cleaned.startsWith("(") && cleaned.endsWith(")");
-      if (isNegative) cleaned = cleaned.slice(1, -1);
-      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
-      const n = Number(cleaned);
-      if (isNaN(n)) return def;
-      return isNegative ? -n : n;
+      let cleaned = val.replace(/[^0-9\.,-]/g, "");
+      const lastDotIndex = cleaned.lastIndexOf(".");
+      const lastCommaIndex = cleaned.lastIndexOf(",");
+      const decimalSeparatorIndex = Math.max(lastDotIndex, lastCommaIndex);
+      
+      if (decimalSeparatorIndex !== -1) {
+        if (cleaned.length - decimalSeparatorIndex <= 3) {
+          const integerPart = cleaned.substring(0, decimalSeparatorIndex).replace(/[\.,]/g, "");
+          const decimalPart = cleaned.substring(decimalSeparatorIndex + 1);
+          const n = Number(integerPart + "." + decimalPart);
+          return isNaN(n) ? def : n;
+        }
+      }
+      const n = Number(cleaned.replace(/[\.,]/g, ""));
+      return isNaN(n) ? def : n;
     }
     return def;
   }
@@ -526,13 +534,21 @@ async function parseInformeMensualData(buffer: Buffer): Promise<any[]> {
     if (val === null || val === undefined || val === "") return def;
     if (typeof val === "number") return isNaN(val) ? def : val;
     if (typeof val === "string") {
-      let cleaned = val.replace(/\$/g, "").replace(/\s/g, "").trim();
-      const isNegative = cleaned.startsWith("(") && cleaned.endsWith(")");
-      if (isNegative) cleaned = cleaned.slice(1, -1);
-      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
-      const n = Number(cleaned);
-      if (isNaN(n)) return def;
-      return isNegative ? -n : n;
+      let cleaned = val.replace(/[^0-9\.,-]/g, "");
+      const lastDotIndex = cleaned.lastIndexOf(".");
+      const lastCommaIndex = cleaned.lastIndexOf(",");
+      const decimalSeparatorIndex = Math.max(lastDotIndex, lastCommaIndex);
+      
+      if (decimalSeparatorIndex !== -1) {
+        if (cleaned.length - decimalSeparatorIndex <= 3) {
+          const integerPart = cleaned.substring(0, decimalSeparatorIndex).replace(/[\.,]/g, "");
+          const decimalPart = cleaned.substring(decimalSeparatorIndex + 1);
+          const n = Number(integerPart + "." + decimalPart);
+          return isNaN(n) ? def : n;
+        }
+      }
+      const n = Number(cleaned.replace(/[\.,]/g, ""));
+      return isNaN(n) ? def : n;
     }
     return def;
   }

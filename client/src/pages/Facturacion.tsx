@@ -162,7 +162,7 @@ export default function FacturacionPage() {
         label: `${r.nombreMes || r.mes}`,
         value: Math.abs(r.totalConIVA || 0),
       })),
-      { title: "Facturación Mensual", width: 480, height: 220 }
+      { title: "Facturación Mensual", width: "container" as any, height: 220 }
     );
   }, [pazSalvoData]);
 
@@ -173,7 +173,7 @@ export default function FacturacionPage() {
         { label: "Con Paz y Salvo", value: pazSalvoData.totalConPaz },
         { label: "Pendiente", value: pazSalvoData.totalSinPaz },
       ],
-      { title: "Estado Paz y Salvo", width: 280, height: 200 }
+      { title: "Estado Paz y Salvo", width: "container" as any, height: 200 }
     );
   }, [pazSalvoData]);
 
