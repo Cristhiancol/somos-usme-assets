@@ -21,28 +21,13 @@ export function ThemeProvider({
   defaultTheme = "dark",
   switchable = true,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
-    }
-    return defaultTheme;
-  });
+  const [theme, setTheme] = useState<Theme>("light");
 
-  // useLayoutEffect ensures class is applied before browser paint,
-  // preventing DOM mutations that can cause React's insertBefore errors
   useLayoutEffect(() => {
     const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else {
-      root.classList.remove("dark");
-    }
-
-    if (switchable) {
-      localStorage.setItem("theme", theme);
-    }
-  }, [theme, switchable]);
+    root.classList.remove("dark");
+    localStorage.removeItem("theme");
+  }, []);
 
   const toggleTheme = switchable
     ? () => {

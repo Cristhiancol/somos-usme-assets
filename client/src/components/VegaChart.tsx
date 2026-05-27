@@ -114,8 +114,8 @@ export function VegaChart({ spec, className = "", style }: VegaChartProps) {
   return (
     <div
       ref={containerRef}
-      className={`vega-chart-container ${className}`}
-      style={{ overflow: "hidden", ...style }}
+      className={`vega-chart-container w-full h-full flex justify-center ${className}`}
+      style={{ overflow: "hidden", minHeight: (spec as any).height || 200, ...style }}
     />
   );
 }
