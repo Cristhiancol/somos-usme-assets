@@ -13,7 +13,17 @@ import "./index.css";
 // Initialize Sentry for error tracking
 initSentry();
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000,     // Cache 5min
+      gcTime: 10 * 60 * 1000,       // Keep 10min
+      retry: 1,                     // Retry failed queries 1x
+      refetchOnWindowFocus: false,  // Evita refetch al cambiar tab
+    },
+    mutations: { retry: 0 },        // No retry mutations
+  },
+});
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;

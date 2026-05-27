@@ -105,7 +105,7 @@ export default function FacturacionPage() {
         { label: "OC (Compras)", value: kpis.oc?.totalNeto || 0 },
         { label: "OCS (Servicios)", value: kpis.ocs?.totalNeto || 0 },
       ],
-      { title: "Distribución OC vs OCS", width: 300, height: 220 }
+      { title: "Distribución OC vs OCS", width: "container" as any, height: 220 }
     );
   }, [kpis]);
 
@@ -117,7 +117,7 @@ export default function FacturacionPage() {
         label: p.proveedor.length > 30 ? p.proveedor.substring(0, 28) + "…" : p.proveedor,
         value: p.totalNeto,
       })),
-      { title: "Top 10 Proveedores por Valor Neto", width: 500, height: 280 }
+      { title: "Top 10 Proveedores por Valor Neto", width: "container" as any, height: 280 }
     );
   }, [resumen]);
 
@@ -130,7 +130,7 @@ export default function FacturacionPage() {
     }
     return barSpec(
       Array.from(estadoMap.entries()).map(([label, value]) => ({ label, value })),
-      { title: "OC por Estado", width: 400, height: 220 }
+      { title: "OC por Estado", width: "container" as any, height: 220 }
     );
   }, [ocData]);
 
@@ -521,8 +521,8 @@ export default function FacturacionPage() {
 
         {/* Tab Informe Mensual */}
         <TabsContent value="informeMensual" className="mt-4">
-          <div className="rounded-xl border border-slate-200/70 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
-            <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="rounded-xl border border-slate-200/70 bg-white shadow-sm">
+            <div className="flex items-center gap-3 p-4 border-b border-slate-100">
               <div className="relative flex-1 max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
@@ -530,7 +530,7 @@ export default function FacturacionPage() {
                   placeholder="Buscar proveedor..."
                   value={searchInforme}
                   onChange={(e) => setSearchInforme(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50"
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50"
                 />
               </div>
               <button
@@ -569,16 +569,16 @@ export default function FacturacionPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-left">
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Año</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Mes</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Proveedor</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OC Sin IVA</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OC Con IVA</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OCS Sin IVA</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OCS Con IVA</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">Total Con IVA</th>
-                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Estado</th>
+                  <tr className="border-b border-slate-100 text-left">
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Año</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Mes</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Proveedor</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider text-right">OC Sin IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider text-right">OC Con IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider text-right">OCS Sin IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider text-right">OCS Con IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider text-right">Total Con IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Estado</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -589,14 +589,14 @@ export default function FacturacionPage() {
                   ) : (
                     informeMensual.map((item: any, i: number) => (
                       <tr key={item.id ?? i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors cursor-pointer" onClick={() => setPazSalvoProveedor(item.proveedor)}>
-                        <td className="px-4 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">{item.anno}</td>
-                        <td className="px-4 py-2.5 text-xs font-medium text-slate-800 dark:text-slate-200">{item.nombreMes || item.mes}</td>
-                        <td className="px-4 py-2.5 text-xs text-slate-600 dark:text-slate-400 max-w-[250px] truncate">{item.proveedor || "—"}</td>
-                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocSinIVA)}</td>
-                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocConIVA)}</td>
-                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocsSinIVA)}</td>
-                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocsConIVA)}</td>
-                        <td className="px-4 py-2.5 text-xs font-mono text-right font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(item.totalConIVA)}</td>
+                        <td className="px-4 py-2.5 font-mono text-xs text-slate-700">{item.anno}</td>
+                        <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{item.nombreMes || item.mes}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-600 max-w-[250px] truncate">{item.proveedor || "—"}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700">{formatCurrency(item.ocSinIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700">{formatCurrency(item.ocConIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700">{formatCurrency(item.ocsSinIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700">{formatCurrency(item.ocsConIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right font-semibold text-slate-800">{formatCurrency(item.totalConIVA)}</td>
                         <td className="px-4 py-2.5">
                           {item.enlacePazSalvo && item.observaciones?.toLowerCase().includes("paz") ? (
                             <button
