@@ -79,6 +79,7 @@ export default function FacturacionPage() {
   const [activeTab, setActiveTab] = useState("oc");
   const [searchOC, setSearchOC] = useState("");
   const [searchOCS, setSearchOCS] = useState("");
+  const [searchInforme, setSearchInforme] = useState("");
 
   const { data: kpis, isLoading: kpisLoading } = trpc.facturacion.kpis.useQuery();
   const { data: ocData, isLoading: ocLoading } = trpc.facturacion.oc.useQuery(
@@ -88,6 +89,9 @@ export default function FacturacionPage() {
     searchOCS.length >= 3 ? { search: searchOCS } : undefined
   );
   const { data: resumen, isLoading: resumenLoading } = trpc.facturacion.resumen.useQuery();
+  const { data: informeMensual, isLoading: informeLoading } = trpc.facturacion.informeMensual.useQuery(
+    searchInforme.length >= 3 ? { search: searchInforme } : undefined
+  );
 
   // Charts
   const donutData = useMemo(() => {
@@ -240,6 +244,9 @@ export default function FacturacionPage() {
           </TabsTrigger>
           <TabsTrigger value="resumen" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
             Resumen Proveedores
+          </TabsTrigger>
+          <TabsTrigger value="informeMensual" className="data-[state=active]:bg-white data-[state=active]:text-[#8CB32A] data-[state=active]:shadow-sm">
+            Informe Mensual
           </TabsTrigger>
         </TabsList>
 
@@ -466,3 +473,115 @@ export default function FacturacionPage() {
     </div>
   );
 }
+
+
+        {/* Tab Informe Mensual */}
+        <TabsContent value="informeMensual" className="mt-4">
+          <div className="rounded-xl border border-slate-200/70 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm">
+            <div className="flex items-center gap-3 p-4 border-b border-slate-100 dark:border-slate-800">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar proveedor..."
+                  value={searchInforme}
+                  onChange={(e) => setSearchInforme(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50"
+                />
+              </div>
+              <button
+                onClick={() => {
+                  if (!informeMensual || informeMensual.length === 0) return;
+                  downloadCSV(
+                    informeMensual,
+                    [
+                      { key: "anno", header: "Año" },
+                      { key: "mes", header: "Mes" },
+                      { key: "nombreMes", header: "Nombre Mes" },
+                      { key: "proveedor", header: "Proveedor" },
+                      { key: "ocSinIVA", header: "OC Sin IVA" },
+                      { key: "ocConIVA", header: "OC Con IVA" },
+                      { key: "ocsSinIVA", header: "OCS Sin IVA" },
+                      { key: "ocsConIVA", header: "OCS Con IVA" },
+                      { key: "totalConIVA", header: "Total Con IVA" },
+                      { key: "observaciones", header: "Observaciones" },
+                    ],
+                    "informe_mensual"
+                  );
+                }}
+                disabled={!informeMensual || informeMensual.length === 0}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all disabled:opacity-50"
+                style={{
+                  fontFamily: "'Work Sans', sans-serif",
+                  background: "rgba(140,179,42,0.1)",
+                  color: "#8CB32A",
+                  border: "1px solid rgba(140,179,42,0.3)",
+                }}
+              >
+                <Download className="h-3.5 w-3.5" />
+                Exportar CSV
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-left">
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Año</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Mes</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Proveedor</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OC Sin IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OC Con IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OCS Sin IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">OCS Con IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider text-right">Total Con IVA</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider">Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {informeLoading ? (
+                    <tr><td colSpan={9} className="text-center py-8 text-slate-400"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></td></tr>
+                  ) : !informeMensual || informeMensual.length === 0 ? (
+                    <tr><td colSpan={9} className="text-center py-8 text-slate-400">No hay datos del informe mensual. Sincronice primero.</td></tr>
+                  ) : (
+                    informeMensual.map((item: any, i: number) => (
+                      <tr key={item.id ?? i} className="border-b border-slate-50 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="px-4 py-2.5 font-mono text-xs text-slate-700 dark:text-slate-300">{item.anno}</td>
+                        <td className="px-4 py-2.5 text-xs font-medium text-slate-800 dark:text-slate-200">{item.nombreMes || item.mes}</td>
+                        <td className="px-4 py-2.5 text-xs text-slate-600 dark:text-slate-400 max-w-[250px] truncate">{item.proveedor || "—"}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocSinIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocConIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocsSinIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700 dark:text-slate-300">{formatCurrency(item.ocsConIVA)}</td>
+                        <td className="px-4 py-2.5 text-xs font-mono text-right font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(item.totalConIVA)}</td>
+                        <td className="px-4 py-2.5">
+                          {item.enlacePazSalvo && item.observaciones?.toLowerCase().includes("paz") ? (
+                            <a
+                              href={item.enlacePazSalvo}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all hover:scale-105 hover:shadow-md"
+                              style={{
+                                fontFamily: "'Work Sans', sans-serif",
+                                background: "linear-gradient(135deg, #8CB32A 0%, #6d8c1f 100%)",
+                                color: "white",
+                                boxShadow: "0 0 10px rgba(140,179,42,0.3)",
+                              }}
+                              data-testid={`paz-salvo-link-${i}`}
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              Paz y Salvo
+                            </a>
+                          ) : item.observaciones ? (
+                            <span className="text-xs text-slate-500 dark:text-slate-400">{item.observaciones}</span>
+                          ) : (
+                            <span className="text-xs text-slate-400 dark:text-slate-500">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </TabsContent>

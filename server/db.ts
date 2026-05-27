@@ -1,6 +1,6 @@
 import { eq, sql, desc, asc, like, and, or, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, inventoryItems, purchaseOrders, suppliers, syncLogs, consumoMensual, facturacionOC, facturacionOCS } from "../drizzle/schema";
+import { InsertUser, users, inventoryItems, purchaseOrders, suppliers, syncLogs, consumoMensual, facturacionOC, facturacionOCS, informeMensualProveedor } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { serverLogger } from './logger';
 
@@ -561,6 +561,58 @@ export async function bulkUpsertFacturacionOCS(items: any[]) {
     count += batch.length;
   }
   return count;
+}
+
+export async function bulkUpsertInformeMensual(items: any[]) {
+  const db = await getDb();
+  if (!db) return 0;
+  await db.delete(informeMensualProveedor);
+  let count = 0;
+  for (let i = 0; i < items.length; i += 500) {
+    const batch = items.slice(i, i + 500).map((item: any) => ({
+      anno: item.anno,
+      mes: item.mes,
+      nombreMes: item.nombreMes,
+      proveedor: item.proveedor,
+      ocSinIVA: item.ocSinIVA,
+      ocConIVA: item.ocConIVA,
+      ocsSinIVA: item.ocsSinIVA,
+      ocsConIVA: item.ocsConIVA,
+      totalConIVA: item.totalConIVA,
+      observaciones: item.observaciones,
+      enlacePazSalvo: item.enlacePazSalvo,
+    }));
+    await db.insert(informeMensualProveedor).values(batch);
+    count += batch.length;
+  }
+  return count;
+}
+
+export async function getInformeMensual(filters?: { anno?: number; mes?: number; search?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const conditions = [];
+  if (filters?.anno) conditions.push(eq(informeMensualProveedor.anno, filters.anno));
+  if (filters?.mes) conditions.push(eq(informeMensualProveedor.mes, filters.mes));
+  if (filters?.search) {
+    const s = filters.search.toLowerCase();
+    conditions.push(
+      or(
+        sql`LOWER(${informeMensualProveedor.proveedor}) LIKE ${`%${s}%`}`,
+        sql`LOWER(${informeMensualProveedor.observaciones}) LIKE ${`%${s}%`}`
+      )
+    );
+  }
+
+  const result = await db
+    .select()
+    .from(informeMensualProveedor)
+    .where(conditions.length > 0 ? and(...conditions) : undefined)
+    .orderBy(desc(informeMensualProveedor.anno), desc(informeMensualProveedor.mes), asc(informeMensualProveedor.proveedor))
+    .limit(1000);
+
+  return result;
 }
 
 export async function getFacturacionKPIs() {

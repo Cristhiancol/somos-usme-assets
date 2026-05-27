@@ -1,5 +1,5 @@
 import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
-import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, bulkUpsertFacturacionOC, bulkUpsertFacturacionOCS, logSync, updateSyncLog } from "./db";
+import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, bulkUpsertFacturacionOC, bulkUpsertFacturacionOCS, bulkUpsertInformeMensual, logSync, updateSyncLog } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
 import { serverLogger } from "./logger";
 import { notificarSincronizacion, notificarStockCero, isZapierConfigured } from "./zapier";
@@ -514,6 +514,127 @@ async function parseFacturacionData(buffer: Buffer) {
   return { ocItems, ocsItems };
 }
 
+/**
+ * Parse INFORME POR MES sheet with hyperlinks extraction
+ * Extracts hyperlinks from "Paz y Salvo" cells using Google Sheets API
+ */
+async function parseInformeMensualData(buffer: Buffer): Promise<any[]> {
+  const { read, utils } = await import("xlsx");
+  const workbook = read(buffer, { type: "buffer" });
+
+  function safeFloatCOP(val: any, def = 0): number {
+    if (val === null || val === undefined || val === "") return def;
+    if (typeof val === "number") return isNaN(val) ? def : val;
+    if (typeof val === "string") {
+      let cleaned = val.replace(/\$/g, "").replace(/\s/g, "").trim();
+      const isNegative = cleaned.startsWith("(") && cleaned.endsWith(")");
+      if (isNegative) cleaned = cleaned.slice(1, -1);
+      cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+      const n = Number(cleaned);
+      if (isNaN(n)) return def;
+      return isNegative ? -n : n;
+    }
+    return def;
+  }
+
+  function safeStr(val: any): string | null {
+    if (val === null || val === undefined || val === "") return null;
+    return String(val).trim() || null;
+  }
+
+  function safeInt(val: any, def = 0): number {
+    if (val === null || val === undefined || val === "") return def;
+    const n = Number(val);
+    return isNaN(n) ? def : Math.floor(n);
+  }
+
+  const sheet = workbook.Sheets["INFORME POR MES"];
+  const items: any[] = [];
+  
+  if (!sheet) {
+    serverLogger.warn("[Sync] Sheet 'INFORME POR MES' not found");
+    return [];
+  }
+
+  const raw = utils.sheet_to_json(sheet, { header: 1, defval: null }) as any[][];
+  
+  // Row 4 is header, data starts at row 5 (index 4)
+  for (let r = 4; r < raw.length; r++) {
+    const row = raw[r];
+    if (!row) continue;
+    
+    const hasData = row.some((v: any) => v !== null && v !== undefined && v !== "");
+    if (!hasData) continue;
+
+    // Skip subtotal rows
+    const proveedor = safeStr(row[3]);
+    if (!proveedor || proveedor.toUpperCase().includes("SUBTOTAL")) continue;
+
+    items.push({
+      anno: safeInt(row[0]),
+      mes: safeInt(row[1]),
+      nombreMes: safeStr(row[2]),
+      proveedor: proveedor,
+      ocSinIVA: safeFloatCOP(row[4]),
+      ocConIVA: safeFloatCOP(row[5]),
+      ocsSinIVA: safeFloatCOP(row[6]),
+      ocsConIVA: safeFloatCOP(row[7]),
+      totalConIVA: safeFloatCOP(row[8]),
+      observaciones: safeStr(row[9]),
+      enlacePazSalvo: null, // Will be populated from Google Sheets API
+      rowIndex: r, // Keep track for hyperlink matching
+    });
+  }
+
+  serverLogger.log(`[Sync] Informe Mensual parsed: ${items.length} rows`);
+  return items;
+}
+
+/**
+ * Extract hyperlinks from INFORME POR MES using Google Sheets API
+ */
+async function extractInformeMensualHyperlinks(items: any[]): Promise<any[]> {
+  try {
+    const accessToken = await getValidAccessToken();
+    if (!accessToken) {
+      serverLogger.warn("[Sync] No OAuth token, skipping hyperlink extraction");
+      return items;
+    }
+
+    // Get hyperlinks from column J (Observaciones) - column index 9
+    const range = "'INFORME POR MES'!J5:J1000"; // Adjust range as needed
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${DRIVE_FACTURACION_ID}?ranges=${encodeURIComponent(range)}&fields=sheets(data(rowData(values(hyperlink,formattedValue))))`;
+    
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      serverLogger.warn(`[Sync] Google Sheets API returned ${response.status}, skipping hyperlinks`);
+      return items;
+    }
+
+    const data = await response.json();
+    const rowData = data?.sheets?.[0]?.data?.[0]?.rowData || [];
+
+    // Match hyperlinks with items
+    let hyperlinkCount = 0;
+    for (let i = 0; i < items.length && i < rowData.length; i++) {
+      const cellData = rowData[i]?.values?.[0];
+      if (cellData?.hyperlink) {
+        items[i].enlacePazSalvo = cellData.hyperlink;
+        hyperlinkCount++;
+      }
+    }
+
+    serverLogger.log(`[Sync] Extracted ${hyperlinkCount} hyperlinks from Informe Mensual`);
+    return items;
+  } catch (e) {
+    serverLogger.warn("[Sync] Error extracting hyperlinks (non-fatal):", e);
+    return items;
+  }
+}
+
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   // Insert 'running' record immediately so polling can detect it
   const syncId = await logSync({ syncType: "gdrive_import", status: "running" });
@@ -557,22 +678,31 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
       (async () => {
         try {
           const facBuffer = await getFacturacionFileData();
-          if (!facBuffer) return { ocCount: 0, ocsCount: 0 };
+          if (!facBuffer) return { ocCount: 0, ocsCount: 0, informeCount: 0 };
+          
           const facData = await parseFacturacionData(facBuffer);
-          const [ocCount, ocsCount] = await Promise.all([
+          
+          // Parse informe mensual
+          let informeMensualData = await parseInformeMensualData(facBuffer);
+          // Extract hyperlinks from Google Sheets API
+          informeMensualData = await extractInformeMensualHyperlinks(informeMensualData);
+          
+          const [ocCount, ocsCount, informeCount] = await Promise.all([
             facData.ocItems.length > 0 ? bulkUpsertFacturacionOC(facData.ocItems) : 0,
             facData.ocsItems.length > 0 ? bulkUpsertFacturacionOCS(facData.ocsItems) : 0,
+            informeMensualData.length > 0 ? bulkUpsertInformeMensual(informeMensualData) : 0,
           ]);
-          serverLogger.log(`[Sync] Facturación: ${ocCount} OC, ${ocsCount} OCS`);
-          return { ocCount, ocsCount };
+          
+          serverLogger.log(`[Sync] Facturación: ${ocCount} OC, ${ocsCount} OCS, ${informeCount} Informe Mensual`);
+          return { ocCount, ocsCount, informeCount };
         } catch (e) {
           serverLogger.warn("[Sync] Error syncing facturacion (non-fatal):", e);
-          return { ocCount: 0, ocsCount: 0 };
+          return { ocCount: 0, ocsCount: 0, informeCount: 0 };
         }
       })(),
     ]);
     const consumoCount = consumoResult;
-    const { ocCount: facOCCount, ocsCount: facOCSCount } = facturacionResult;
+    const { ocCount: facOCCount, ocsCount: facOCSCount, informeCount } = facturacionResult;
 
     // Update sync log to 'success'
     if (syncId) {

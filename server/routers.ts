@@ -17,7 +17,7 @@ import {
   getCriticalStockItems,
   getStockCeroConOC,
 } from "./db";
-import { getFacturacionKPIs, getFacturacionOCList, getFacturacionOCSList, getFacturacionResumenProveedores } from "./db";
+import { getFacturacionKPIs, getFacturacionOCList, getFacturacionOCSList, getFacturacionResumenProveedores, getInformeMensual } from "./db";
 import { isGDriveAuthorized, getValidAccessToken } from "./gdrive-oauth";
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
@@ -234,6 +234,16 @@ export const appRouter = router({
     resumen: publicProcedure.query(async () => {
       return getFacturacionResumenProveedores();
     }),
+
+    informeMensual: publicProcedure
+      .input(z.object({
+        anno: z.number().optional(),
+        mes: z.number().optional(),
+        search: z.string().optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        return getInformeMensual(input ?? undefined);
+      }),
   }),
 });
 
