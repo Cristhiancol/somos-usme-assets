@@ -84,6 +84,7 @@ export default function FacturacionPage() {
   const [searchOCS, setSearchOCS] = useState("");
   const [searchInforme, setSearchInforme] = useState("");
   const [pazSalvoProveedor, setPazSalvoProveedor] = useState<string | null>(null);
+  const [filtroEstado, setFiltroEstado] = useState<"todos" | "paz-salvo" | "pendiente">("todos");
 
   const { data: kpis, isLoading: kpisLoading } = trpc.facturacion.kpis.useQuery();
   const { data: ocData, isLoading: ocLoading } = trpc.facturacion.oc.useQuery(
@@ -99,12 +100,20 @@ export default function FacturacionPage() {
 
   const filteredInforme = useMemo(() => {
     if (!informeMensual) return [];
-    return informeMensual.filter((r: any) => 
+    let data = informeMensual.filter((r: any) => 
       Math.abs(r.totalConIVA || 0) > 0 || 
       r.enlacePazSalvo || 
       (r.observaciones && r.observaciones.trim() !== "")
     );
-  }, [informeMensual]);
+
+    if (filtroEstado === "paz-salvo") {
+      data = data.filter((r: any) => r.enlacePazSalvo || (r.observaciones && r.observaciones.toLowerCase().includes("paz")));
+    } else if (filtroEstado === "pendiente") {
+      data = data.filter((r: any) => !r.enlacePazSalvo && !(r.observaciones && r.observaciones.toLowerCase().includes("paz")));
+    }
+
+    return data;
+  }, [informeMensual, filtroEstado]);
 
   // Charts
   const donutData = useMemo(() => {
@@ -543,6 +552,15 @@ export default function FacturacionPage() {
                   className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50"
                 />
               </div>
+              <select
+                value={filtroEstado}
+                onChange={(e) => setFiltroEstado(e.target.value as any)}
+                className="px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50 text-slate-700 font-medium"
+              >
+                <option value="todos">Todos</option>
+                <option value="paz-salvo">Paz y Salvo</option>
+                <option value="pendiente">Pendientes</option>
+              </select>
               <button
                 onClick={() => {
                   if (!filteredInforme || filteredInforme.length === 0) return;
@@ -608,31 +626,46 @@ export default function FacturacionPage() {
                         <td className="px-4 py-2.5 text-xs font-mono text-right text-slate-700">{formatCurrency(item.ocsConIVA)}</td>
                         <td className="px-4 py-2.5 text-xs font-mono text-right font-semibold text-slate-800">{formatCurrency(item.totalConIVA)}</td>
                         <td className="px-4 py-2.5">
-                          {item.enlacePazSalvo && item.observaciones?.toLowerCase().includes("paz") ? (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setPazSalvoProveedor(item.proveedor); }}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all hover:scale-105 hover:shadow-md"
-                              style={{
-                                fontFamily: "'Space Grotesk', sans-serif",
-                                background: "linear-gradient(135deg, #8CB32A 0%, #6d8c1f 100%)",
-                                color: "white",
-                                boxShadow: "0 0 10px rgba(140,179,42,0.3)",
-                              }}
-                              data-testid={`paz-salvo-link-${i}`}
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5" />
-                              Paz y Salvo
-                            </button>
-                          ) : item.observaciones ? (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setPazSalvoProveedor(item.proveedor); }}
-                              className="text-xs text-slate-500 hover:text-[#8CB32A] hover:underline transition-colors text-left"
-                            >
-                              {item.observaciones}
-                            </button>
-                          ) : (
-                            <span className="text-xs text-slate-400">—</span>
-                          )}
+                          <div className="flex items-center justify-between gap-2">
+                            {item.enlacePazSalvo || item.observaciones?.toLowerCase().includes("paz") ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setPazSalvoProveedor(item.proveedor); }}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-all hover:scale-105 hover:shadow-md"
+                                style={{
+                                  fontFamily: "'Space Grotesk', sans-serif",
+                                  background: "linear-gradient(135deg, #8CB32A 0%, #6d8c1f 100%)",
+                                  color: "white",
+                                  boxShadow: "0 0 10px rgba(140,179,42,0.3)",
+                                }}
+                                data-testid={`paz-salvo-link-${i}`}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                                Paz y Salvo
+                              </button>
+                            ) : item.observaciones ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setPazSalvoProveedor(item.proveedor); }}
+                                className="text-xs text-slate-500 hover:text-[#8CB32A] hover:underline transition-colors text-left"
+                              >
+                                {item.observaciones}
+                              </button>
+                            ) : (
+                              <span className="text-xs text-slate-400">—</span>
+                            )}
+                            
+                            {item.enlacePazSalvo && (
+                              <a
+                                href={item.enlacePazSalvo}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center justify-center p-1.5 rounded-md text-slate-400 hover:text-[#8CB32A] hover:bg-[#8CB32A]/10 transition-colors"
+                                onClick={(e) => e.stopPropagation()}
+                                title="Ver documento adjunto"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))
