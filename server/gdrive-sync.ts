@@ -586,6 +586,12 @@ async function parseInformeMensualData(buffer: Buffer): Promise<any[]> {
     const proveedor = safeStr(row[3]);
     if (!proveedor || proveedor.toUpperCase().includes("SUBTOTAL")) continue;
 
+    // Extract hyperlink from column J (index 9) using xlsx cell metadata
+    // In xlsx, cell addresses are like J5, J6, etc. Row r=4 in raw array corresponds to spreadsheet row 5
+    const cellAddress = utils.encode_cell({ r: r, c: 9 }); // column J = index 9
+    const cell = sheet[cellAddress];
+    const hyperlink = cell?.l?.Target || null;
+
     items.push({
       anno: safeInt(row[0]),
       mes: safeInt(row[1]),
@@ -597,12 +603,13 @@ async function parseInformeMensualData(buffer: Buffer): Promise<any[]> {
       ocsConIVA: safeFloatCOP(row[7]),
       totalConIVA: safeFloatCOP(row[8]),
       observaciones: safeStr(row[9]),
-      enlacePazSalvo: null, // Will be populated from Google Sheets API
-      rowIndex: r, // Keep track for hyperlink matching
+      enlacePazSalvo: hyperlink,
+      rowIndex: r,
     });
   }
 
-  serverLogger.log(`[Sync] Informe Mensual parsed: ${items.length} rows`);
+  const linkCount = items.filter(i => i.enlacePazSalvo).length;
+  serverLogger.log(`[Sync] Informe Mensual parsed: ${items.length} rows, ${linkCount} with PDF hyperlinks`);
   return items;
 }
 
