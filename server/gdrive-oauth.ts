@@ -23,7 +23,7 @@ export function getGDriveAuthUrl(redirectUri: string): string {
     client_id: CLIENT_ID,
     redirect_uri: redirectUri,
     response_type: "code",
-    scope: "https://www.googleapis.com/auth/drive.readonly",
+    scope: "https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/spreadsheets.readonly",
     access_type: "offline",
     prompt: "consent",
     state: statePayload,
