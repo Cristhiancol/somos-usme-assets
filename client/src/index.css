@@ -1,17 +1,17 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ═══════════════════════════════════════════════════════════════════
-   SOMOS USME — LIGHT CYBERPUNK THEME
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SOMOS USME â€” LIGHT CYBERPUNK THEME
    Paleta Corporativa:
-     Primario oscuro : #281C19  → oklch(0.18 0.03 30)
-     Verde Lima      : #8CB32A  → oklch(0.68 0.17 120)
-     Verde Teal      : #009890  → oklch(0.58 0.12 185)
-     Fondo           : #FFFFFF  → oklch(1 0 0)
-     Fondo sutil     : #F5F5F5  → oklch(0.96 0 0)
-   ═══════════════════════════════════════════════════════════════════ */
+     Primario oscuro : #281C19  â†’ oklch(0.18 0.03 30)
+     Verde Lima      : #8CB32A  â†’ oklch(0.68 0.17 120)
+     Verde Teal      : #009890  â†’ oklch(0.58 0.12 185)
+     Fondo           : #FFFFFF  â†’ oklch(1 0 0)
+     Fondo sutil     : #F5F5F5  â†’ oklch(0.96 0 0)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -51,23 +51,23 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* ── Colores Corporativos Neón ── */
+  /* â”€â”€ Colores Corporativos NeÃ³n â”€â”€ */
   --color-corp-dark:  oklch(0.18 0.03 30);    /* #281C19 */
   --color-corp-lime:  oklch(0.68 0.17 120);   /* #8CB32A */
   --color-corp-teal:  oklch(0.58 0.12 185);   /* #009890 */
 
-  /* ── Alias neón (compatibilidad con clases existentes) ── */
-  --color-neon-pink:   oklch(0.68 0.17 120);  /* → Verde Lima corporativo */
-  --color-neon-cyan:   oklch(0.58 0.12 185);  /* → Teal corporativo */
-  --color-neon-purple: oklch(0.18 0.03 30);   /* → Oscuro corporativo */
-  --color-neon-green:  oklch(0.68 0.17 120);  /* → Verde Lima */
-  --color-neon-yellow: oklch(0.68 0.17 120);  /* → Verde Lima */
+  /* â”€â”€ Alias neÃ³n (compatibilidad con clases existentes) â”€â”€ */
+  --color-neon-pink:   oklch(0.68 0.17 120);  /* â†’ Verde Lima corporativo */
+  --color-neon-cyan:   oklch(0.58 0.12 185);  /* â†’ Teal corporativo */
+  --color-neon-purple: oklch(0.18 0.03 30);   /* â†’ Oscuro corporativo */
+  --color-neon-green:  oklch(0.68 0.17 120);  /* â†’ Verde Lima */
+  --color-neon-yellow: oklch(0.68 0.17 120);  /* â†’ Verde Lima */
   --color-neon-red:    oklch(0.55 0.22 25);   /* Rojo alerta (no corporativo, solo alertas) */
   --color-neon-orange: oklch(0.65 0.18 50);   /* Naranja alerta */
 
-  /* ── Superficies Light ── */
+  /* â”€â”€ Superficies Light â”€â”€ */
   --color-cyber-dark:    oklch(0.96 0 0);     /* Fondo tarjeta claro */
-  --color-cyber-darker:  oklch(0.92 0 0);     /* Fondo ligeramente más oscuro */
+  --color-cyber-darker:  oklch(0.92 0 0);     /* Fondo ligeramente mÃ¡s oscuro */
   --color-cyber-card:    oklch(1 0 0);        /* Blanco puro para cards */
   --color-cyber-surface: oklch(0.97 0.005 120); /* Superficie con toque verde muy sutil */
 }
@@ -75,7 +75,7 @@
 :root {
   --radius: 0.5rem;
 
-  /* ── Light Cyberpunk Theme ── */
+  /* â”€â”€ Light Cyberpunk Theme â”€â”€ */
   --background:            oklch(1 0 0);                  /* Blanco puro */
   --foreground:            oklch(0.18 0.03 30);           /* #281C19 oscuro */
   --card:                  oklch(1 0 0);                  /* Blanco */
@@ -87,7 +87,7 @@
   --secondary:             oklch(0.68 0.17 120);          /* #8CB32A Lima */
   --secondary-foreground:  oklch(0.18 0.03 30);           /* Oscuro sobre Lima */
   --muted:                 oklch(0.95 0.005 120);         /* Fondo muy sutil verde */
-  --muted-foreground:      oklch(0.45 0.04 30);           /* Gris cálido */
+  --muted-foreground:      oklch(0.45 0.04 30);           /* Gris cÃ¡lido */
   --accent:                oklch(0.58 0.12 185);          /* #009890 Teal */
   --accent-foreground:     oklch(1 0 0);                  /* Blanco sobre Teal */
   --destructive:           oklch(0.55 0.22 25);           /* Rojo alerta */
@@ -114,39 +114,39 @@
   --sidebar-ring:               oklch(0.68 0.17 120);
 }
 
-/* ── Dark Mode (Modo Oscuro Real) ── */
+/* â”€â”€ Dark Mode â€” Mantenemos Light para contenido (sidebar usa colores hardcoded) â”€â”€ */
 .dark {
-  --background:            oklch(0.07 0.02 30);       /* #120D0B negro profundo */
-  --foreground:            oklch(1 0 0);               /* Blanco texto */
-  --card:                  oklch(0.18 0.03 30 / 0.8); /* rgba(40, 28, 25, 0.8) */
-  --card-foreground:       oklch(1 0 0);
-  --popover:               oklch(0.18 0.03 30);
-  --popover-foreground:    oklch(1 0 0);
-  --primary:               oklch(0.68 0.17 120);       /* Verde Lima */
-  --primary-foreground:    oklch(0.18 0.03 30);        /* Oscuro sobre Lima */
-  --secondary:             oklch(0.58 0.12 185);       /* Teal */
-  --secondary-foreground:  oklch(1 0 0);
-  --muted:                 oklch(0.25 0.04 30);        /* Oscuro muted */
-  --muted-foreground:      oklch(0.65 0.02 120);       /* #A19B99 texto secundario */
-  --accent:                oklch(0.58 0.12 185);       /* Teal */
+  --background:            oklch(0.975 0.002 120);     /* Fondo sutil casi blanco */
+  --foreground:            oklch(0.18 0.03 30);        /* Texto oscuro */
+  --card:                  oklch(1 0 0);               /* Blanco */
+  --card-foreground:       oklch(0.18 0.03 30);
+  --popover:               oklch(1 0 0);
+  --popover-foreground:    oklch(0.18 0.03 30);
+  --primary:               oklch(0.18 0.03 30);
+  --primary-foreground:    oklch(1 0 0);
+  --secondary:             oklch(0.68 0.17 120);
+  --secondary-foreground:  oklch(0.18 0.03 30);
+  --muted:                 oklch(0.95 0.005 120);
+  --muted-foreground:      oklch(0.45 0.04 30);
+  --accent:                oklch(0.58 0.12 185);
   --accent-foreground:     oklch(1 0 0);
-  --destructive:           oklch(0.55 0.22 25);        /* Rojo */
+  --destructive:           oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
-  --border:                oklch(1 0 0 / 0.08);        /* rgba(255, 255, 255, 0.08) */
-  --input:                 oklch(0.25 0.04 30);
+  --border:                oklch(0.85 0.02 120);
+  --input:                 oklch(0.96 0.005 120);
   --ring:                  oklch(0.68 0.17 120);
-  --chart-1: oklch(0.68 0.17 120);   /* Lima */
-  --chart-2: oklch(0.58 0.12 185);   /* Teal */
-  --chart-3: oklch(0.55 0.22 25);    /* Rojo */
-  --chart-4: oklch(0.65 0.18 50);    /* Naranja */
-  --chart-5: oklch(0.18 0.03 30);    /* Oscuro */
-  --sidebar:                    oklch(0.18 0.03 30);      
-  --sidebar-foreground:         oklch(1 0 0);     
-  --sidebar-primary:            oklch(0.68 0.17 120);     
-  --sidebar-primary-foreground: oklch(0.18 0.03 30);      
-  --sidebar-accent:             oklch(0.25 0.04 30);      
-  --sidebar-accent-foreground:  oklch(1 0 0);
-  --sidebar-border:             oklch(1 0 0 / 0.08);      
+  --chart-1: oklch(0.68 0.17 120);
+  --chart-2: oklch(0.58 0.12 185);
+  --chart-3: oklch(0.55 0.22 25);
+  --chart-4: oklch(0.65 0.18 50);
+  --chart-5: oklch(0.18 0.03 30);
+  --sidebar:                    oklch(0.18 0.03 30);
+  --sidebar-foreground:         oklch(0.95 0.01 120);
+  --sidebar-primary:            oklch(0.68 0.17 120);
+  --sidebar-primary-foreground: oklch(0.18 0.03 30);
+  --sidebar-accent:             oklch(0.25 0.04 30);
+  --sidebar-accent-foreground:  oklch(0.95 0.01 120);
+  --sidebar-border:             oklch(0.28 0.04 30);
   --sidebar-ring:               oklch(0.68 0.17 120);
 }
 
@@ -195,11 +195,11 @@
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LIGHT CYBERPUNK — GLOW EFFECTS (Paleta Corporativa)
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   LIGHT CYBERPUNK â€” GLOW EFFECTS (Paleta Corporativa)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* Glow Lima (#8CB32A) — para NUEVO, acciones positivas */
+/* Glow Lima (#8CB32A) â€” para NUEVO, acciones positivas */
 .cyber-glow-lime {
   box-shadow:
     0 0 8px oklch(0.68 0.17 120 / 0.5),
@@ -213,7 +213,7 @@
     inset 0 1px 0 oklch(0.68 0.17 120 / 0.4);
 }
 
-/* Glow Teal (#009890) — para SERVICIO, información */
+/* Glow Teal (#009890) â€” para SERVICIO, informaciÃ³n */
 .cyber-glow-teal {
   box-shadow:
     0 0 8px oklch(0.58 0.12 185 / 0.5),
@@ -227,7 +227,7 @@
     inset 0 1px 0 oklch(0.58 0.12 185 / 0.4);
 }
 
-/* Glow Oscuro (#281C19) — para REPARADO, énfasis */
+/* Glow Oscuro (#281C19) â€” para REPARADO, Ã©nfasis */
 .cyber-glow-dark {
   box-shadow:
     0 0 8px oklch(0.18 0.03 30 / 0.4),
@@ -235,7 +235,7 @@
     0 0 0 1px oklch(0.68 0.17 120 / 0.4);
 }
 
-/* Glow Rojo — solo alertas críticas */
+/* Glow Rojo â€” solo alertas crÃ­ticas */
 .cyber-glow-red {
   box-shadow:
     0 0 8px oklch(0.55 0.22 25 / 0.4),
@@ -275,9 +275,9 @@
     inset 0 1px 0 oklch(0.68 0.17 120 / 0.3);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   CYBER CARD — Light Version
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   CYBER CARD â€” Light Version
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cyber-card {
   background: oklch(1 0 0);
   border: 1px solid oklch(0.85 0.02 120);
@@ -303,9 +303,9 @@
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   CYBER TEXT GLOW — Adaptado para Light
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   CYBER TEXT GLOW â€” Adaptado para Light
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cyber-text-glow {
   text-shadow:
     0 0 8px currentColor,
@@ -317,9 +317,9 @@
   box-shadow: inset 0 0 12px oklch(0.68 0.17 120 / 0.04);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   CYBER GRID BG — Sutil en gris claro (#F0F0F0)
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   CYBER GRID BG â€” Sutil en gris claro (#F0F0F0)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cyber-grid-bg {
   background-image:
     linear-gradient(oklch(0.88 0.01 120 / 0.6) 1px, transparent 1px),
@@ -327,9 +327,9 @@
   background-size: 40px 40px;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SCANLINES — Muy sutil en light
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SCANLINES â€” Muy sutil en light
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cyber-scanline {
   position: relative;
 }
@@ -347,9 +347,9 @@
   pointer-events: none;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    ANIMACIONES
-   ═══════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes pulse-neon {
   0%, 100% { opacity: 1; box-shadow: 0 0 8px currentColor; }
   50% { opacity: 0.6; box-shadow: 0 0 20px currentColor; }
@@ -358,7 +358,7 @@
   animation: pulse-neon 1.5s ease-in-out infinite;
 }
 
-/* Glow Neón Rojo — Bus Transmilenio */
+/* Glow NeÃ³n Rojo â€” Bus Transmilenio */
 @keyframes glow-neon-red {
   0%, 100% { filter: drop-shadow(0 0 6px rgba(255,51,51,0.6)); opacity: 1; }
   50% { filter: drop-shadow(0 0 16px rgba(255,51,51,1)); opacity: 0.85; }
@@ -367,7 +367,7 @@
   animation: glow-neon-red 2s ease-in-out infinite;
 }
 
-/* Badge PEDIR INMEDIATAMENTE — pulse rojo */
+/* Badge PEDIR INMEDIATAMENTE â€” pulse rojo */
 @keyframes badge-pulse-critical {
   0%, 100% { box-shadow: 0 0 4px rgba(220,38,38,0.4); }
   50% { box-shadow: 0 0 12px rgba(220,38,38,0.8), 0 0 24px rgba(220,38,38,0.3); }
@@ -388,9 +388,9 @@
   animation: cyber-flicker 4s ease-in-out infinite;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SCROLLBAR — Light Cyberpunk
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SCROLLBAR â€” Light Cyberpunk
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -406,11 +406,11 @@
   background: oklch(0.68 0.17 120 / 0.8);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   BADGES CORPORATIVOS — NUEVO / REPARADO / SERVICIO
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   BADGES CORPORATIVOS â€” NUEVO / REPARADO / SERVICIO
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* NUEVO: Fondo Lima, texto oscuro, borde Lima neón */
+/* NUEVO: Fondo Lima, texto oscuro, borde Lima neÃ³n */
 .badge-nuevo {
   background-color: oklch(0.68 0.17 120);
   color: oklch(0.18 0.03 30);
@@ -423,7 +423,7 @@
   box-shadow: 0 0 10px oklch(0.68 0.17 120 / 0.7), 0 0 20px oklch(0.68 0.17 120 / 0.3);
 }
 
-/* REPARADO: Fondo oscuro, texto blanco, borde Lima neón */
+/* REPARADO: Fondo oscuro, texto blanco, borde Lima neÃ³n */
 .badge-reparado {
   background-color: oklch(0.18 0.03 30);
   color: oklch(1 0 0);
@@ -436,7 +436,7 @@
   box-shadow: 0 0 10px oklch(0.68 0.17 120 / 0.6), 0 0 20px oklch(0.68 0.17 120 / 0.25);
 }
 
-/* SERVICIO: Fondo Teal, texto blanco, borde Teal neón */
+/* SERVICIO: Fondo Teal, texto blanco, borde Teal neÃ³n */
 .badge-servicio {
   background-color: oklch(0.58 0.12 185);
   color: oklch(1 0 0);
@@ -449,9 +449,9 @@
   box-shadow: 0 0 10px oklch(0.58 0.12 185 / 0.7), 0 0 20px oklch(0.58 0.12 185 / 0.3);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   TABLA — Cabeceras con Teal 10% opacidad
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   TABLA â€” Cabeceras con Teal 10% opacidad
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .table-header-corp {
   background-color: oklch(0.58 0.12 185 / 0.1);
   color: oklch(0.18 0.03 30);
@@ -461,9 +461,9 @@
   letter-spacing: 0.05em;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   BOTONES DE FILTRO — Interactividad corporativa
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   BOTONES DE FILTRO â€” Interactividad corporativa
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .filter-btn {
   border: 1px solid oklch(0.85 0.02 120);
   background: oklch(1 0 0);
@@ -496,9 +496,9 @@
   box-shadow: 0 0 10px oklch(0.18 0.03 30 / 0.2);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   KPI CARDS — Light Cyberpunk
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   KPI CARDS â€” Light Cyberpunk
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .kpi-card-corp {
   background: oklch(1 0 0);
   border: 1px solid oklch(0.88 0.015 120);
@@ -513,9 +513,9 @@
   border-color: oklch(0.68 0.17 120 / 0.4);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   INPUTS Y SELECTS — Light
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   INPUTS Y SELECTS â€” Light
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cyber-input {
   background: oklch(0.97 0.005 120);
   border: 1px solid oklch(0.85 0.02 120);
@@ -530,9 +530,9 @@
   color: oklch(0.6 0.02 120);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   MARKDOWN RENDERER — Estilos para el Chatbot v4.0
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   MARKDOWN RENDERER â€” Estilos para el Chatbot v4.0
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .chatbot-markdown .md-h1 {
   font-size: 1rem;
   font-weight: 800;
@@ -571,7 +571,7 @@
   padding-left: 0;
 }
 .chatbot-markdown .md-list li::before {
-  content: '•';
+  content: 'â€¢';
   position: absolute;
   left: -1rem;
   color: #8CB32A;
@@ -633,9 +633,9 @@
   margin: 0.5rem 0;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   PAGE TRANSITIONS — Suave entrada de páginas
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PAGE TRANSITIONS â€” Suave entrada de pÃ¡ginas
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes pageSlideIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -645,9 +645,9 @@ main > section {
   animation: pageSlideIn 0.25s ease-out;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   COUNTER ANIMATION — Efecto contador para KPIs
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   COUNTER ANIMATION â€” Efecto contador para KPIs
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes countUp {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -661,9 +661,9 @@ main > section {
 .kpi-card-corp:nth-child(4) { animation-delay: 0.2s; }
 .kpi-card-corp:nth-child(5) { animation-delay: 0.25s; }
 
-/* ═══════════════════════════════════════════════════════════════════
-   TABLE ROW ANIMATION — Filas aparecen progresivamente
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   TABLE ROW ANIMATION â€” Filas aparecen progresivamente
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes rowFadeIn {
   from { opacity: 0; transform: translateX(-4px); }
   to { opacity: 1; transform: translateX(0); }
@@ -682,9 +682,9 @@ tbody tr:nth-child(8) { animation-delay: 0.16s; }
 tbody tr:nth-child(9) { animation-delay: 0.18s; }
 tbody tr:nth-child(10) { animation-delay: 0.2s; }
 
-/* ═══════════════════════════════════════════════════════════════════
-   CARD HOVER PREMIUM — Efecto premium en hover
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   CARD HOVER PREMIUM â€” Efecto premium en hover
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .cyber-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
@@ -696,17 +696,17 @@ tbody tr:nth-child(10) { animation-delay: 0.2s; }
   border-color: oklch(0.68 0.17 120 / 0.3);
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   SEMAPHORE PULSE — Pulso en cards de semáforo
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SEMAPHORE PULSE â€” Pulso en cards de semÃ¡foro
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes semaphorePulse {
   0%, 100% { box-shadow: 0 0 8px var(--pulse-color, rgba(220,38,38,0.3)); }
   50% { box-shadow: 0 0 20px var(--pulse-color, rgba(220,38,38,0.5)); }
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   LOADING SKELETON — Efecto shimmer mejorado
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   LOADING SKELETON â€” Efecto shimmer mejorado
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -723,9 +723,9 @@ tbody tr:nth-child(10) { animation-delay: 0.2s; }
   border-radius: 4px;
 }
 
-/* ═══════════════════════════════════════════════════════════════════
-   ASSET TRACKER v2.0 — Dashboard premium
-   ═══════════════════════════════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ASSET TRACKER v2.0 â€” Dashboard premium
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 .at-page { display: flex; flex-direction: column; gap: 1.5rem; padding-bottom: 2rem; }
 .at-header { display: flex; flex-direction: column; gap: 0.75rem; }
 @media (min-width: 768px) { .at-header { flex-direction: row; align-items: center; justify-content: space-between; } }
@@ -751,6 +751,101 @@ tbody tr:nth-child(10) { animation-delay: 0.2s; }
 .at-badge { display: inline-block; font-family: 'Space Grotesk', sans-serif; font-size: 0.65rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 0.3rem; letter-spacing: 0.03em; }
 .at-section { padding: 1.25rem 1.5rem; }
 .at-section-title { font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em; color: #281C19; margin-bottom: 0.2rem; }
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PREMIUM CARDS â€” Clean, Bright, Enterprise-grade
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* Glass Card â€” Light & Clean */
+.glass-card {
+  background: #ffffff;
+  border: 1px solid rgba(140, 179, 42, 0.12);
+  border-radius: 1rem;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04),
+    0 4px 16px rgba(0,0,0,0.03);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .glass-card {
+  background: rgba(255,255,255,0.97);
+  border-color: rgba(140, 179, 42, 0.15);
+}
+
+.glass-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 8px 30px rgba(140, 179, 42, 0.1),
+    0 2px 8px rgba(0,0,0,0.04);
+  border-color: rgba(140, 179, 42, 0.25);
+}
+
+.dark .glass-card:hover {
+  border-color: rgba(140, 179, 42, 0.3);
+  box-shadow:
+    0 8px 30px rgba(140, 179, 42, 0.12),
+    0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* â”€â”€ KPI Card â€” Bright White with colored top accent â”€â”€ */
+.glass-kpi {
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.06);
+  border-radius: 1rem;
+  padding: 1.25rem 1.5rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-kpi::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--at-accent, #8CB32A), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.dark .glass-kpi {
+  background: #ffffff;
+}
+
+.glass-kpi:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 8px 25px rgba(0,0,0,0.06),
+    0 0 0 1px var(--at-accent, rgba(140, 179, 42, 0.2));
+}
+
+.glass-kpi:hover::after {
+  opacity: 1;
+}
+
+/* Pulse for critical KPIs */
+@keyframes glass-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+}
+
+.glass-pulse-red {
+  animation: glass-pulse 2.5s ease-in-out infinite;
+  border-color: rgba(220, 38, 38, 0.15);
+}
+
+/* Subtle glass */
+.dark .glass-subtle,
+.glass-subtle {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
 .at-section-sub { font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; color: #6b7280; margin-bottom: 1rem; }
 .at-row-2col { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
 @media (min-width: 1024px) { .at-row-2col { grid-template-columns: 1fr 1fr; } }
@@ -787,99 +882,3 @@ tbody tr:nth-child(10) { animation-delay: 0.2s; }
 .at-table tbody tr:hover { background: oklch(0.97 0.01 120 / 0.5); }
 .at-table tbody tr:last-child td { border-bottom: none; }
 .at-footer { text-align: center; font-family: 'Space Grotesk', sans-serif; font-size: 0.68rem; color: #9ca3af; padding: 1rem 0; }
-
-
-/* ═══════════════════════════════════════════════════════════════════
-   GLASSMORPHISM MODERNO — Dark & Light
-   ═══════════════════════════════════════════════════════════════════ */
-
-/* Glassmorphism Card — Dark Mode */
-.dark .glass-card {
-  background: rgba(40, 28, 25, 0.8);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 
-    0 8px 32px 0 rgba(0, 0, 0, 0.37),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-}
-
-/* Glassmorphism Card — Light Mode */
-.glass-card {
-  background: rgba(255, 255, 255, 0.9);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  box-shadow: 
-    0 8px 32px 0 rgba(31, 38, 135, 0.1),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.5);
-}
-
-/* Glass hover effect */
-.glass-card:hover {
-  transform: translateY(-2px);
-  transition: all 0.3s ease;
-}
-
-.dark .glass-card:hover {
-  border-color: rgba(140, 179, 42, 0.3);
-  box-shadow: 
-    0 12px 40px 0 rgba(140, 179, 42, 0.15),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
-}
-
-.glass-card:hover {
-  border-color: rgba(140, 179, 42, 0.2);
-  box-shadow: 
-    0 12px 40px 0 rgba(140, 179, 42, 0.1),
-    inset 0 1px 0 0 rgba(255, 255, 255, 0.6);
-}
-
-/* Glassmorphism KPI Card */
-.glass-kpi {
-  background: rgba(40, 28, 25, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1rem;
-  padding: 1.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.dark .glass-kpi {
-  background: rgba(40, 28, 25, 0.7);
-}
-
-.glass-kpi:hover {
-  transform: translateY(-4px) scale(1.02);
-  border-color: rgba(140, 179, 42, 0.3);
-}
-
-/* Pulse animation for critical items */
-@keyframes glass-pulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-  }
-  50% { 
-    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-  }
-}
-
-.glass-pulse-red {
-  animation: glass-pulse 2s infinite;
-}
-
-/* Dark mode specific glassmorphism utilities */
-.dark .glass-subtle {
-  background: rgba(40, 28, 25, 0.4);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.glass-subtle {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-
