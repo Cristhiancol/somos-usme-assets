@@ -615,6 +615,26 @@ export async function getInformeMensual(filters?: { anno?: number; mes?: number;
   return result;
 }
 
+export async function getPazYSalvoResumen() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const result = await db
+    .select({
+      proveedor: informeMensualProveedor.proveedor,
+      totalMeses: sql<number>`COUNT(*)`,
+      mesesConPazSalvo: sql<number>`SUM(CASE WHEN ${informeMensualProveedor.observaciones} IS NOT NULL AND (LOWER(${informeMensualProveedor.observaciones}) LIKE '%paz%' OR ${informeMensualProveedor.enlacePazSalvo} IS NOT NULL) THEN 1 ELSE 0 END)`,
+      mesesPendientes: sql<number>`SUM(CASE WHEN ${informeMensualProveedor.observaciones} IS NULL OR (LOWER(${informeMensualProveedor.observaciones}) NOT LIKE '%paz%' AND ${informeMensualProveedor.enlacePazSalvo} IS NULL) THEN 1 ELSE 0 END)`,
+      totalConIVA: sql<number>`COALESCE(SUM(${informeMensualProveedor.totalConIVA}), 0)`,
+    })
+    .from(informeMensualProveedor)
+    .groupBy(informeMensualProveedor.proveedor)
+    .orderBy(desc(sql`SUM(${informeMensualProveedor.totalConIVA})`))
+    .limit(50);
+
+  return result;
+}
+
 export async function getFacturacionKPIs() {
   const db = await getDb();
   if (!db) return null;
@@ -622,17 +642,17 @@ export async function getFacturacionKPIs() {
   const [ocResult] = await db.select({
     totalOC: sql<number>`COUNT(*)`,
     docsUnicos: sql<number>`COUNT(DISTINCT ${facturacionOC.documento})`,
-    totalSubtotal: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorSubtotal})), 0)`,
-    totalNeto: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorNeto})), 0)`,
-    totalImpuestos: sql<number>`COALESCE(SUM(ABS(${facturacionOC.valorImptos})), 0)`,
+    totalSubtotal: sql<number>`COALESCE(SUM(${facturacionOC.valorSubtotal}), 0)`,
+    totalNeto: sql<number>`COALESCE(SUM(${facturacionOC.valorNeto}), 0)`,
+    totalImpuestos: sql<number>`COALESCE(SUM(${facturacionOC.valorImptos}), 0)`,
   }).from(facturacionOC);
 
   const [ocsResult] = await db.select({
     totalOCS: sql<number>`COUNT(*)`,
     docsUnicos: sql<number>`COUNT(DISTINCT ${facturacionOCS.nroDocto})`,
-    totalSubtotal: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.subtotal})), 0)`,
-    totalNeto: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.valorNeto})), 0)`,
-    totalImpuestos: sql<number>`COALESCE(SUM(ABS(${facturacionOCS.valorImpuestos})), 0)`,
+    totalSubtotal: sql<number>`COALESCE(SUM(${facturacionOCS.subtotal}), 0)`,
+    totalNeto: sql<number>`COALESCE(SUM(${facturacionOCS.valorNeto}), 0)`,
+    totalImpuestos: sql<number>`COALESCE(SUM(${facturacionOCS.valorImpuestos}), 0)`,
   }).from(facturacionOCS);
 
   return {

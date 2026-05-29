@@ -24,6 +24,7 @@ import {
   getConsumoMensual,
   getFacturacionKPIs,
   getFacturacionResumenProveedores,
+  getPazYSalvoResumen,
 } from "../db";
 import Fuse from "fuse.js";
 
@@ -104,9 +105,26 @@ async function getCatalog(): Promise<CatalogItem[]> {
 }
 
 // ── Fuzzy search (incluye valorUnitario, PF, EOQ) ──────────────────────────
+// Spanish month names to exclude from fuzzy search (prevents 'mayo' → 'mayonesa')
+const SPANISH_MONTHS = new Set([
+  "enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+]);
+
+function cleanQueryForFuzzy(query: string): string {
+  // Remove month names and common non-inventory words from the query
+  const words = query.toLowerCase().split(/\s+/);
+  const filtered = words.filter(w => !SPANISH_MONTHS.has(w) && w.length >= 3);
+  return filtered.join(" ");
+}
+
 async function fuzzySearch(query: string): Promise<string> {
   const catalog = await getCatalog();
   if (catalog.length === 0) return "";
+
+  // Clean query to remove month names that cause false matches
+  const cleanedQuery = cleanQueryForFuzzy(query);
+  if (!cleanedQuery || cleanedQuery.trim().length < 3) return "";
 
   const fuse = new Fuse(catalog, {
     keys: [
@@ -115,12 +133,12 @@ async function fuzzySearch(query: string): Promise<string> {
       { name: "parteFabricante", weight: 0.15 },
       { name: "proveedor", weight: 0.15 },
     ],
-    threshold: 0.45,
+    threshold: 0.4,
     includeScore: true,
     minMatchCharLength: 3,
   });
 
-  const results = fuse.search(query).slice(0, 8);
+  const results = fuse.search(cleanedQuery).slice(0, 8);
   if (results.length === 0) return "";
 
   const lines = results.map((r, i) => {
@@ -321,12 +339,19 @@ INSTRUCCIONES POR TIPO DE CONSULTA:
 - Usar la sección [FACTURACION_PENDIENTE] del contexto.
 - Mostrar totales de OC y OCS por separado y combinados.
 - Si preguntan por un proveedor específico, buscar en el resumen [FACTURACION_TOP_PROVEEDORES].
-- Formato: $XXX.XXX COP`;
+- Formato: $XXX.XXX COP
+
+✅ CUANDO PREGUNTEN "PAZ Y SALVO" o "QUIÉN TIENE PAZ Y SALVO" o "ESTADO DE PAZ Y SALVO":
+- Usar la sección [PAZ_Y_SALVO_RESUMEN] del contexto.
+- Mostrar: proveedor, meses con Paz y Salvo, meses pendientes, porcentaje de cumplimiento.
+- Si preguntan por un proveedor específico, buscar en el resumen y dar detalle.
+- Si preguntan por un mes específico (ej: "mayo"), interpretar correctamente como el MES, no como un producto.
+- IMPORTANTE: "mayo" = mes de mayo, "marzo" = mes de marzo, etc. NUNCA confundir nombres de meses con productos del inventario.`;
 
 // ── Construir contexto dinámico enriquecido v3.0 ───────────────────────────
 async function buildInventoryContext(userMessage: string): Promise<string> {
   try {
-    const [kpis, alerts, criticalOrders, ordersData, suppliersData, catalog, fuzzyResults, topConsumo, consumoMeses, facKpis, facResumen] = await Promise.all([
+    const [kpis, alerts, criticalOrders, ordersData, suppliersData, catalog, fuzzyResults, topConsumo, consumoMeses, facKpis, facResumen, pazSalvoResumen] = await Promise.all([
       getDashboardKPIs(),
       getJITAlerts(),
       getStockCeroConOC(),
@@ -338,6 +363,7 @@ async function buildInventoryContext(userMessage: string): Promise<string> {
       getConsumoByMonth(),
       getFacturacionKPIs(),
       getFacturacionResumenProveedores(),
+      getPazYSalvoResumen(),
     ]);
 
     const alertSummary = alerts
@@ -453,6 +479,12 @@ ${facKpis ? `  - Total OC (sin IVA): $${Number(facKpis.oc?.totalSubtotal ?? 0).t
 ${(facResumen || []).slice(0, 15).map((p: any, i: number) =>
   `  ${i + 1}. ${p.proveedor} | OC: $${Number(p.ocSubtotal).toLocaleString("es-CO")} | OCS: $${Number(p.ocsSubtotal).toLocaleString("es-CO")} | Total: $${Number(p.totalNeto).toLocaleString("es-CO")} COP`
 ).join("\n") || "  (Sin datos de proveedores)"}
+
+[PAZ_Y_SALVO_RESUMEN] Estado de Paz y Salvo por proveedor:
+${(pazSalvoResumen || []).map((p: any, i: number) => {
+  const pct = p.totalMeses > 0 ? Math.round((p.mesesConPazSalvo / p.totalMeses) * 100) : 0;
+  return `  ${i + 1}. ${p.proveedor} | Paz y Salvo: ${p.mesesConPazSalvo}/${p.totalMeses} meses (${pct}%) | Pendientes: ${p.mesesPendientes} | Total: $${Number(p.totalConIVA).toLocaleString("es-CO")} COP`;
+}).join("\n") || "  (Sin datos de Paz y Salvo)"}
 ${fuzzyResults}
 ===`;
   } catch (e) {

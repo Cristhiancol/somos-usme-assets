@@ -199,7 +199,7 @@ export default function FacturacionPage() {
   const handleExportOC = useCallback(() => {
     if (!ocData) return;
     downloadCSV(ocData, [
-      { key: "documento", header: "Documento" },
+      { key: "documento", header: "Referencia OC" },
       { key: "referencia", header: "Referencia" },
       { key: "descItem", header: "Descripción" },
       { key: "proveedor", header: "Proveedor" },
@@ -324,7 +324,7 @@ export default function FacturacionPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Buscar referencia, proveedor, documento..."
+                  placeholder="Buscar referencia OC, proveedor, descripción..."
                   value={searchOC}
                   onChange={(e) => setSearchOC(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50"
@@ -349,7 +349,7 @@ export default function FacturacionPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 text-left">
-                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Documento</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Referencia OC</th>
                     <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Referencia</th>
                     <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Descripción</th>
                     <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Proveedor</th>
