@@ -198,13 +198,16 @@ export default function FacturacionPage() {
 
   const handleExportOC = useCallback(() => {
     if (!ocData) return;
-    downloadCSV(ocData, [
-      { key: "documento", header: "Referencia OC" },
-      { key: "referencia", header: "Referencia" },
+    downloadCSV(ocData.map((item: any) => {
+      const mes = item.fechaOC ? new Date(item.fechaOC).toLocaleDateString("es-CO", { month: "short", year: "numeric" }) : "—";
+      return { ...item, mesLabel: mes };
+    }), [
+      { key: "mesLabel", header: "Mes" },
+      { key: "referenciaOC", header: "Orden de Compra" },
+      { key: "documento", header: "Referencia" },
       { key: "descItem", header: "Descripción" },
       { key: "proveedor", header: "Proveedor" },
       { key: "cantidad", header: "Cantidad" },
-      { key: "precioUnit", header: "Precio Unit." },
       { key: "valorSubtotal", header: "Subtotal" },
       { key: "valorNeto", header: "Neto" },
       { key: "comprador", header: "Comprador" },
@@ -225,6 +228,16 @@ export default function FacturacionPage() {
       { key: "fecha", header: "Fecha" },
     ], "facturacion_ocs");
   }, [ocsData]);
+
+  // Helper to extract month label from date
+  const getMesLabel = (fechaOC: string | null | undefined): string => {
+    if (!fechaOC) return "—";
+    try {
+      const d = new Date(fechaOC);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleDateString("es-CO", { month: "short", year: "numeric" });
+    } catch { return "—"; }
+  };
 
   if (kpisLoading) {
     return (
@@ -324,7 +337,7 @@ export default function FacturacionPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Buscar referencia OC, proveedor, descripción..."
+                  placeholder="Buscar orden de compra, proveedor, referencia..."
                   value={searchOC}
                   onChange={(e) => setSearchOC(e.target.value)}
                   className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-[#8CB32A]/30 focus:border-[#8CB32A]/50"
@@ -349,7 +362,8 @@ export default function FacturacionPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-100 text-left">
-                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Referencia OC</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Mes</th>
+                    <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Orden de Compra</th>
                     <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Referencia</th>
                     <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Descripción</th>
                     <th className="px-4 py-3 font-medium text-slate-500 text-xs uppercase tracking-wider">Proveedor</th>
@@ -362,14 +376,15 @@ export default function FacturacionPage() {
                 </thead>
                 <tbody>
                   {ocLoading ? (
-                    <tr><td colSpan={9} className="text-center py-8 text-slate-400"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></td></tr>
+                    <tr><td colSpan={10} className="text-center py-8 text-slate-400"><Loader2 className="h-5 w-5 animate-spin mx-auto" /></td></tr>
                   ) : !ocData || ocData.length === 0 ? (
-                    <tr><td colSpan={9} className="text-center py-8 text-slate-400">No hay datos de OC. Sincronice primero.</td></tr>
+                    <tr><td colSpan={10} className="text-center py-8 text-slate-400">No hay datos de OC. Sincronice primero.</td></tr>
                   ) : (
                     ocData.slice(0, 100).map((item, i) => (
                       <tr key={item.id ?? i} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                        <td className="px-4 py-2.5 text-xs text-slate-500">{getMesLabel(item.fechaOC)}</td>
+                        <td className="px-4 py-2.5 font-mono text-xs font-semibold text-[#8CB32A]">{item.referenciaOC || "—"}</td>
                         <td className="px-4 py-2.5 font-mono text-xs text-slate-700">{item.documento || "—"}</td>
-                        <td className="px-4 py-2.5 text-xs font-medium text-slate-800">{item.referencia?.trim() || "—"}</td>
                         <td className="px-4 py-2.5 text-xs text-slate-600 max-w-[200px] truncate">{item.descItem || "—"}</td>
                         <td className="px-4 py-2.5 text-xs text-slate-600 max-w-[180px] truncate">{item.proveedor || "—"}</td>
                         <td className="px-4 py-2.5 text-xs text-right font-mono">{formatNumber(item.cantidad)}</td>
