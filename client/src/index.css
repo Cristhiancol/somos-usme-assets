@@ -1,4 +1,4 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
@@ -571,7 +571,7 @@
   padding-left: 0;
 }
 .chatbot-markdown .md-list li::before {
-  content: 'â€¢';
+  content: '\2022';
   position: absolute;
   left: -1rem;
   color: #8CB32A;
