@@ -74,7 +74,7 @@ export default function ConsumoPage() {
   const refChartSpec = useMemo(() => {
     if (!refData || refData.length === 0) return null;
     const data = refData.map((d) => ({
-      label: String(d.mes).slice(5),
+      label: String(d.mes).substring(2).replace('-', '/'),
       value: d.cantidad,
       color: d.cantidad > 0 ? "#8CB32A" : "#DC2626",
     }));
