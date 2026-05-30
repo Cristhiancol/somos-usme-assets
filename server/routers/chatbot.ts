@@ -346,7 +346,8 @@ INSTRUCCIONES POR TIPO DE CONSULTA:
 - Mostrar: proveedor, meses con Paz y Salvo, meses pendientes, porcentaje de cumplimiento.
 - Si preguntan por un proveedor específico, buscar en el resumen y dar detalle.
 - Si preguntan por un mes específico (ej: "mayo"), interpretar correctamente como el MES, no como un producto.
-- IMPORTANTE: "mayo" = mes de mayo, "marzo" = mes de marzo, etc. NUNCA confundir nombres de meses con productos del inventario.`;
+- IMPORTANTE: "mayo" = mes de mayo, "marzo" = mes de marzo, etc. NUNCA confundir nombres de meses con productos del inventario.
+- **Si el usuario pregunta por un rango de fechas (ej: de enero 2026 a mayo 2026), suma las cantidades reportadas en el historial de consumo para esos meses en específico e indícalo en tu respuesta.**`;
 
 // ── Construir contexto dinámico enriquecido v3.0 ───────────────────────────
 async function buildInventoryContext(userMessage: string): Promise<string> {
@@ -564,12 +565,12 @@ export const chatbotRouter = router({
       }
 
       welcomeMsg += "Puedo ayudarte con:\n";
-      welcomeMsg += "• 📦 Consultar stock, valor y parte fabricante de cualquier referencia\n";
-      welcomeMsg += "• 🛒 Calcular cuánto comprar de una referencia\n";
-      welcomeMsg += "• 📋 Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
-      welcomeMsg += "• 🔧 Servicios pendientes (SRV)\n";
-      welcomeMsg += "• 💰 Top 20 referencias de mayor valor\n";
-      welcomeMsg += "• 💳 Facturación pendiente por pagar (OC y OCS)\n\n";
+      welcomeMsg += "- 📦 Consultar stock, valor y parte fabricante de cualquier referencia\n";
+      welcomeMsg += "- 🛒 Calcular cuánto comprar de una referencia\n";
+      welcomeMsg += "- 📋 Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
+      welcomeMsg += "- 🔧 Servicios pendientes (SRV)\n";
+      welcomeMsg += "- 💰 Top 20 referencias de mayor valor\n";
+      welcomeMsg += "- 💳 Facturación pendiente por pagar (OC y OCS)\n\n";
       welcomeMsg += "¿En qué te puedo ayudar?";
 
       return {

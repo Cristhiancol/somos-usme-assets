@@ -140,18 +140,23 @@ export default function FacturacionPage() {
     );
   }, [resumen]);
 
-  const estadosOCData = useMemo(() => {
-    if (!ocData || ocData.length === 0) return null;
-    const estadoMap = new Map<string, number>();
-    for (const item of ocData) {
-      const estado = item.estado || "Sin estado";
-      estadoMap.set(estado, (estadoMap.get(estado) || 0) + 1);
+  const pazSalvoResumenData = useMemo(() => {
+    if (!informeMensual || informeMensual.length === 0) return null;
+    let conPaz = 0;
+    let sinPaz = 0;
+    for (const r of informeMensual) {
+      const val = Math.abs(r.totalConIVA || 0);
+      if (r.enlacePazSalvo || (r.observaciones && r.observaciones.toLowerCase().includes("paz"))) {
+        conPaz += val;
+      } else {
+        sinPaz += val;
+      }
     }
-    return barSpec(
-      Array.from(estadoMap.entries()).map(([label, value]) => ({ label, value })),
-      { title: "OC por Estado", width: "container" as any, height: 220 }
-    );
-  }, [ocData]);
+    return barSpec([
+      { label: "Con Paz y Salvo", value: conPaz, color: CORP_COLORS.green },
+      { label: "Pendiente", value: sinPaz, color: "#f59e0b" }
+    ], { title: "Valor Paz y Salvo vs Pendiente", width: "container" as any, height: 220, colorField: true });
+  }, [informeMensual]);
 
   // ── Paz y Salvo computed data ──
   const pazSalvoData = useMemo(() => {
@@ -300,9 +305,9 @@ export default function FacturacionPage() {
             <VegaChart spec={donutData} />
           </div>
         )}
-        {estadosOCData && (
+        {pazSalvoResumenData && (
           <div className="rounded-xl border border-slate-200/70 bg-white p-5 shadow-sm">
-            <VegaChart spec={estadosOCData} />
+            <VegaChart spec={pazSalvoResumenData} />
           </div>
         )}
         {topProvData && (
