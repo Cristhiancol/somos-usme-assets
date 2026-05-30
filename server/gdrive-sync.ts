@@ -2,6 +2,7 @@ import { readFileSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { bulkUpsertInventory, bulkUpsertOrders, bulkUpsertSuppliers, bulkUpsertConsumo, bulkUpsertFacturacionOC, bulkUpsertFacturacionOCS, bulkUpsertInformeMensual, logSync, updateSyncLog } from "./db";
 import { getValidAccessToken } from "./gdrive-oauth";
 import { serverLogger } from "./logger";
+import { startSyncMonitoring, recordSyncCompletion } from "./monitoring";
 import { notificarSincronizacion, notificarStockCero, isZapierConfigured } from "./zapier";
 
 const LOCAL_DIR = "/tmp/gdrive-sync-temp";
@@ -664,6 +665,7 @@ async function extractInformeMensualHyperlinks(items: any[]): Promise<any[]> {
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   // Insert 'running' record immediately so polling can detect it
   const syncId = await logSync({ syncType: "gdrive_import", status: "running" });
+  startSyncMonitoring(syncId.toString());
   try {
     // Ensure temp dir exists
     if (!existsSync(LOCAL_DIR)) mkdirSync(LOCAL_DIR, { recursive: true });
@@ -749,6 +751,14 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
       });
     }
 
+    recordSyncCompletion(syncId.toString(), {
+      itemsProcessed: itemsCount,
+      ordersProcessed: ordersCount,
+      suppliersProcessed: suppliersCount,
+      errorsCount: 0,
+      status: 'success',
+    });
+
     // ── Zapier: Detectar stock cero y notificar sincronización ──
     if (isZapierConfigured()) {
       try {
@@ -798,6 +808,15 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
     } else {
       await logSync({ syncType: "gdrive_import", status: "error", errorMessage: error.message });
     }
+    
+    recordSyncCompletion(syncId ? syncId.toString() : "unknown", {
+      itemsProcessed: 0,
+      ordersProcessed: 0,
+      suppliersProcessed: 0,
+      errorsCount: 1,
+      status: 'error',
+    });
+
     return { success: false, message: error.message };
   }
 }

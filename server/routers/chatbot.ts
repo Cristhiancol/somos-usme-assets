@@ -22,11 +22,13 @@ import {
   getTopConsumers,
   getConsumoByMonth,
   getConsumoMensual,
+import {
   getFacturacionKPIs,
   getFacturacionResumenProveedores,
   getPazYSalvoResumen,
 } from "../db";
 import Fuse from "fuse.js";
+import { checkRateLimit } from "../_core/rateLimiter";
 
 // ── Tipos para el catálogo fuzzy ────────────────────────────────────────────
 interface CatalogItem {
@@ -549,6 +551,17 @@ export const chatbotRouter = router({
       };
     }),
 
+  fuzzySearch: publicProcedure
+    .input(z.object({ query: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      // ✅ NUEVO: Rate Limiter
+      const userId = ctx.user?.openId || ctx.req?.ip || "unknown_user";
+      if (!checkRateLimit(userId, 'search')) {
+        throw new Error('Rate limit: demasiadas búsquedas por segundo. Intenta nuevamente en breve.');
+      }
+      return fuzzySearch(input.query);
+    }),
+
   /**
    * Mensaje de bienvenida inicial con datos reales del dashboard.
    */
@@ -570,12 +583,12 @@ export const chatbotRouter = router({
       }
 
       welcomeMsg += "Puedo ayudarte con:\n";
-      welcomeMsg += "- 📦 Consultar stock, valor y parte fabricante de cualquier referencia\n";
-      welcomeMsg += "- 🛒 Calcular cuánto comprar de una referencia\n";
-      welcomeMsg += "- 📋 Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
-      welcomeMsg += "- 🔧 Servicios pendientes (SRV)\n";
-      welcomeMsg += "- 💰 Top 20 referencias de mayor valor\n";
-      welcomeMsg += "- 💳 Facturación pendiente por pagar (OC y OCS)\n\n";
+      welcomeMsg += "📦 Consultar stock, valor y parte fabricante de cualquier referencia\n";
+      welcomeMsg += "🛒 Calcular cuánto comprar de una referencia\n";
+      welcomeMsg += "📋 Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
+      welcomeMsg += "🔧 Servicios pendientes (SRV)\n";
+      welcomeMsg += "💰 Top 20 referencias de mayor valor\n";
+      welcomeMsg += "💳 Facturación pendiente por pagar (OC y OCS)\n\n";
       welcomeMsg += "¿En qué te puedo ayudar?";
 
       return {
