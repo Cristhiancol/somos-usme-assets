@@ -573,22 +573,22 @@ export const chatbotRouter = router({
       const urgentes = kpis?.urgentOrders ?? 0;
       const valorTotal = kpis?.totalValue ?? 0;
 
-      let welcomeMsg = "¡Hola! Soy **Stock**, tu asistente virtual JIT de Somos Bogotá Usme. 🐾\n\n";
+      let welcomeMsg = "¡Hola! Soy **Stock**, tu asistente virtual JIT de Somos Bogotá Usme. \u{1F43E}\n\n";
 
       if (stockCero > 0) {
-        welcomeMsg += `📊 **Estado actual:**\n`;
+        welcomeMsg += `\u{1F4CA} **Estado actual:**\n`;
         welcomeMsg += `- **${stockCero}** referencias con stock cero\n`;
         welcomeMsg += `- **${ordenesPendientes}** órdenes pendientes (${urgentes} urgentes)\n`;
         welcomeMsg += `- Valor inventario: **$${valorTotal.toLocaleString("es-CO")} COP**\n\n`;
       }
 
       welcomeMsg += "Puedo ayudarte con:\n";
-      welcomeMsg += "📦 Consultar stock, valor y parte fabricante de cualquier referencia\n";
-      welcomeMsg += "🛒 Calcular cuánto comprar de una referencia\n";
-      welcomeMsg += "📋 Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
-      welcomeMsg += "🔧 Servicios pendientes (SRV)\n";
-      welcomeMsg += "💰 Top 20 referencias de mayor valor\n";
-      welcomeMsg += "💳 Facturación pendiente por pagar (OC y OCS)\n\n";
+      welcomeMsg += "\u{1F4E6} Consultar stock, valor y parte fabricante de cualquier referencia\n";
+      welcomeMsg += "\u{1F6D2} Calcular cuánto comprar de una referencia\n";
+      welcomeMsg += "\u{1F4CB} Estado detallado de órdenes de compra (pedido/recibido/pendiente)\n";
+      welcomeMsg += "\u{1F527} Servicios pendientes (SRV)\n";
+      welcomeMsg += "\u{1F4B0} Top 20 referencias de mayor valor\n";
+      welcomeMsg += "\u{1F4B3} Facturación pendiente por pagar (OC y OCS)\n\n";
       welcomeMsg += "¿En qué te puedo ayudar?";
 
       return {
