@@ -269,13 +269,16 @@ export async function bulkUpsertInventory(items: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
-  // Clear and re-insert (simpler for full sync)
-  // Batch size 500 to minimize round-trips to TiDB (was 100 = ~19 inserts, now ~4 inserts)
-  await db.delete(inventoryItems);
+  // Batch size 500 to minimize round-trips to TiDB
   let count = 0;
   for (let i = 0; i < items.length; i += 500) {
     const batch = items.slice(i, i + 500);
-    await db.insert(inventoryItems).values(batch);
+    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'referencia');
+    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+    for (const key of keys) {
+      setClause[key] = sql.raw(`VALUES(${key})`);
+    }
+    await db.insert(inventoryItems).values(batch).onDuplicateKeyUpdate({ set: setClause });
     count += batch.length;
   }
   return count;
@@ -285,7 +288,6 @@ export async function bulkUpsertOrders(orders: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
-  await db.delete(purchaseOrders);
   let count = 0;
   for (let i = 0; i < orders.length; i += 500) {
     const batch = orders.slice(i, i + 500).map((o: any) => ({
@@ -293,7 +295,12 @@ export async function bulkUpsertOrders(orders: any[]) {
       fechaPromesa: o.fechaPromesa ? new Date(o.fechaPromesa) : null,
       fechaRequerida: o.fechaRequerida ? new Date(o.fechaRequerida) : null,
     }));
-    await db.insert(purchaseOrders).values(batch);
+    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'ordenCompra');
+    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+    for (const key of keys) {
+      setClause[key] = sql.raw(`VALUES(${key})`);
+    }
+    await db.insert(purchaseOrders).values(batch).onDuplicateKeyUpdate({ set: setClause });
     count += batch.length;
   }
   return count;
@@ -303,11 +310,15 @@ export async function bulkUpsertSuppliers(suppliersList: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
-  await db.delete(suppliers);
   let count = 0;
   for (let i = 0; i < suppliersList.length; i += 500) {
     const batch = suppliersList.slice(i, i + 500);
-    await db.insert(suppliers).values(batch);
+    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'nit');
+    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+    for (const key of keys) {
+      setClause[key] = sql.raw(`VALUES(${key})`);
+    }
+    await db.insert(suppliers).values(batch).onDuplicateKeyUpdate({ set: setClause });
     count += batch.length;
   }
   return count;
@@ -467,12 +478,16 @@ export async function bulkUpsertConsumo(items: { referencia: string; fabricante:
   const db = await getDb();
   if (!db) return 0;
 
-  await db.delete(consumoMensual);
   const BATCH = 500;
   let count = 0;
   for (let i = 0; i < items.length; i += BATCH) {
     const batch = items.slice(i, i + BATCH);
-    await db.insert(consumoMensual).values(batch);
+    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'referencia' && k !== 'mes');
+    const setClause: Record<string, any> = {};
+    for (const key of keys) {
+      setClause[key] = sql.raw(`VALUES(${key})`);
+    }
+    await db.insert(consumoMensual).values(batch).onDuplicateKeyUpdate({ set: setClause });
     count += batch.length;
   }
   return count;

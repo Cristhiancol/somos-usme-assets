@@ -133,7 +133,11 @@ export function registerOAuthRoutes(app: Express) {
       });
 
       const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.cookie(COOKIE_NAME, sessionToken, { 
+        ...cookieOptions, 
+        maxAge: 30 * 24 * 60 * 60 * 1000, 
+        sameSite: "lax" 
+      });
 
       // Registrar login exitoso
       await registrarAuditoria("LOGIN_EXITOSO", email, "Acceso concedido", {

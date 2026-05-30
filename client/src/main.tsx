@@ -19,7 +19,8 @@ const queryClient = new QueryClient({
       staleTime: 5 * 60 * 1000,     // Cache 5min
       gcTime: 10 * 60 * 1000,       // Keep 10min
       retry: 1,                     // Retry failed queries 1x
-      refetchOnWindowFocus: false,  // Evita refetch al cambiar tab
+      refetchOnWindowFocus: "stale",  // ✅ Refresca si datos >5min
+      refetchOnReconnect: "stale",    // ✅ Refresca al cambiar red
     },
     mutations: { retry: 0 },        // No retry mutations
   },

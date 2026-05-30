@@ -15,7 +15,9 @@ export function useAuth(options?: UseAuthOptions) {
 
   const meQuery = trpc.auth.me.useQuery(undefined, {
     retry: false,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: "stale",
+    refetchOnReconnect: "stale",
+    staleTime: 5 * 60 * 1000,
   });
 
   const logoutMutation = trpc.auth.logout.useMutation({
@@ -58,11 +60,27 @@ export function useAuth(options?: UseAuthOptions) {
 
   // Side-effect moved OUT of useMemo to avoid DOM mutations during render
   useEffect(() => {
+    // Device fingerprint detection
+    const getDeviceFingerprint = () => {
+      return `${navigator.userAgent}|${screen.width}|${screen.height}`;
+    };
+    
+    const currentFP = getDeviceFingerprint();
+    const storedFP = localStorage.getItem("device-fingerprint");
+    
+    if (storedFP && storedFP !== currentFP) {
+      // ⚠️ Dispositivo cambió (móvil → desktop, etc.)
+      console.warn("[Auth] Device fingerprint changed, revalidating session");
+      meQuery.refetch();
+    }
+    
+    localStorage.setItem("device-fingerprint", currentFP);
+
     localStorage.setItem(
       "manus-runtime-user-info",
       JSON.stringify(meQuery.data)
     );
-  }, [meQuery.data]);
+  }, [meQuery.data, meQuery]);
 
   useEffect(() => {
     if (!redirectOnUnauthenticated) return;

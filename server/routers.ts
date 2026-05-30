@@ -16,8 +16,13 @@ import {
   getDelayedOrders,
   getCriticalStockItems,
   getStockCeroConOC,
+  getFacturacionKPIs, 
+  getFacturacionOCList, 
+  getFacturacionOCSList, 
+  getFacturacionResumenProveedores, 
+  getInformeMensual,
+  getUserByOpenId
 } from "./db";
-import { getFacturacionKPIs, getFacturacionOCList, getFacturacionOCSList, getFacturacionResumenProveedores, getInformeMensual } from "./db";
 import { isGDriveAuthorized, getValidAccessToken } from "./gdrive-oauth";
 import { notifyOwner } from "./_core/notification";
 import { syncFromGoogleDrive } from "./gdrive-sync";
@@ -38,6 +43,33 @@ export const appRouter = router({
   consumo: consumoRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
+    
+    validateSession: publicProcedure.query(async ({ ctx }) => {
+      // ✅ Endpoint PÚBLICO que revalida la sesión sin ser protegido
+      if (!ctx.user) {
+        return { valid: false, reason: "no_session" };
+      }
+      
+      // Revalidar en BD que usuario existe y está activo
+      const freshUser = await getUserByOpenId(ctx.user.openId);
+      if (!freshUser) {
+        return { valid: false, reason: "user_deleted" };
+      }
+      if (freshUser.activo === 0) {
+        return { valid: false, reason: "user_inactive" };
+      }
+      
+      return { 
+        valid: true, 
+        user: {
+          id: freshUser.id,
+          name: freshUser.name,
+          email: freshUser.email,
+          role: freshUser.role,
+        }
+      };
+    }),
+
     logout: publicProcedure.mutation(async ({ ctx }) => {
       // Registrar logout en auditoría
       if (ctx.user?.email) {
@@ -63,7 +95,8 @@ export const appRouter = router({
     }),
 
     valueByCategory: publicProcedure.query(async () => {
-      return getValueByCategory();
+      const result = await getValueByCategory();
+      return result.slice(0, 50);  // Limitar a 50 categorías
     }),
 
     top20Value: publicProcedure.query(async () => {

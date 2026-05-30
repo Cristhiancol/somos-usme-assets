@@ -48,6 +48,7 @@ import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from "./DashboardLayoutSkeleton";
 import { Button } from "./ui/button";
 import { StockChatbot } from "./StockChatbot";
+import { SessionValidator } from "./SessionValidator";
 import { CommandPalette } from "./CommandPalette";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -367,16 +368,7 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
                 {kpis.zeroStock} stock cero
               </Badge>
             )}
-            <button
-              onClick={() => {
-                document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true }));
-              }}
-              className="hidden md:flex items-center gap-2 rounded-md border border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors px-2.5 py-1.5 text-xs text-muted-foreground"
-            >
-              <Search className="h-3 w-3" />
-              <span>Buscar...</span>
-              <kbd className="rounded border border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-700 px-1.5 py-0.5 text-[10px] font-mono">⌘K</kbd>
-            </button>
+
             <Button
               variant="outline"
               size="sm"
@@ -391,6 +383,9 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 sm:p-6">{children}</main>
       </SidebarInset>
+
+      {/* Session validation banner */}
+      <SessionValidator />
 
       {/* Chatbot Stock — disponible en todas las páginas */}
       <StockChatbot />

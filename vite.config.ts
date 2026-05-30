@@ -51,20 +51,20 @@ function trimLogFile(logPath: string, maxSize: number) {
 
 function writeToLogFile(source: LogSource, entries: unknown[]) {
   if (entries.length === 0) return;
-
   ensureLogDir();
   const logPath = path.join(LOG_DIR, `${source}.log`);
-
-  // Format entries with timestamps
-  const lines = entries.map((entry) => {
+  
+  // ✅ Buffer concatenation (más eficiente)
+  const buffers = entries.map((entry) => {
     const ts = new Date().toISOString();
-    return `[${ts}] ${JSON.stringify(entry)}`;
+    return Buffer.from(`[${ts}] ${JSON.stringify(entry)}\n`, "utf-8");
   });
-
-  // Append to log file
-  fs.appendFileSync(logPath, `${lines.join("\n")}\n`, "utf-8");
-
-  // Trim if exceeds max size
+  
+  if (buffers.length > 0) {
+    const combined = Buffer.concat(buffers);
+    fs.appendFileSync(logPath, combined);
+  }
+  
   trimLogFile(logPath, MAX_LOG_SIZE_BYTES);
 }
 

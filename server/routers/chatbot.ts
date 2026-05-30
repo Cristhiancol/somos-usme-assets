@@ -58,12 +58,14 @@ interface CatalogItem {
 // ── Cache del catálogo (5 min TTL) ──────────────────────────────────────────
 let catalogCache: CatalogItem[] = [];
 let catalogCacheTime = 0;
+let fuseIndex: Fuse<CatalogItem> | null = null;
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutos
 
 /** Reset cache — solo para tests */
 export function resetCatalogCache() {
   catalogCache = [];
   catalogCacheTime = 0;
+  fuseIndex = null;
 }
 
 async function getCatalog(): Promise<CatalogItem[]> {
@@ -98,6 +100,7 @@ async function getCatalog(): Promise<CatalogItem[]> {
       valorAPedir: i.valorAPedir ?? 0,
     }));
     catalogCacheTime = Date.now();
+    fuseIndex = null; // Invalidate index when data changes
   } catch (e) {
     serverLogger.error("[Chatbot] Error cargando catálogo:", e);
   }
@@ -126,19 +129,21 @@ async function fuzzySearch(query: string): Promise<string> {
   const cleanedQuery = cleanQueryForFuzzy(query);
   if (!cleanedQuery || cleanedQuery.trim().length < 3) return "";
 
-  const fuse = new Fuse(catalog, {
-    keys: [
-      { name: "referencia", weight: 0.35 },
-      { name: "descripcion", weight: 0.35 },
-      { name: "parteFabricante", weight: 0.15 },
-      { name: "proveedor", weight: 0.15 },
-    ],
-    threshold: 0.4,
-    includeScore: true,
-    minMatchCharLength: 3,
-  });
+  if (!fuseIndex) {
+    fuseIndex = new Fuse(catalog, {
+      keys: [
+        { name: "referencia", weight: 0.35 },
+        { name: "descripcion", weight: 0.35 },
+        { name: "parteFabricante", weight: 0.15 },
+        { name: "proveedor", weight: 0.15 },
+      ],
+      threshold: 0.4,
+      includeScore: true,
+      minMatchCharLength: 3,
+    });
+  }
 
-  const results = fuse.search(cleanedQuery).slice(0, 8);
+  const results = fuseIndex.search(cleanedQuery).slice(0, 8);
   if (results.length === 0) return "";
 
   const lines = results.map((r, i) => {
