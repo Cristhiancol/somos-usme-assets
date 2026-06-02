@@ -291,7 +291,7 @@ async function parseExcelData(filePath: string) {
     if (!oc) continue;
     orders.push({
       ordenCompra: oc,
-      descripcion: safeStr(row["DESCRIPCION"]),
+      descripcion: safeStr(row["DESCRIPCION"]) || "",
       qtyOrdenada: safeFloat(row["QTY ORDENADA"]),
       um: safeStr(row["UM"]),
       qtyRecibida: safeFloat(row["QTY RECIBIDA"]),
@@ -300,7 +300,7 @@ async function parseExcelData(filePath: string) {
       proveedor: safeStr(row["PROVEEDOR"]),
       parteFabricante: safeStr(row["PARTE FABRICANTE"]),
       comprador: safeStr(row["COMPRADOR"]),
-      mainsaver: safeStr(row["MAINSAVER"]),
+      mainsaver: safeStr(row["MAINSAVER"]) || "",
       fechaPromesa: safeDate(row["FECHA PROMESA"]),
       fechaRequerida: safeDate(row["FECHA REQUERIDA"]),
       valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
