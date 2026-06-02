@@ -141,28 +141,6 @@ async function startServer() {
     }
   });
 
-  // 🔴 TEMPORARY ENDPOINT TO FIX TIDB INCONSISTENT STATE
-  app.post('/api/fix-tidb', async (_req, res) => {
-    try {
-      const { getDb } = await import('../db');
-      const { sql } = await import('drizzle-orm');
-      const db = await getDb();
-      if (!db) throw new Error('No DB connection');
-      
-      serverLogger.log('[FixTiDB] Executing TRUNCATE...');
-      await db.execute(sql`TRUNCATE TABLE consumo_mensual;`);
-      
-      serverLogger.log('[FixTiDB] Executing ALTER TABLE...');
-      await db.execute(sql`ALTER TABLE consumo_mensual ADD UNIQUE INDEX IF NOT EXISTS idx_ref_mes_unique (referencia, mes);`);
-      
-      serverLogger.log('[FixTiDB] Fix completed.');
-      res.json({ success: true, message: 'TRUNCATE and ALTER completed safely.' });
-    } catch (error: any) {
-      serverLogger.error('[FixTiDB] Error:', error.message);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  });
-
   // Auto-sync every 15 minutes
   setInterval(async () => {
     serverLogger.log('[AutoSync] Running scheduled Google Drive sync...');
