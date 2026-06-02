@@ -22,7 +22,6 @@ import {
   getTopConsumers,
   getConsumoByMonth,
   getConsumoMensual,
-import {
   getFacturacionKPIs,
   getFacturacionResumenProveedores,
   getPazYSalvoResumen,
