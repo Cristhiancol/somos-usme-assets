@@ -18,7 +18,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 // ── Inventory Items (DATA + CONTROL INVENTARIO) ──
-export const inventoryItems = mysqlTable("inventory_items", {
+export const inventoryItems = mysqlTable("inventory_items_v2", {
   id: int("id").autoincrement().primaryKey(),
   referencia: varchar("referencia", { length: 64 }).notNull(),
   descripcion: text("descripcion"),
@@ -58,16 +58,20 @@ export const inventoryItems = mysqlTable("inventory_items", {
   prioridad: varchar("prioridad", { length: 16 }), // 1-CRITICA, 2-ALTA, 3-MEDIA, 4-BAJA
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => {
+  return {
+    refIdx: uniqueIndex("idx_inv_ref_unique").on(table.referencia)
+  };
 });
 
 export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
 
 // ── Purchase Orders (DATA PENDIENTES) ──
-export const purchaseOrders = mysqlTable("purchase_orders", {
+export const purchaseOrders = mysqlTable("purchase_orders_v2", {
   id: int("id").autoincrement().primaryKey(),
   ordenCompra: varchar("ordenCompra", { length: 32 }),
-  descripcion: text("descripcion"),
+  descripcion: varchar("descripcion", { length: 255 }), // Needs to be varchar to be indexable alongside others without length issues
   qtyOrdenada: double("qtyOrdenada").default(0),
   um: varchar("um", { length: 16 }),
   qtyRecibida: double("qtyRecibida").default(0),
@@ -87,13 +91,17 @@ export const purchaseOrders = mysqlTable("purchase_orders", {
   prioridad: varchar("prioridad", { length: 32 }), // REORDEN INMEDIATO, OPTIMO, PRECAUCION, CRITICO, EXCESO (valores del Drive)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => {
+  return {
+    poLineIdx: uniqueIndex("idx_po_line_unique").on(table.ordenCompra, table.descripcion, table.mainsaver)
+  };
 });
 
 export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
 
 // ── Suppliers (PROVEEDORES) ──
-export const suppliers = mysqlTable("suppliers", {
+export const suppliers = mysqlTable("suppliers_v2", {
   id: int("id").autoincrement().primaryKey(),
   nit: varchar("nit", { length: 32 }).notNull(),
   nombre: text("nombre"),
@@ -103,6 +111,10 @@ export const suppliers = mysqlTable("suppliers", {
   contacto: varchar("contacto", { length: 128 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => {
+  return {
+    nitIdx: uniqueIndex("idx_sup_nit_unique").on(table.nit)
+  };
 });
 
 export type Supplier = typeof suppliers.$inferSelect;
