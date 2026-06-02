@@ -73,15 +73,36 @@ export async function getDashboardKPIs() {
     classC: sql<number>`SUM(CASE WHEN ${inventoryItems.claseAbc} = 'C' THEN 1 ELSE 0 END)`,
   }).from(inventoryItems);
 
+  // Deduplicar órdenes primero, usando ordenCompra, descripcion y valorPendiente
+  // para evitar sumar líneas de "SERVICIO" duplicadas.
+  const uniqueOrdersQuery = db.select({
+    ordenCompra: purchaseOrders.ordenCompra,
+    descripcion: purchaseOrders.descripcion,
+    valorPendiente: purchaseOrders.valorPendiente,
+    prioridad: purchaseOrders.prioridad,
+  })
+  .from(purchaseOrders)
+  .where(
+    or(
+      eq(purchaseOrders.estado, 'PENDIENTE'),
+      eq(purchaseOrders.estado, 'RECIBIDO PARCIAL'),
+      eq(purchaseOrders.estado, 'VENCIDO'),
+      eq(purchaseOrders.estado, 'CASI COMPLETO')
+    )
+  )
+  .groupBy(
+    purchaseOrders.ordenCompra,
+    purchaseOrders.descripcion,
+    purchaseOrders.valorPendiente,
+    purchaseOrders.prioridad
+  )
+  .as('unique_orders');
+
   const [ordersResult] = await db.select({
-    // Contar OC unicas (una OC puede tener multiples lineas/referencias)
-    totalPending: sql<number>`COUNT(DISTINCT ${purchaseOrders.ordenCompra})`,
-    totalPendingValue: sql<number>`COALESCE(SUM(${purchaseOrders.valorPendiente}), 0)`,
-    // Urgentes: contar OC unicas con prioridad CRITICO o REORDEN INMEDIATO
-    urgentOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${purchaseOrders.prioridad} IN ('CRITICO','REORDEN INMEDIATO') THEN ${purchaseOrders.ordenCompra} END)`,
-  }).from(purchaseOrders).where(
-    or(eq(purchaseOrders.estado, 'PENDIENTE'), eq(purchaseOrders.estado, 'RECIBIDO PARCIAL'), eq(purchaseOrders.estado, 'VENCIDO'), eq(purchaseOrders.estado, 'CASI COMPLETO'))
-  );
+    totalPending: sql<number>`COUNT(DISTINCT ${uniqueOrdersQuery.ordenCompra})`,
+    totalPendingValue: sql<number>`COALESCE(SUM(${uniqueOrdersQuery.valorPendiente}), 0)`,
+    urgentOrders: sql<number>`COUNT(DISTINCT CASE WHEN ${uniqueOrdersQuery.prioridad} IN ('CRITICO','REORDEN INMEDIATO') THEN ${uniqueOrdersQuery.ordenCompra} END)`,
+  }).from(uniqueOrdersQuery);
 
   // Contar referencias con stock=0 que tienen OC activa (SQL nativo para evitar alias conflict en Drizzle)
   const stockCeroConOCRows = await db.execute(sql`
