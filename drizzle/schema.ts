@@ -11,6 +11,19 @@ export const users = mysqlTable("users", {
   activo: int("activo").default(1).notNull(), // 1=activo, 0=inactivo
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, double, bigint, uniqueIndex } from "drizzle-orm/mysql-core";
+
+// ── Users (Auth) ──
+export const users = mysqlTable("users", {
+  id: int("id").autoincrement().primaryKey(),
+  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  name: text("name"),
+  email: varchar("email", { length: 320 }),
+  loginMethod: varchar("loginMethod", { length: 64 }),
+  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  activo: int("activo").default(1).notNull(), // 1=activo, 0=inactivo
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -18,7 +31,7 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 // ── Inventory Items (DATA + CONTROL INVENTARIO) ──
-export const inventoryItems = mysqlTable("inventory_items_v2", {
+export const inventoryItems = mysqlTable("inventory_items_v3", {
   id: int("id").autoincrement().primaryKey(),
   referencia: varchar("referencia", { length: 64 }).notNull(),
   descripcion: text("descripcion"),
@@ -68,7 +81,7 @@ export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertInventoryItem = typeof inventoryItems.$inferInsert;
 
 // ── Purchase Orders (DATA PENDIENTES) ──
-export const purchaseOrders = mysqlTable("purchase_orders_v2", {
+export const purchaseOrders = mysqlTable("purchase_orders_v3", {
   id: int("id").autoincrement().primaryKey(),
   ordenCompra: varchar("ordenCompra", { length: 32 }),
   descripcion: varchar("descripcion", { length: 255 }), // Needs to be varchar to be indexable alongside others without length issues
@@ -101,7 +114,7 @@ export type PurchaseOrder = typeof purchaseOrders.$inferSelect;
 export type InsertPurchaseOrder = typeof purchaseOrders.$inferInsert;
 
 // ── Suppliers (PROVEEDORES) ──
-export const suppliers = mysqlTable("suppliers_v2", {
+export const suppliers = mysqlTable("suppliers_v3", {
   id: int("id").autoincrement().primaryKey(),
   nit: varchar("nit", { length: 32 }).notNull(),
   nombre: text("nombre"),
@@ -266,18 +279,11 @@ export type InsertInformeMensualProveedor = typeof informeMensualProveedor.$infe
 // --- ZOMBIE TABLES (DO NOT USE) ---
 // TiDB locked these tables. We keep them in the schema ONLY so `drizzle-kit push` 
 // doesn't try to DROP them and trigger DDL timeouts.
-export const inventoryItemsOld = mysqlTable("inventory_items", {
-  id: int("id").autoincrement().primaryKey(),
-});
+export const inventoryItemsOld = mysqlTable("inventory_items", { id: int("id").autoincrement().primaryKey() });
+export const purchaseOrdersOld = mysqlTable("purchase_orders", { id: int("id").autoincrement().primaryKey() });
+export const suppliersOld = mysqlTable("suppliers", { id: int("id").autoincrement().primaryKey() });
+export const consumoMensualOld = mysqlTable("consumo_mensual", { id: int("id").autoincrement().primaryKey() });
 
-export const purchaseOrdersOld = mysqlTable("purchase_orders", {
-  id: int("id").autoincrement().primaryKey(),
-});
-
-export const suppliersOld = mysqlTable("suppliers", {
-  id: int("id").autoincrement().primaryKey(),
-});
-
-export const consumoMensualOld = mysqlTable("consumo_mensual", {
-  id: int("id").autoincrement().primaryKey(),
-});
+export const inventoryItemsV2 = mysqlTable("inventory_items_v2", { id: int("id").autoincrement().primaryKey() });
+export const purchaseOrdersV2 = mysqlTable("purchase_orders_v2", { id: int("id").autoincrement().primaryKey() });
+export const suppliersV2 = mysqlTable("suppliers_v2", { id: int("id").autoincrement().primaryKey() });
