@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, double, bigint } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, double, bigint, uniqueIndex } from "drizzle-orm/mysql-core";
 
 // ── Users (Auth) ──
 export const users = mysqlTable("users", {
@@ -166,7 +166,12 @@ export const consumoMensual = mysqlTable("consumo_mensual", {
   mes: varchar("mes", { length: 7 }).notNull(), // YYYY-MM
   cantidad: double("cantidad").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => {
+  return {
+    refMesIdx: uniqueIndex("idx_ref_mes_unique").on(table.referencia, table.mes)
+  };
 });
+
 
 export type ConsumoMensual = typeof consumoMensual.$inferSelect;
 export type InsertConsumoMensual = typeof consumoMensual.$inferInsert;
