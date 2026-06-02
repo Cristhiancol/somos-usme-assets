@@ -70,7 +70,7 @@ export function recordSyncCompletion(syncId: string, metrics: Partial<SyncMetric
 // Detectar syncs muertos
 setInterval(() => {
   const now = Date.now();
-  for (const [id, sync] of activeSyncs) {
+  for (const [id, sync] of Array.from(activeSyncs.entries())) {
     if (now - sync.startTime > 60000) {  // 60 segundos = deadlock
       serverLogger.error(`[Monitoring] Deadlock detected: Sync ${id} running for ${(now - sync.startTime) / 1000}s`);
       Sentry.captureException(new Error('Sync deadlock detected'), {

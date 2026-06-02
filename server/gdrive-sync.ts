@@ -665,7 +665,7 @@ async function extractInformeMensualHyperlinks(items: any[]): Promise<any[]> {
 export async function syncFromGoogleDrive(): Promise<{ success: boolean; message: string; stats?: any }> {
   // Insert 'running' record immediately so polling can detect it
   const syncId = await logSync({ syncType: "gdrive_import", status: "running" });
-  startSyncMonitoring(syncId.toString());
+  startSyncMonitoring(String(syncId));
   try {
     // Ensure temp dir exists
     if (!existsSync(LOCAL_DIR)) mkdirSync(LOCAL_DIR, { recursive: true });
@@ -751,7 +751,7 @@ export async function syncFromGoogleDrive(): Promise<{ success: boolean; message
       });
     }
 
-    recordSyncCompletion(syncId.toString(), {
+    recordSyncCompletion(String(syncId), {
       itemsProcessed: itemsCount,
       ordersProcessed: ordersCount,
       suppliersProcessed: suppliersCount,
