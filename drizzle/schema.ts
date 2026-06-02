@@ -263,3 +263,21 @@ export const informeMensualProveedor = mysqlTable("informe_mensual_proveedor", {
 export type InformeMensualProveedor = typeof informeMensualProveedor.$inferSelect;
 export type InsertInformeMensualProveedor = typeof informeMensualProveedor.$inferInsert;
 
+// --- ZOMBIE TABLES (DO NOT USE) ---
+// TiDB locked these tables. We keep them in the schema ONLY so `drizzle-kit push` 
+// doesn't try to DROP them and trigger DDL timeouts.
+export const inventoryItemsOld = mysqlTable("inventory_items", {
+  id: int("id").autoincrement().primaryKey(),
+});
+
+export const purchaseOrdersOld = mysqlTable("purchase_orders", {
+  id: int("id").autoincrement().primaryKey(),
+});
+
+export const suppliersOld = mysqlTable("suppliers", {
+  id: int("id").autoincrement().primaryKey(),
+});
+
+export const consumoMensualOld = mysqlTable("consumo_mensual", {
+  id: int("id").autoincrement().primaryKey(),
+});
