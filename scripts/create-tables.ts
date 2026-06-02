@@ -98,6 +98,20 @@ async function main() {
     );
   `);
 
+  console.log('Creando tabla consumo_mensual_v3...');
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS consumo_mensual_v3 (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      referencia VARCHAR(64) NOT NULL,
+      fabricante VARCHAR(128),
+      descripcion TEXT,
+      mes VARCHAR(7) NOT NULL,
+      cantidad DOUBLE DEFAULT 0 NOT NULL,
+      createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+      UNIQUE KEY idx_ref_mes_unique (referencia, mes)
+    );
+  `);
+
   console.log('Tablas _v3 creadas exitosamente evadiendo Drizzle!');
   process.exit(0);
 }
