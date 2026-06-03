@@ -148,43 +148,71 @@ export default function OrdersPage() {
     onError: () => setAlertMsg("Error al enviar notificación"),
   });
 
-  const totalPendingValue = (data || []).reduce((s, o) => s + (o.valorPendiente || 0), 0);
-
-  // Conteo de OC únicas (una OC puede tener múltiples líneas/referencias)
-  const uniqueOCSet = useMemo(() => new Set((data || []).map(o => o.ordenCompra)), [data]);
-  const totalOrders = uniqueOCSet.size;
-
-  // KPIs de órdenes — conteo por OC únicas
-  const ordersConRetraso = useMemo(() => {
-    const ocsRetraso = new Set((data || []).filter(o => (o.diasRetraso || 0) > 0).map(o => o.ordenCompra));
-    return ocsRetraso.size;
+  const deduplicatedData = useMemo(() => {
+    const seen = new Set();
+    return (data || []).filter(o => {
+      // Usar clave compuesta para evitar líneas de servicio duplicadas desde el ERP (mainsaver vacío)
+      const key = `${o.ordenCompra}-${o.descripcion}-${o.valorPendiente}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }, [data]);
-  const promedioRetraso = useMemo(() => {
-    // Promedio de retraso por OC única (tomar el máximo retraso de cada OC)
+
+  const {
+    totalPendingValue,
+    totalOrders,
+    ordersConRetraso,
+    promedioRetraso,
+    ordenesVencidas,
+    conteoNuevos,
+    conteoReparados,
+    conteoServicios,
+    totalLineas
+  } = useMemo(() => {
+    let totalVal = 0;
+    const uniqueOCs = new Set<string>();
+    const ocsRetraso = new Set<string>();
+    const ocsVencidas = new Set<string>();
+    const ocsNuevos = new Set<string>();
+    const ocsReparados = new Set<string>();
+    const ocsServicios = new Set<string>();
     const retrasoByOC: Record<string, number> = {};
-    (data || []).forEach(o => {
-      if ((o.diasRetraso || 0) > 0 && o.ordenCompra) {
-        retrasoByOC[o.ordenCompra] = Math.max(retrasoByOC[o.ordenCompra] || 0, o.diasRetraso || 0);
+
+    deduplicatedData.forEach(o => {
+      totalVal += (o.valorPendiente || 0);
+      if (o.ordenCompra) {
+        uniqueOCs.add(o.ordenCompra);
+        const tipo = (o as any).tipoReferencia;
+        if (tipo === 'NUEVO') ocsNuevos.add(o.ordenCompra);
+        if (tipo === 'REPARADO') ocsReparados.add(o.ordenCompra);
+        if (tipo === 'SERVICIO') ocsServicios.add(o.ordenCompra);
+
+        if ((o.diasRetraso || 0) > 0) {
+          ocsRetraso.add(o.ordenCompra);
+          retrasoByOC[o.ordenCompra] = Math.max(retrasoByOC[o.ordenCompra] || 0, o.diasRetraso || 0);
+        }
+        if (o.estado === 'VENCIDO') {
+          ocsVencidas.add(o.ordenCompra);
+        }
       }
     });
-    const vals = Object.values(retrasoByOC);
-    return vals.length > 0 ? Math.round(vals.reduce((s, v) => s + v, 0) / vals.length) : 0;
-  }, [data]);
-  const ordenesVencidas = useMemo(() => {
-    const ocsVencidas = new Set((data || []).filter(o => o.estado === 'VENCIDO').map(o => o.ordenCompra));
-    return ocsVencidas.size;
-  }, [data]);
 
-  // Conteos por tipo para los botones de filtro — OC únicas
-  const conteoNuevos = useMemo(() =>
-    new Set((data || []).filter(o => (o as any).tipoReferencia === 'NUEVO').map(o => o.ordenCompra)).size, [data]);
-  const conteoReparados = useMemo(() =>
-    new Set((data || []).filter(o => (o as any).tipoReferencia === 'REPARADO').map(o => o.ordenCompra)).size, [data]);
-  const conteoServicios = useMemo(() =>
-    new Set((data || []).filter(o => (o as any).tipoReferencia === 'SERVICIO').map(o => o.ordenCompra)).size, [data]);
+    const retrasoVals = Object.values(retrasoByOC);
+    const promRetraso = retrasoVals.length > 0 ? Math.round(retrasoVals.reduce((s, v) => s + v, 0) / retrasoVals.length) : 0;
 
-  // Líneas totales (referencias individuales dentro de las OC)
-  const totalLineas = data?.length ?? 0;
+    return {
+      totalPendingValue: totalVal,
+      totalOrders: uniqueOCs.size,
+      ordersConRetraso: ocsRetraso.size,
+      promedioRetraso: promRetraso,
+      ordenesVencidas: ocsVencidas.size,
+      conteoNuevos: ocsNuevos.size,
+      conteoReparados: ocsReparados.size,
+      conteoServicios: ocsServicios.size,
+      totalLineas: deduplicatedData.length
+    };
+  }, [deduplicatedData]);
 
   // Clases activas con paleta corporativa
   const tipoButtons: { key: TipoFiltro; label: string; count?: number; activeClass: string }[] = [
@@ -331,7 +359,7 @@ export default function OrdersPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-neon-pink" />
           </div>
-        ) : (data || []).length === 0 ? (
+        ) : deduplicatedData.length === 0 ? (
           <div className="text-center py-16 text-muted-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
             No se encontraron órdenes con los filtros aplicados.
           </div>
@@ -358,7 +386,7 @@ export default function OrdersPage() {
                 </tr>
               </thead>
               <tbody>
-                {(data || []).map((o, i) => {
+                {deduplicatedData.map((o, i) => {
                   const tipo = (o as any).tipoReferencia as string || 'NUEVO';
                   // Fondo de fila sutil con paleta corporativa
                   const rowBg = tipo === 'SERVICIO'
