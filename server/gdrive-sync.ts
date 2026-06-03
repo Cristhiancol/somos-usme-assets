@@ -289,9 +289,15 @@ async function parseExcelData(filePath: string) {
   for (const row of pendRows) {
     const oc = safeStr(row["ORDEN COMPRA"]);
     if (!oc) continue;
+    const rawMainsaver = safeStr(row["MAINSAVER"]);
+    const desc = safeStr(row["DESCRIPCION"]) || "";
+    // IMPORTANT: when mainsaver is empty (SERVICIO/REPARADO orders), build a synthetic unique key
+    // using OC + description prefix so the UNIQUE index (ordenCompra, descripcion, mainsaver)
+    // doesn't collapse multiple service rows into one record.
+    const mainsaver = rawMainsaver || `${oc}|${desc.substring(0, 32)}`;
     orders.push({
       ordenCompra: oc,
-      descripcion: safeStr(row["DESCRIPCION"]) || "",
+      descripcion: desc,
       qtyOrdenada: safeFloat(row["QTY ORDENADA"]),
       um: safeStr(row["UM"]),
       qtyRecibida: safeFloat(row["QTY RECIBIDA"]),
@@ -300,7 +306,7 @@ async function parseExcelData(filePath: string) {
       proveedor: safeStr(row["PROVEEDOR"]),
       parteFabricante: safeStr(row["PARTE FABRICANTE"]),
       comprador: safeStr(row["COMPRADOR"]),
-      mainsaver: safeStr(row["MAINSAVER"]) || "",
+      mainsaver,
       fechaPromesa: safeDate(row["FECHA PROMESA"]),
       fechaRequerida: safeDate(row["FECHA REQUERIDA"]),
       valorImpuesto: safeFloat(row["VALOR IMPUESTO"]),
@@ -312,6 +318,7 @@ async function parseExcelData(filePath: string) {
       prioridad: (safeStr(row["PRIORIDAD"]) || "").toUpperCase().trim() || null,
     });
   }
+
 
   // Parse PROVEEDORES (no header row)
   const provSheet = workbook.Sheets["PROVEEDORES"];
