@@ -8,8 +8,8 @@ import { oauthTokens } from "../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { serverLogger } from "./logger";
 
-const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID || "220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro.apps.googleusercontent.com";
-const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET || "";
+const CLIENT_ID = process.env.GOOGLE_DRIVE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || process.env.GDRIVE_CLIENT_ID || "220183698829-7o71jvu74scbc1rp0kfimcf6sl2l7qro.apps.googleusercontent.com";
+const CLIENT_SECRET = process.env.GOOGLE_DRIVE_CLIENT_SECRET || process.env.GOOGLE_CLIENT_SECRET || process.env.GDRIVE_CLIENT_SECRET || "";
 const PROVIDER = "google_drive";
 
 /**
