@@ -107,8 +107,8 @@ export async function getDashboardKPIs() {
   // Contar referencias con stock=0 que tienen OC activa (SQL nativo para evitar alias conflict en Drizzle)
   const stockCeroConOCRows = await db.execute(sql`
     SELECT COUNT(DISTINCT inv.id) as stockCeroConOC
-    FROM inventory_items inv
-    INNER JOIN purchase_orders po
+    FROM inventory_items_v3 inv
+    INNER JOIN purchase_orders_v3 po
       ON UPPER(TRIM(inv.descripcion)) = UPPER(TRIM(po.descripcion))
     WHERE inv.stockActual = 0
       AND po.estado IN ('PENDIENTE', 'CASI COMPLETO')
@@ -457,8 +457,8 @@ export async function getStockCeroConOC() {
         WHEN i.referencia REGEXP '-R$' THEN 'REPARADO'
         ELSE 'NUEVO'
       END AS tipoReferencia
-    FROM inventory_items i
-    INNER JOIN purchase_orders p
+    FROM inventory_items_v3 i
+    INNER JOIN purchase_orders_v3 p
       ON UPPER(TRIM(p.mainsaver)) = UPPER(TRIM(i.referencia))
     WHERE i.stockActual = 0
       AND p.estado IN ('PENDIENTE', 'CASI COMPLETO')
