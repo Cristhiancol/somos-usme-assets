@@ -290,18 +290,28 @@ export async function bulkUpsertInventory(items: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
-  // IMPORTANT: Delete all existing inventory first, then re-insert from Drive.
-  // The Drive spreadsheet is the source of truth for current inventory state.
-  await db.delete(inventoryItems);
-  serverLogger.log(`[DB] Cleared inventory_items_v3 before fresh insert`);
+  // Record the time BEFORE upserting so we can clean stale records after
+  const syncStartTime = new Date();
 
   // Batch size 500 to minimize round-trips to TiDB
   let count = 0;
   for (let i = 0; i < items.length; i += 500) {
     const batch = items.slice(i, i + 500);
-    await db.insert(inventoryItems).values(batch);
+    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'referencia');
+    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+    for (const key of keys) {
+      setClause[key] = sql.raw(`VALUES(${key})`);
+    }
+    await db.insert(inventoryItems).values(batch).onDuplicateKeyUpdate({ set: setClause });
     count += batch.length;
   }
+
+  // CLEANUP: Delete stale inventory items that were NOT updated during this sync.
+  // These are items that no longer exist in the Drive spreadsheet.
+  const deleted = await db.delete(inventoryItems)
+    .where(sql`${inventoryItems.updatedAt} < ${syncStartTime}`);
+  serverLogger.log(`[DB] Inventory: upserted ${count}, cleaned stale records older than ${syncStartTime.toISOString()}`);
+
   return count;
 }
 
@@ -309,13 +319,8 @@ export async function bulkUpsertOrders(orders: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
-  // IMPORTANT: Delete all existing orders first, then re-insert from Drive.
-  // The Drive spreadsheet "DATA PENDIENTES" is the source of truth — it only contains
-  // orders that are still pending. Orders that have been completed (material received)
-  // are removed from the sheet. Without this delete, completed orders would remain
-  // as phantom records in the database forever.
-  await db.delete(purchaseOrders);
-  serverLogger.log(`[DB] Cleared purchase_orders_v3 before fresh insert`);
+  // Record the time BEFORE upserting so we can clean stale records after
+  const syncStartTime = new Date();
 
   let count = 0;
   for (let i = 0; i < orders.length; i += 500) {
@@ -324,11 +329,24 @@ export async function bulkUpsertOrders(orders: any[]) {
       fechaPromesa: o.fechaPromesa ? new Date(o.fechaPromesa) : null,
       fechaRequerida: o.fechaRequerida ? new Date(o.fechaRequerida) : null,
     }));
-    await db.insert(purchaseOrders).values(batch);
+    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'ordenCompra');
+    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
+    for (const key of keys) {
+      setClause[key] = sql.raw(`VALUES(${key})`);
+    }
+    await db.insert(purchaseOrders).values(batch).onDuplicateKeyUpdate({ set: setClause });
     count += batch.length;
   }
+
+  // CLEANUP: Delete stale orders that were NOT updated during this sync.
+  // These are completed orders that no longer exist in the Drive "DATA PENDIENTES" sheet.
+  const deleted = await db.delete(purchaseOrders)
+    .where(sql`${purchaseOrders.updatedAt} < ${syncStartTime}`);
+  serverLogger.log(`[DB] Orders: upserted ${count}, cleaned stale records older than ${syncStartTime.toISOString()}`);
+
   return count;
 }
+
 
 export async function bulkUpsertSuppliers(suppliersList: any[]) {
   const db = await getDb();
