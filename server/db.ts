@@ -290,16 +290,16 @@ export async function bulkUpsertInventory(items: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
+  // IMPORTANT: Delete all existing inventory first, then re-insert from Drive.
+  // The Drive spreadsheet is the source of truth for current inventory state.
+  await db.delete(inventoryItems);
+  serverLogger.log(`[DB] Cleared inventory_items_v3 before fresh insert`);
+
   // Batch size 500 to minimize round-trips to TiDB
   let count = 0;
   for (let i = 0; i < items.length; i += 500) {
     const batch = items.slice(i, i + 500);
-    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'referencia');
-    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
-    for (const key of keys) {
-      setClause[key] = sql.raw(`VALUES(${key})`);
-    }
-    await db.insert(inventoryItems).values(batch).onDuplicateKeyUpdate({ set: setClause });
+    await db.insert(inventoryItems).values(batch);
     count += batch.length;
   }
   return count;
@@ -309,6 +309,14 @@ export async function bulkUpsertOrders(orders: any[]) {
   const db = await getDb();
   if (!db) return 0;
   
+  // IMPORTANT: Delete all existing orders first, then re-insert from Drive.
+  // The Drive spreadsheet "DATA PENDIENTES" is the source of truth — it only contains
+  // orders that are still pending. Orders that have been completed (material received)
+  // are removed from the sheet. Without this delete, completed orders would remain
+  // as phantom records in the database forever.
+  await db.delete(purchaseOrders);
+  serverLogger.log(`[DB] Cleared purchase_orders_v3 before fresh insert`);
+
   let count = 0;
   for (let i = 0; i < orders.length; i += 500) {
     const batch = orders.slice(i, i + 500).map((o: any) => ({
@@ -316,12 +324,7 @@ export async function bulkUpsertOrders(orders: any[]) {
       fechaPromesa: o.fechaPromesa ? new Date(o.fechaPromesa) : null,
       fechaRequerida: o.fechaRequerida ? new Date(o.fechaRequerida) : null,
     }));
-    const keys = Object.keys(batch[0]).filter(k => k !== 'id' && k !== 'ordenCompra');
-    const setClause: Record<string, any> = { updatedAt: sql`CURRENT_TIMESTAMP` };
-    for (const key of keys) {
-      setClause[key] = sql.raw(`VALUES(${key})`);
-    }
-    await db.insert(purchaseOrders).values(batch).onDuplicateKeyUpdate({ set: setClause });
+    await db.insert(purchaseOrders).values(batch);
     count += batch.length;
   }
   return count;
