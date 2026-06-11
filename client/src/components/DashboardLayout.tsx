@@ -164,7 +164,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Cleanup polling on unmount
   useEffect(() => {
-    return () => { if (syncPollingRef.current) clearInterval(syncPollingRef.current); };
+    return () => {
+      if (syncPollingRef.current) {
+        clearInterval(syncPollingRef.current);
+        syncPollingRef.current = null;
+      }
+    };
   }, []);
 
   const handleSync = async () => {
@@ -312,8 +317,12 @@ function DashboardLayoutContent({ children }: { children: React.ReactNode }) {
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-slate-100 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8CB32A]/50">
-                <Avatar className="h-8 w-8 border border-slate-200 shrink-0">
+              <button
+                className="flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-slate-100 transition-colors w-full text-left group-data-[collapsible=icon]:justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8CB32A]/50"
+                aria-label={`Menú de usuario: ${user?.name || "Usuario"}`}
+                aria-haspopup="true"
+              >
+                <Avatar className="h-8 w-8 border border-slate-200 shrink-0" aria-hidden="true">
                   <AvatarFallback className="text-[11px] font-semibold bg-[#8CB32A]/20 text-[#281C19]">
                     {initials}
                   </AvatarFallback>
